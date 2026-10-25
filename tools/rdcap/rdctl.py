@@ -33,6 +33,14 @@ RequestShow=14.
     (матч по счётчику present'ов слоя: core.cpp:1484-1515 +
      vk_core.cpp:3587 ShouldTriggerCapture(m_FrameCounter); кадр в прошлом —
      отбрасывается, поэтому цель ставить в будущем: frameNum = текущий + N)
+  CycleActiveWindow payload нет → RenderDoc::CycleActiveWindow()
+  CapturableWindowCount payload нет → отвечает тем же id, u32 count
+
+Один процесс может зарегистрировать НЕСКОЛЬКО swapchain'ов (в nvrhi-контуре
+Vulkan их два: DXVK для D3D9-устройствa клиента + сам шов NVRHI). TriggerCapture
+бьёт только по «активному» окну; если активен DXVK-swapchain, который не
+презентует, капча не начинается вообще (в логе слоя нет «Starting capture»).
+Тогда: windows → cycle → trigger.
   NewCapture     payload idx u32, ts u64, path string, thumb bytebuf(u64 len),
                  driver u32, frameNumber u32, byteSize u64, title string
                  (target_control.cpp:243-265) — номер кадра дублируется в
@@ -235,6 +243,21 @@ def main():
         print("port=%d" % port)
         for name, info in read_chunks(s, secs):
             print("  %s %s" % (name, info))
+        s.close()
+        return 0
+    elif cmd in ("cycle", "windows"):
+        # cycle — переключить активное capturable-окно (swapchain), windows —
+        # сколько их. Нужны, когда в процессе несколько Vulkan-swapchain'ов.
+        port = argport(2)
+        port, s = connect(port)
+        got = read_chunks(s, 1.0)
+        cid = 12 if cmd == "cycle" else 13
+        s.sendall(pkt(cid))
+        got += read_chunks(s, 3.0)
+        print("port=%d sent=%d %s" % (port, cid, cmd))
+        for name, info in got:
+            if name not in ("Noop",):
+                print("  %s %s" % (name, info))
         s.close()
         return 0
     elif cmd == "arm":

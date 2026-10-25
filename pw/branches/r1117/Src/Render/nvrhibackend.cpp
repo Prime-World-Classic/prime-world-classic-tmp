@@ -34,7 +34,7 @@
 #include "Vendor/DirectX/Include/d3d9types.h"
 // App API RenderDoc — только заголовок: с библиотекой не линкуемся, единственная
 // точка входа RENDERDOC_GetAPI берётся GetProcAddress (раздел «RenderDoc»).
-#include "Vendor/renderdoc/renderdoc_app.h"
+#include "rdcapmarker.h"                      // маркер RenderDoc-капчи (env PW_VK_RDCAP*), общий с d3d9backend
 #include "System/FileSystem/FileStream.h"                 // Stream для чтения контейнера
 #include "System/FileSystem/FileSystem.h"                 // RootFileSystem::OpenFile
 
@@ -968,14 +968,9 @@ struct NvrhiBackendImpl
   unsigned shotLastSec;      // уже отснятая секунда (для режима по времени)
   unsigned shotProbe;        // env PW_VK_SHOT_PROBE: перед снимком залить картинку
   // RenderDoc-контур (env PW_VK_RDCAP*, раздел «RenderDoc» перед «Кадр»):
-  // клиент считает сессионные секунды и на нужной пишет маркер с целевым кадром.
-  unsigned rdAt;             // env PW_VK_RDCAP: кадр (present), на котором нужна капча
-  unsigned rdTime;           // env PW_VK_RDCAP_TIME: секунда сессии (от 1-го present)
-  unsigned rdStep;           // env PW_VK_RDCAP_STEP: период серии в секундах (0 = один раз)
-  unsigned rdLead;           // env PW_VK_RDCAP_LEAD: кадров запаса на арм (default 60)
-  unsigned rdLastSec;        // уже отмеченная секунда
-  unsigned rdSeq;            // счётчик маркеров (нумерует серии)
-  char rdMarker[64];         // env PW_VK_RDCAP_FILE: имя маркера (cwd = Game/Bin)
+  // клиент считает сессионные секунды и на нужной пишет маркер с целевым
+  // кадром. Часы и формат маркера — общие для обоих бэкендов (rdcapmarker.h).
+  RdCapMarker rdCap;
   unsigned dbgName;          // env PW_VK_DBGNAME: VK_EXT_debug_utils + имена объектов
   unsigned drawDiag;         // сколько выводов описано подробно (диагностика пустого кадра)
   unsigned panelLogged;      // трассировка «шейдер читает глубину» (00344)
@@ -1193,7 +1188,7 @@ struct NvrhiBackendImpl
       clearLoadFrame(1u), clearLoadDone(0), clearLoadLogged(0),
       dsSetNull(0), dsSetForeign(0), dsSetOwn(0), dsSetEmpty(0),
       setsCreated(0), texMissing(0), resMapsCreated(0),
-      ssboSetsCreated(0), texDimMismatch(0), dummySubs(0), vbHoles(0), dsNonDepth(0), readbackRaw(0), shotAt(0), shotStep(0), shotTime(0), shotLastSec(0xffffffffu), shotProbe(0), rdAt(0), rdTime(0), rdStep(0), rdLead(60u), rdLastSec(0xffffffffu), rdSeq(0), dbgName(0), drawDiag(0), panelLogged(0), rtSizeLogged(0), surfLogged(0), tracePsLogged(0), traceDrawLogged(0), traceVtxLogged(0), traceConstLogged(0),
+      ssboSetsCreated(0), texDimMismatch(0), dummySubs(0), vbHoles(0), dsNonDepth(0), readbackRaw(0), shotAt(0), shotStep(0), shotTime(0), shotLastSec(0xffffffffu), shotProbe(0), dbgName(0), drawDiag(0), panelLogged(0), rtSizeLogged(0), surfLogged(0), tracePsLogged(0), traceDrawLogged(0), traceVtxLogged(0), traceConstLogged(0),
       recOn(false), recFile(0), recMax(0), recSkip(0), recSeen(0), recDraws(0), recObjs(0), recRtW(0), recRtH(0),
       recAt(0), recArmed(false), recT0(0),
       modelHash(0ull), stateSets(0), samplersCreated(0), smpSetsCreated(0),
@@ -2117,20 +2112,7 @@ bool NvrhiBackend::Init(NativeWindow window, unsigned width, unsigned height)
     // Часы — сессионные (от 1-го present), как у PW_VK_SHOT_TIME: своего
     // «таймера матча» у клиента нет (grep GetGameTime/battleStartTime — пусто),
     // а сессионная секунда воспроизводима между прогонами.
-    { char rc[16];
-      if (GetEnvironmentVariableA("PW_VK_RDCAP", rc, sizeof(rc) - 1) > 0)
-        d.rdAt = (unsigned)atoi(rc); }
-    { char rc[16];
-      if (GetEnvironmentVariableA("PW_VK_RDCAP_TIME", rc, sizeof(rc) - 1) > 0)
-        d.rdTime = (unsigned)atoi(rc); }
-    { char rc[16];
-      if (GetEnvironmentVariableA("PW_VK_RDCAP_STEP", rc, sizeof(rc) - 1) > 0)
-        d.rdStep = (unsigned)atoi(rc); }
-    { char rc[16];
-      if (GetEnvironmentVariableA("PW_VK_RDCAP_LEAD", rc, sizeof(rc) - 1) > 0)
-        d.rdLead = (unsigned)atoi(rc); }
-    if (GetEnvironmentVariableA("PW_VK_RDCAP_FILE", d.rdMarker, sizeof(d.rdMarker) - 1) <= 0)
-      strcpy(d.rdMarker, "rdcap.marker");
+    d.rdCap.Init();
     RecOpen(d);
   }
 
@@ -3366,101 +3348,12 @@ HRESULT NvrhiBackend::GetSystemInfo(BackendSystemInfo& out)
 }
 
 //////////////////////////////////////////////////////////////////////////
-// RenderDoc (env PW_VK_RDCAP*)
-//
-// Капчу снимает НЕ сам клиент. Под Wine гостевой PE не может вызвать
-// RENDERDOC_GetAPI (символ живёт в хостовом librenderdoc.so), а LD_PRELOAD-
-// хуки инжекта в гостя winevulkan не видят. Работает другой контур: слой
-// VK_LAYER_RENDERDOC_Capture включает ХОСТОВЫЙ Vulkan-загрузчик внутри wine64
-// (VK_ADD_IMPLICIT_LAYER_PATH=<...>/implicit_layer.d +
-// ENABLE_VULKAN_RENDERDOC_CAPTURE=1), и в процессе поднимается target-control
-// сервер слоя (порты 38920..38927), куда хост шлёт TriggerCapture/QueueCapture
-// — tools/rd/rdctl.py (протокол: renderdoc/core/target_control.cpp).
-// Слой при этом сам считает кадры по present'ам, а счётчик present'ов бэкенда
-// с ним совпадает (замер 2026-10-22: «Finished capture, Frame 1899» при
-// presents=1899), поэтому хост армит захват ровно на нужном кадре, а не
-// «примерно в нужное время».
-//
-// Роль клиента — часы сессии и маркер: на выбранной секунде он пишет файл с
-// целевым кадром, наблюдатель на хосте (tools/rd/rdwatch.py) по нему шлёт
-// QueueCapture. Если же клиент запущен самим RenderDoc (нативный Windows-
-// контур), в процессе есть renderdoc.dll и тот же маркер дублируется прямым
-// TriggerCapture() через app API.
-
-// Единственная точка входа app API: с библиотекой не линкуемся, берём
-// GetProcAddress из уже загруженной dll (свою грузим только по PW_VK_RDC_DLL=1).
-static RENDERDOC_API_1_7_0* g_rdApi = 0;
-static bool g_rdApiTried = false;
-static bool g_rdApiTitle = false;   // dll отдала struct 1.6.0+ (SetCaptureTitle)
-
-static RENDERDOC_API_1_7_0* RdApi()
-{
-  if (g_rdApiTried)
-    return g_rdApi;
-  g_rdApiTried = true;
-  HMODULE h = GetModuleHandleA("renderdoc.dll");
-  if (!h)
-  {
-    char rf[8];
-    if (GetEnvironmentVariableA("PW_VK_RDC_DLL", rf, sizeof(rf) - 1) > 0 && atoi(rf))
-      h = LoadLibraryA("renderdoc.dll");
-  }
-  if (!h)
-    return 0;
-  pRENDERDOC_GetAPI getApi = (pRENDERDOC_GetAPI)GetProcAddress(h, "RENDERDOC_GetAPI");
-  if (!getApi)
-    return 0;
-  // Просим 1.7.0; если dll старше — просим 1.0.0 и дальше трогаем только те
-  // поля, которые в старой dll точно есть (в 1.46 все RENDERDOC_API_1_x_y —
-  // typedef одного struct, см. Vendor/renderdoc/renderdoc_app.h:835, но у
-  // старой dll struct короче).
-  void* out = 0;
-  if (getApi(eRENDERDOC_API_Version_1_7_0, &out) && out)
-    g_rdApiTitle = true;
-  else
-  {
-    out = 0;
-    if (!getApi(eRENDERDOC_API_Version_1_0_0, &out) || !out)
-      return 0;
-  }
-  g_rdApi = (RENDERDOC_API_1_7_0*)out;
-  int major = 0, minor = 0, patch = 0;
-  if (g_rdApi->GetAPIVersion)
-    g_rdApi->GetAPIVersion(&major, &minor, &patch);
-  DebugTrace("VkRdCap: RenderDoc API %d.%d.%d в процессе", major, minor, patch);
-  return g_rdApi;
-}
-
-// sec — секунда сессии, target — кадр, на котором хост обязан снять капчу.
-static void RdMark(NvrhiBackendImpl& d, unsigned sec, unsigned target)
-{
-  ++d.rdSeq;
-  RENDERDOC_API_1_7_0* api = RdApi();
-  // Имя маркера относительное и БЕЗ '/': под Wine путь с '/' в аргументе
-  // портится (тот же вывод, что у PW_VK_RECORD), а cwd = Game/Bin, так что на
-  // хосте файл лежит в wine-client/Game/Bin/<маркер>.
-  FILE* f = fopen(d.rdMarker, "wb");
-  if (f)
-  {
-    fprintf(f, "PWRDCAP 1 seq=%u cur=%u frame=%u sec=%u api=%d\n",
-            d.rdSeq, d.presents, target, sec, api ? 1 : 0);
-    fclose(f);
-  }
-  else
-    DebugTrace("VkRdCap: маркер %s открыть не удалось", d.rdMarker);
-  if (api)
-  {
-    if (g_rdApiTitle && api->SetCaptureTitle)
-    {
-      char title[48];
-      snprintf(title, sizeof(title), "match t=%us frame=%u", sec, target);
-      api->SetCaptureTitle(title);
-    }
-    api->TriggerCapture();
-  }
-  DebugTrace("VkRdCap: маркер %s seq=%u sec=%u present=%u frame=%u api=%d",
-             d.rdMarker, d.rdSeq, sec, d.presents, target, api ? 1 : 0);
-}
+// RenderDoc (env PW_VK_RDCAP*) — часы сессии и маркер кадра вынесены в
+// rdcapmarker.h (RdCapMarker): ОДИН формат маркера и ОДИН набор env на оба
+// бэкенда (Vulkan и D3D9). Раньше маркер писал только Vulkan-бэкенд, и
+// DXVK-контур снимался вслепую по wall-clock — пара капч попадала в разные
+// моменты мира (см. проблемы 5—7, docs/NVRHI_VULKAN_VS_DXVK_ISSUES.md).
+// Здесь остаются только вызовы из Present().
 
 //////////////////////////////////////////////////////////////////////////
 // Кадр
@@ -3646,35 +3539,14 @@ HRESULT NvrhiBackend::Present(NativeWindow window, const BackendRect* pSrcRect, 
     VK_TRACE("Present: shot <");
   }
   // RenderDoc (env PW_VK_RDCAP_TIME / PW_VK_RDCAP): цель — кадр в БУДУЩЕМ
-  // (d.presents + rdLead): наблюдатель на хосте читает маркер и шлёт
-  // QueueCapture с запасом; слой армится и снимает ровно этот кадр
-  // (замер: queue 1899 -> «Finished capture, Frame 1899»). Запас по умолчанию
-  // 60 кадров — сам арм идёт за десятки миллисекунд, но хост может и тормозить.
-  if (d.rdAt || d.rdTime)
-  {
-    static unsigned long long rdT0 = 0;
-    if (!rdT0)
-      rdT0 = GetTickCount64();
-    const unsigned el = (unsigned)((GetTickCount64() - rdT0) / 1000ull);
-    bool rdOne = false;
-    if (d.rdTime)
-    {
-      // PW_VK_RDCAP_STEP=0 — одна капча на секунде rdTime; N>0 — серия
-      // rdTime, rdTime+N, rdTime+2N, ...
-      if (d.rdStep)
-      {
-        rdOne = el >= d.rdTime && ((el - d.rdTime) % d.rdStep) == 0u && el != d.rdLastSec;
-        if (rdOne)
-          d.rdLastSec = el;
-      }
-      else
-        rdOne = d.rdSeq == 0u && el >= d.rdTime;
-    }
-    else
-      rdOne = d.rdSeq == 0u && d.presents >= d.rdAt;
-    if (rdOne)
-      RdMark(d, el, d.presents + d.rdLead);
-  }
+  // (presents + lead): наблюдатель на хосте читает маркер и шлёт QueueCapture
+  // с запасом; слой армится и снимает ровно этот кадр (замер: queue 1899 ->
+  // «Finished capture, Frame 1899»). Запас по умолчанию 60 кадров — сам арм
+  // идёт за десятки миллисекунд, но хост может и тормозить. Часы, формат
+  // маркера и app API — RdCapMarker (rdcapmarker.h), тот же у d3d9backend.
+  { unsigned rdSec = 0, rdTarget = 0;
+    if (d.rdCap.Due(d.presents, rdSec, rdTarget))
+      d.rdCap.Mark(d.presents, rdSec, rdTarget, "VkRdCap"); }
   VK_TRACE("Present: acquire next >");
   const VkResult ar = AcquireNextImage(d);
   if (ar != VK_SUCCESS)

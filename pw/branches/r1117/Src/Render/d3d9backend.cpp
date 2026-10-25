@@ -4,6 +4,7 @@
 #include "dxutils.h"   // GetD3DPoolAndUsagesParamaters + PoolType (D3D9-реализация знает про D3D9)
 #include "renderstatesmanager.h"  // VerifyShadowAgainstDevice (проверка полноты модели)
 #include "System/Compatibility.h"   // IsRunnedUnderWine / IsRunnedUnderCrossOverWine (mip-цепочка)
+#include "rdcapmarker.h"            // маркер RenderDoc-капчи (env PW_VK_RDCAP*), общий с nvrhibackend
 
 namespace Render
 {
@@ -99,9 +100,31 @@ HRESULT D3D9Backend::Present(NativeWindow window, const BackendRect* pSrcRect, c
   // Единственное место, где ручка seam'а становится HWND (окно — граница
   // платформы, см. renderwindow.h).
   RECT srcRect, dstRect;
-  return pDevice->Present(ToD3DRect(pSrcRect, srcRect) ? &srcRect : NULL,
+  // Счётчик present'ов держится здесь, а не в RenderDoc: он должен совпадать
+  // со счётчиком кадров слоя (у Vulkan-бэкенда — d.presents, замер: слой даёт
+  // «Finished capture, Frame 1899» при presents=1899). DXVK делает один Vulkan-
+  // present на один D3D9-present, так что счётчики идут 1:1.
+  static unsigned presents = 0;
+  ++presents;
+  const HRESULT hr = pDevice->Present(ToD3DRect(pSrcRect, srcRect) ? &srcRect : NULL,
                           ToD3DRect(pDstRect, dstRect) ? &dstRect : NULL,
                           static_cast<HWND>(window.p), NULL);
+  // RenderDoc-маркер (env PW_VK_RDCAP*) — тот же RdCapMarker и тот же формат
+  // строки, что у Vulkan-бэкенда. Без него DXVK-контур снимался вслепую по
+  // wall-clock, и «пара» капч Vulkan <-> DXVK бралась из разных моментов мира
+  // (docs/NVRHI_VULKAN_VS_DXVK_ISSUES.md, проблемы 5—7 и 12): теперь оба
+  // контура отмечают одну и ту же сессионную секунду.
+  static RdCapMarker rdCap;
+  static bool rdInit = false;
+  if (!rdInit)
+  {
+    rdInit = true;
+    rdCap.Init();
+  }
+  unsigned rdSec = 0, rdTarget = 0;
+  if (rdCap.Due(presents, rdSec, rdTarget))
+    rdCap.Mark(presents, rdSec, rdTarget, "DxRdCap");
+  return hr;
 }
 
 void D3D9Backend::GetViewport(BackendViewport& vp) {

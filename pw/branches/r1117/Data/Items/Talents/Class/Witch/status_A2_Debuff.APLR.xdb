@@ -107,9 +107,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FR0AAAACAAAAJAAAAD0AAABXaXRjaF9BMl9TVVAAAAAAV2l0Y2hfQTJfU1VQAFWL7IPsFGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoEAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAD7ZN+4XJdDaLVQiLAotNCIuQQAEAAP/Si0UIixCLTQiLgkQBAADdXfD/0Nxd8N/g9sRBegnHRewBAAAA6wfHRewAAAAAikXsi+Vdww==</compiledString>
+					<compiledString>FR0AAAACAAAAJQAAAD4AAABXaXRjaF9BMl9TVVAAAAAAV2l0Y2hfQTJfU1VQAFWL7IPsIFZoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaBAAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AA+2TfuFyQ+EyQAAAGoTi1UIiwKLTQiLkCwBAAD/0g+28GoUi0UIixCLTQiLgiwBAAD/0A+2yDvxfgzHRfQBAAAA6YAAAABqE4tVCIsCi00Ii5AsAQAA/9IPtvBqFItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0XwAAAAAOtDi1UIiwKLTQiLkMgAAAD/0otFCIsQi00Ii4LMAAAA3V3o/9DcXejf4PbEQXoJx0XkAQAAAOsHx0XkAAAAAItN5IlN8ItV8IlV9IN99AB0CcdF4AEAAADrB8dF4AAAAACKReBei+Vdww==</compiledString>
 					<returnType>bool</returnType>
-					<sString>tal("Witch_A2_SUP") &amp;&amp; sStamina &gt;= sWill</sString>
+					<sString>tal("Witch_A2_SUP") &amp;&amp; (pFirst-&gt;IsRecommended(19) &gt; pFirst-&gt;IsRecommended(20) ? 1 : pFirst-&gt;IsRecommended(19) &lt; pFirst-&gt;IsRecommended(20) ? 0 : sBaseStamina&gt;=sBaseWill)</sString>
 				</enabled>
 				<formulaName>WitchDefence</formulaName>
 				<lifeTime>
@@ -154,9 +154,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FR0AAAACAAAAJAAAAD0AAABXaXRjaF9BMl9TVVAAAAAAV2l0Y2hfQTJfU1VQAFWL7IPsFGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoEAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAD7ZN+4XJdDaLVQiLAotNCIuQRAEAAP/Si0UIixCLTQiLgkABAADdXfD/0Nxd8N/g9sQFegnHRewBAAAA6wfHRewAAAAAikXsi+Vdww==</compiledString>
+					<compiledString>FR0AAAACAAAAJQAAAD4AAABXaXRjaF9BMl9TVVAAAAAAV2l0Y2hfQTJfU1VQAFWL7IPsIFZoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaBAAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AA+2TfuFyQ+EyQAAAGoTi1UIiwKLTQiLkCwBAAD/0g+28GoUi0UIixCLTQiLgiwBAAD/0A+2yDvxfgzHRfQBAAAA6YAAAABqE4tVCIsCi00Ii5AsAQAA/9IPtvBqFItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0XwAAAAAOtDi1UIiwKLTQiLkMgAAAD/0otFCIsQi00Ii4LMAAAA3V3o/9DcXejf4PbEQXoJx0XkAQAAAOsHx0XkAAAAAItN5IlN8ItV8IlV9IN99AB1CcdF4AEAAADrB8dF4AAAAACKReBei+Vdww==</compiledString>
 					<returnType>bool</returnType>
-					<sString>tal("Witch_A2_SUP") &amp;&amp; sWill  &gt; sStamina</sString>
+					<sString>tal("Witch_A2_SUP") &amp;&amp; !(pFirst-&gt;IsRecommended(19) &gt; pFirst-&gt;IsRecommended(20) ? 1 : pFirst-&gt;IsRecommended(19) &lt; pFirst-&gt;IsRecommended(20) ? 0 : sBaseStamina&gt;=sBaseWill)</sString>
 				</enabled>
 				<formulaName>WitchDefence</formulaName>
 				<lifeTime>

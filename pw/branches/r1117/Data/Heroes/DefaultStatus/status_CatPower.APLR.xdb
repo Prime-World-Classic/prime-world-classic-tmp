@@ -157,9 +157,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FRAAAAABAAAARAAAAENhdEtpbGxfQ291bnRlcgBVi+yD7AyLRQyLEItNDIuCvAAAAP/Qi00MixGLTQyLgrgAAADdXfj/0Nxd+N/g9sQBdS9oAAAAAItNDIsRi00Mi4KIAQAA/9BR2Rwk6B8AAACDxASD+AJ+CcdF9AEAAADrB8dF9AAAAACKRfSL5V3DuAEAAAAPovfCAAAABHQH8w8sRCQEw+kAAAAAVYvsg+wM2UUI2X38D7dF/A0ADAAAiUX42W3421302W38i0X0i+Vdww==</compiledString>
+					<compiledString>FRAAAAABAAAA2AAAAENhdEtpbGxfQ291bnRlcgBVi+yD7BhWag+LRQyLEItNDIuCLAEAAP/QD7bwahCLTQyLEYtNDIuCLAEAAP/QD7bIO/F+DMdF/AEAAADpgAAAAGoPi1UMiwKLTQyLkCwBAAD/0g+28GoQi0UMixCLTQyLgiwBAAD/0A+2yDvxfQnHRfgAAAAA60OLVQyLAotNDIuQuAAAAP/Si0UMixCLTQyLgrwAAADdXfD/0Nxd8N/g9sRBegnHRewBAAAA6wfHRewAAAAAi03siU34i1X4iVX8g338AHQvaAAAAACLRQyLEItNDIuCiAEAAP/QUdkcJOggAAAAg8QEg/gCfgnHRegBAAAA6wfHRegAAAAAikXoXovlXcO4AQAAAA+i98IAAAAEdAfzDyxEJATD6QAAAABVi+yD7AzZRQjZffwPt0X8DQAMAACJRfjZbfjbXfTZbfyLRfSL5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>(rBaseIntellect&lt;=rBaseStrength) &amp;&amp; f2l(receiver.vCatKill_Counter) &gt; 2</sString>
+					<sString>(pSecond-&gt;IsRecommended(15) &gt; pSecond-&gt;IsRecommended(16) ? 1 : pSecond-&gt;IsRecommended(15) &lt; pSecond-&gt;IsRecommended(16) ? 0 : rBaseStrength&gt;=rBaseIntellect) &amp;&amp; f2l(receiver.vCatKill_Counter) &gt; 2</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -204,9 +204,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FRAAAAABAAAARAAAAENhdEtpbGxfQ291bnRlcgBVi+yD7AyLRQyLEItNDIuCvAAAAP/Qi00MixGLTQyLgrgAAADdXfj/0Nxd+N/g9sQFei9oAAAAAItNDIsRi00Mi4KIAQAA/9BR2Rwk6B8AAACDxASD+AJ+CcdF9AEAAADrB8dF9AAAAACKRfSL5V3DuAEAAAAPovfCAAAABHQH8w8sRCQEw+kAAAAAVYvsg+wM2UUI2X38D7dF/A0ADAAAiUX42W3421302W38i0X0i+Vdww==</compiledString>
+					<compiledString>FRAAAAABAAAA2AAAAENhdEtpbGxfQ291bnRlcgBVi+yD7BhWag+LRQyLEItNDIuCLAEAAP/QD7bwahCLTQyLEYtNDIuCLAEAAP/QD7bIO/F+DMdF/AEAAADpgAAAAGoPi1UMiwKLTQyLkCwBAAD/0g+28GoQi0UMixCLTQyLgiwBAAD/0A+2yDvxfQnHRfgAAAAA60OLVQyLAotNDIuQuAAAAP/Si0UMixCLTQyLgrwAAADdXfD/0Nxd8N/g9sRBegnHRewBAAAA6wfHRewAAAAAi03siU34i1X4iVX8g338AHUvaAAAAACLRQyLEItNDIuCiAEAAP/QUdkcJOggAAAAg8QEg/gCfgnHRegBAAAA6wfHRegAAAAAikXoXovlXcO4AQAAAA+i98IAAAAEdAfzDyxEJATD6QAAAABVi+yD7AzZRQjZffwPt0X8DQAMAACJRfjZbfjbXfTZbfyLRfSL5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>(rBaseIntellect &gt; rBaseStrength) &amp;&amp; f2l(receiver.vCatKill_Counter) &gt; 2</sString>
+					<sString>!(pSecond-&gt;IsRecommended(15) &gt; pSecond-&gt;IsRecommended(16) ? 1 : pSecond-&gt;IsRecommended(15) &lt; pSecond-&gt;IsRecommended(16) ? 0 : rBaseStrength&gt;=rBaseIntellect) &amp;&amp; f2l(receiver.vCatKill_Counter) &gt; 2</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>

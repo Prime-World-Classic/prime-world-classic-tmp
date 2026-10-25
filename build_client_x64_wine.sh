@@ -205,7 +205,7 @@ echo "== PCH: ${PW_PCH:-ВЫКЛЮЧЕН (релизный режим)}"
 if [ -n "$PW_PCH" ] && [ -z "${PW_PCH_DIR:-}" ]; then
     PW_PCH_DIR="$HOME/pwbuild/pch/$TC_TAG"
 fi
-if [ -n "$PW_PCH_DIR" ]; then
+if [ -n "${PW_PCH_DIR:-}" ]; then
     mkdir -p "$PW_PCH_DIR" 2>/dev/null
     export PW_PCH_DIR
     echo "   .pch: $PW_PCH_DIR (нижний регистр — требование Wine)"

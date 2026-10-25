@@ -85669,8 +85669,8 @@
     {
       "id": 232,
       "name": "gamedata090.pile",
-      "packed_size": 27317207,
-      "source_size": 43629932,
+      "packed_size": 27317233,
+      "source_size": 43630002,
       "files": [
         ["UI/Styles/Icons/Marketing/hero-on-sale-adorn.dds", 1614692, 126973881],
         ["UI/Styles/Icons/Marketing/hero-on-sale-doct.dds", 1614692, 591108398],
@@ -85984,7 +85984,7 @@
         ["UI/Styles/Icons/Statuses/Neutral/Mycelium.dds", 21972, 517367064],
         ["UI/Styles/Icons/Statuses/Neutral/Normal10.dds", 21972, 3298673064],
         ["UI/Styles/Icons/Statuses/Neutral/beastburning.ITEX.xdb", 858, 2308419706],
-        ["UI/Styles/Icons/Statuses/Neutral/brothershoulder.ITEX.xdb", 878, 134753433],
+        ["UI/Styles/Icons/Statuses/Neutral/brothershoulder.ITEX.xdb", 948, 185880389],
         ["UI/Styles/Icons/Statuses/Neutral/brothershoulder.dds", 21972, 477306724],
         ["UI/Styles/Icons/Statuses/Neutral/defensive_aura.ITEX.xdb", 801, 2872354718],
         ["UI/Styles/Icons/Statuses/Neutral/defensive_aura.dds", 21972, 2693966004],
@@ -89055,8 +89055,8 @@
     {
       "id": 241,
       "name": "gamedata099.pile",
-      "packed_size": 776052,
-      "source_size": 1349450,
+      "packed_size": 780152,
+      "source_size": 1370032,
       "files": [
         ["Heroes/Taurus/idle3.anim", 68608, 3846099047],
         ["Heroes/Taurus/jumpAir.anim", 22016, 1353015381],
@@ -89269,7 +89269,13 @@
         ["Shaders/OnlineShaders/port/VertexShader_vs.hlsl", 1201, 1159836843],
         ["Shaders/OnlineShaders/port/default_shader_ps.hlsl", 304, 3906775524],
         ["Shaders/OnlineShaders/port/default_shader_vs.hlsl", 597, 3467399314],
-        ["Shaders/OnlineShaders/refltex_clear.psb.spv", 1296, 516747820]
+        ["Shaders/OnlineShaders/refltex_clear.psb.spv", 1296, 516747820],
+        ["Heroes/DefaultStatus/LeaverBonus.ABLT.xdb", 3065, 2773523162],
+        ["Heroes/DefaultStatus/LeaverBonus.APLR.xdb", 15633, 3581131551],
+        ["Heroes/DefaultStatus/LeaverBonus.APLR_description.txt", 884, 4084565881],
+        ["Heroes/DefaultStatus/LeaverBonus.APLR_description_en.txt", 942, 4266478200],
+        ["Heroes/DefaultStatus/LeaverBonus.APLR_name.txt", 32, 1690469429],
+        ["Heroes/DefaultStatus/LeaverBonus.APLR_name_en.txt", 26, 885475125]
       ]
     }
   ]

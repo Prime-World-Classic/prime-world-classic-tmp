@@ -193,9 +193,9 @@
 																						</lifeTime>
 																						<LoggingEvent>-1</LoggingEvent>
 																						<period>
-																							<compiledString>FQ0AAAABAAAAGQAAAEExX1RyYWlsVGljawBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+																							<compiledString>FQ8AAAABAAAAGwAAAEExX0luVHJhaWxUaWNrAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
 																							<returnType>float</returnType>
-																							<sString>cA1_TrailTick</sString>
+																							<sString>cA1_InTrailTick</sString>
 																						</period>
 																						<providerName></providerName>
 																						<scaleMode>ScaleIsCount</scaleMode>
@@ -603,9 +603,9 @@
 																						</lifeTime>
 																						<LoggingEvent>-1</LoggingEvent>
 																						<period>
-																							<compiledString>FQ0AAAABAAAAGQAAAEExX1RyYWlsVGljawBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+																							<compiledString>FQ8AAAABAAAAGwAAAEExX0luVHJhaWxUaWNrAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
 																							<returnType>float</returnType>
-																							<sString>cA1_TrailTick</sString>
+																							<sString>cA1_InTrailTick</sString>
 																						</period>
 																						<providerName></providerName>
 																						<scaleMode>ScaleIsCount</scaleMode>
@@ -892,9 +892,9 @@
 																											</lifeTime>
 																											<LoggingEvent>-1</LoggingEvent>
 																											<period>
-																												<compiledString>FQ0AAAABAAAAGQAAAEExX1RyYWlsVGljawBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+																												<compiledString>FQ8AAAABAAAAGwAAAEExX0luVHJhaWxUaWNrAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
 																												<returnType>float</returnType>
-																												<sString>cA1_TrailTick</sString>
+																												<sString>cA1_InTrailTick</sString>
 																											</period>
 																											<providerName></providerName>
 																											<scaleMode>ScaleIsCount</scaleMode>
@@ -1244,9 +1244,29 @@
 					<UnitConstant>
 						<name>A1_InTrailLinger</name>
 						<var>
-							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAADAPw==</compiledString>
+							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DzczMPg==</compiledString>
 							<returnType>float</returnType>
-							<sString>1.5f</sString>
+							<sString>0.4f</sString>
+						</var>
+					</UnitConstant>
+				</Item>
+				<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="D617934F-C187-4658-996D-A04F71654EBF">
+					<UnitConstant>
+						<name>A1_InTrailTick</name>
+						<var>
+							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DzczMPQ==</compiledString>
+							<returnType>float</returnType>
+							<sString>0.1f</sString>
+						</var>
+					</UnitConstant>
+				</Item>
+				<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="9EB22218-99A7-4297-B522-C9794313A318">
+					<UnitConstant>
+						<name>GhostCorridor_Laguna_A1_InTrail</name>
+						<var>
+							<compiledString>FQ8AAAABAAAAGwAAAEExX1RyYWlsUmFkaXVzAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+							<returnType>float</returnType>
+							<sString>cA1_TrailRadius</sString>
 						</var>
 					</UnitConstant>
 				</Item>

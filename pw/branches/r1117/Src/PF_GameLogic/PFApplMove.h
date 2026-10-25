@@ -299,15 +299,25 @@ protected:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Ghost move restricted to a corridor: if the ability has a constant named "GhostCorridor_<name>", static obstacles
+// (trees, stones, buildings) are passed only within its value (radius) from the corridor points. A corridor point is
+// the position the applicator <name> on the unit came from (Laguna: the jellyfish trail point that marks her
+// "in the trail"), see PFBaseUnit::IsInGhostCorridor and MovingUnit::IsOutsideGhostCorridor.
 class PFApplGhostMove : public DBLinker<PFApplBuff, NDb::GhostMoveApplicator>
 {
   WORLD_OBJECT_METHODS(0xB74F481, PFApplGhostMove);
   ZDATA_(DBLinker)
   int ghostMoveIndex;
+  string corridorMark;
+  float corridorRadius;
 public:
-  ZEND int operator&( IBinSaver &f ) { f.Add(1,(DBLinker*)this); f.Add(2,&ghostMoveIndex); return 0; }
-  PFApplGhostMove(PFApplCreatePars const &cp) : Base(cp), ghostMoveIndex(-1) {}
-  PFApplGhostMove() : ghostMoveIndex(-1) {/*NI_ALWAYS_ASSERT("Should be never invoked.");*/}
+  ZEND int operator&( IBinSaver &f ) { f.Add(1,(DBLinker*)this); f.Add(2,&ghostMoveIndex); f.Add(3,&corridorMark); f.Add(4,&corridorRadius); return 0; }
+  PFApplGhostMove(PFApplCreatePars const &cp) : Base(cp), ghostMoveIndex(-1), corridorRadius(0.0f) {}
+  PFApplGhostMove() : ghostMoveIndex(-1), corridorRadius(0.0f) {/*NI_ALWAYS_ASSERT("Should be never invoked.");*/}
+
+  bool          HasCorridor() const       { return corridorRadius > 0.0f; }
+  float         GetCorridorRadius() const { return corridorRadius; }
+  string const& GetCorridorMark() const   { return corridorMark; }
 protected:
   virtual bool Start();
   virtual void Stop();

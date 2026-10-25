@@ -265,6 +265,9 @@ private:
 	bool UpdatePath();
 	bool ValidatePath(bool fast);
   bool ValidatePos( CVec2 pos );
+  // ghost move restricted to a corridor (see PFApplGhostMove)
+  bool IsOutsideGhostCorridor( CVec2 const& pos );
+  bool IsStaticPathOutsideGhostCorridor( CCommonStaticPath const* pStatic );
 	bool CheckSplineControlPoint();
 	bool BypassPoint(CVec2 const& point, int pointSize, float maxOverhead);
 

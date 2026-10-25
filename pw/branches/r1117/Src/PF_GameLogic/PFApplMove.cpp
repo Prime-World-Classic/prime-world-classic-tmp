@@ -1659,6 +1659,25 @@ namespace NWorld
 
     NI_VERIFY(NULL != pMovingUnit, "Invalid unit", return true);
 
+    // corridor: the constant "GhostCorridor_<mark applicator name>" of the ability (see PFApplMove.h)
+    corridorMark.clear();
+    corridorRadius = 0.0f;
+    const char * const corridorPrefix = "GhostCorridor_";
+    const int corridorPrefixLen = (int)strlen( corridorPrefix );
+    PFAbilityData const * pData = GetAbilityData();
+    if ( pData && pData->GetDBDesc() && pData->GetDBDesc()->constants )
+    {
+      vector<NDb::Ptr<NDb::UnitConstant>> const & vars = pData->GetDBDesc()->constants->vars;
+      for ( int i = 0; i < vars.size(); ++i )
+      {
+        if ( !vars[i] || strncmp( vars[i]->name.c_str(), corridorPrefix, corridorPrefixLen ) != 0 )
+          continue;
+        corridorMark   = vars[i]->name.c_str() + corridorPrefixLen;
+        corridorRadius = pData->CalcParam( vars[i]->name.c_str(), pOwner.GetPtr(), pOwner.GetPtr(), pData );
+        break;
+      }
+    }
+
     ghostMoveIndex = pMovingUnit->SetGhostMode( GetDB().collisionFlags, false );
 
     return false;
@@ -1683,16 +1702,81 @@ namespace NWorld
     // to the tile centre, a visible jerk when a ghost move status ends (Laguna's trail, the Mana Wyrm's ethereal form)
     if (!pMovingUnit->IsDead() && !pMovingUnit->CanOccupyPosition( pMovingUnit->GetPosition().AsVec2D() ))
     {
+      // the unit may be deep inside an obstacle (Laguna walks along the jellyfish trail through a forest), while the
+      // placing below looks for a free place only ~10 m around and leaves the unit inside the obstacle if there is none:
+      // find the nearest free place (static obstacles only) in a larger radius first
+      const float exitSearchRadius = 40.0f;
+      CVec2 placePos = pMovingUnit->GetPosition().AsVec2D();
+      CVec2 freePos;
+      if ( pMovingUnit->FindFreePlace( placePos, exitSearchRadius, freePos, true ) )
+        placePos = freePos;
+
       if ( GetDB().pushUnits )
       {
-        pMovingUnit->PlaceUnitWithPush( pMovingUnit->GetPosition().AsVec2D(), pMovingUnit->GetObjectSize(), true, false );
+        pMovingUnit->PlaceUnitWithPush( placePos, pMovingUnit->GetObjectSize(), true, false );
       }
       else
       {
-        pMovingUnit->TeleportTo( pMovingUnit->GetPosition().AsVec2D(), true, false );
+        pMovingUnit->TeleportTo( placePos, true, false );
       } 
     }
     Base::Stop();
+  }
+
+}
+
+namespace NWorld
+{
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  bool PFBaseUnit::HasGhostCorridor() const
+  {
+    for ( ring::Range<PFBaseApplicator::AppliedRing> it( appliedApplicators ); it; ++it )
+    {
+      PFBaseApplicator const & appl = *it;
+      if ( appl.GetTypeId() == PFApplGhostMove::typeId && appl.IsAlive() && appl.IsEnabled()
+        && static_cast<PFApplGhostMove const &>( appl ).HasCorridor() )
+        return true;
+    }
+    return false;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  bool PFBaseUnit::IsInGhostCorridor( CVec2 const& pos ) const
+  {
+    for ( ring::Range<PFBaseApplicator::AppliedRing> it( appliedApplicators ); it; ++it )
+    {
+      PFBaseApplicator const & appl = *it;
+      if ( appl.GetTypeId() != PFApplGhostMove::typeId || !appl.IsAlive() || !appl.IsEnabled() )
+        continue;
+      PFApplGhostMove const & ghost = static_cast<PFApplGhostMove const &>( appl );
+      if ( !ghost.HasCorridor() )
+        continue;
+
+      const float radius2 = ghost.GetCorridorRadius() * ghost.GetCorridorRadius();
+      const CPtr<PFBaseUnit> pGhostOwner = ghost.GetAbilityOwner();
+
+      for ( ring::Range<PFBaseApplicator::NamedRing> nit( namedApplicators ); nit; ++nit )
+      {
+        PFBaseApplicator const & mark = *nit;
+        if ( !mark.IsEnabled() || !( mark.GetAbilityOwner() == pGhostOwner ) || mark.GetApplicatorName().compare( ghost.GetCorridorMark().c_str() ) != 0 )
+          continue;
+
+        // the corridor point: the first ancestor applicator aimed at a position (the trail point)
+        PFBaseApplicator const * pAncestor = IsValid( mark.GetParentAppl() ) ? mark.GetParentAppl().GetPtr() : 0;
+        for ( int depth = 0; pAncestor && depth < 4; ++depth )
+        {
+          if ( pAncestor->GetTarget().IsPosition() )
+          {
+            if ( fabs2( pAncestor->GetTarget().GetPosition().AsVec2D() - pos ) <= radius2 )
+              return true;
+            break;
+          }
+          pAncestor = IsValid( pAncestor->GetParentAppl() ) ? pAncestor->GetParentAppl().GetPtr() : 0;
+        }
+      }
+    }
+    return false;
   }
 
 }

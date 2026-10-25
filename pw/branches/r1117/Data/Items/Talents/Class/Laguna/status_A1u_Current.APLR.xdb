@@ -10,7 +10,7 @@
 			<GhostMoveApplicator>
 				<applyTarget>ApplicatorTarget</applyTarget>
 				<behaviorFlags>1</behaviorFlags>
-				<caption>сквозь существ, деревья, камни и здания</caption>
+				<caption>сквозь существ; деревья, камни и здания — только в коридоре следа (константа A1 GhostCorridor_Laguna_A1_InTrail = радиус)</caption>
 				<collisionFlags>7</collisionFlags>
 				<effect>
 					<Item href="" />

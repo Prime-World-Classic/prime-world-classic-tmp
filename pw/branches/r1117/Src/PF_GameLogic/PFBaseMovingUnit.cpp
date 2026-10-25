@@ -753,7 +753,36 @@ bool MovingUnit::CreatePath( bool needReversePath )
 
   NI_VERIFY(pStaticPath->GetLength(), "Static path with 0 len was created? 0_o", return false);
 
+  // ghost move restricted to a corridor (Laguna's trail): the path ignores static obstacles; if it leaves the corridor
+  // through an obstacle near the unit, take the ordinary path around the obstacles instead. There is none when the unit
+  // stands inside an obstacle (in the trail): then the ghost path stays and the unit stops at the corridor edge.
+  const int ghostMapModeStatic = mapModeStatic;
+  const int ghostMapModeAll    = mapModeAll;
+  bool ordinaryPath = false;
+  if ( IsStaticPathOutsideGhostCorridor( pStaticPath ) )
+  {
+    mapModeStatic = MAP_MODE_ALL_STATICS;
+    mapModeAll    = mapMode | MAP_MODE_ALL_STATICS;
+    CObj<CCommonStaticPath> pOrdinaryPath = CreateStaticPath( start, pMap->GetTile( vFarTarget ) );
+    if ( pOrdinaryPath && pOrdinaryPath->GetLength() )
+    {
+      pStaticPath  = pOrdinaryPath;
+      ordinaryPath = true;
+    }
+    else
+    {
+      mapModeStatic = ghostMapModeStatic;
+      mapModeAll    = ghostMapModeAll;
+    }
+  }
+
   pPath = CreateStandartPath();
+
+  if ( ordinaryPath )
+  {
+    mapModeStatic = ghostMapModeStatic;
+    mapModeAll    = ghostMapModeAll;
+  }
 
   vShortTarget = origin;
 	return true;
@@ -1138,9 +1167,65 @@ bool MovingUnit::ValidatePos( CVec2 pos )
     return false;
   }
 
-  MapModeChanger mode( mapModeStatic, pMap );
+  {
+    MapModeChanger mode( mapModeStatic, pMap );
+    if ( !pMap->CanUnitGo( pOwner->GetUnitRadius(), pOwner->GetUnitDynamicRadius(), pMap->GetTile( pos ) ) )
+      return false;
+  }
 
-  return pMap->CanUnitGo( pOwner->GetUnitRadius(), pOwner->GetUnitDynamicRadius(), pMap->GetTile( pos ) );
+  return !IsOutsideGhostCorridor( pos );
+}
+
+// Ghost move restricted to a corridor (see PFApplGhostMove): the ghost mode lets the unit through a static obstacle
+// at this position, but the position is outside the corridor.
+bool MovingUnit::IsOutsideGhostCorridor( CVec2 const& pos )
+{
+  if ( ( mapModeStatic & MAP_MODE_ALL_STATICS ) == MAP_MODE_ALL_STATICS )
+    return false;                   // static obstacles are not ignored: nothing to restrict
+  if ( !IsValid( pOwner ) || !pOwner->HasGhostCorridor() )
+    return false;
+
+  {
+    MapModeChanger mode( MAP_MODE_ALL_STATICS, pMap );
+    if ( pMap->CanUnitGo( pOwner->GetUnitRadius(), pOwner->GetUnitDynamicRadius(), pMap->GetTile( pos ) ) )
+      return false;                 // no static obstacle here
+  }
+
+  return !pOwner->IsInGhostCorridor( GetCenter( pos ) );
+}
+
+// The beginning of the path (near the unit) leaves the ghost corridor through a static obstacle. Only the beginning
+// is checked: the corridor points are known only near the unit (its marks come from the trail points around it).
+bool MovingUnit::IsStaticPathOutsideGhostCorridor( CCommonStaticPath const* pStatic )
+{
+  if ( !pStatic || pStatic->GetLength() <= 0 )
+    return false;
+  if ( ( mapModeStatic & MAP_MODE_ALL_STATICS ) == MAP_MODE_ALL_STATICS || !IsValid( pOwner ) || !pOwner->HasGhostCorridor() )
+    return false;
+
+  const float checkDistance = 3.0f;
+  const CVec2 startPoint = pMap->GetPointByTile( pMap->GetTile( origin ) );
+
+  SVector tile = pStatic->GetTile( 0 );
+  for ( int i = 1; i < pStatic->GetLength(); ++i )
+  {
+    const SVector next = pStatic->GetTile( i );
+    CBres bres;
+    bres.InitPoint( tile, next );
+    while ( true )
+    {
+      const CVec2 point = pMap->GetPointByTile( tile );
+      if ( fabs( point - startPoint ) > checkDistance )
+        return false;
+      if ( IsOutsideGhostCorridor( point ) )
+        return true;
+      if ( tile == next )
+        break;
+      bres.MakeStep();
+      tile += bres.GetDirection();
+    }
+  }
+  return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1421,6 +1506,12 @@ void MovingUnit::TickMove(float timeDelta)
 			// moving to far distance; skip next point
       if ( !ValidatePos( vShortTarget ) )
       {
+        if ( IsOutsideGhostCorridor( vShortTarget ) )
+        {
+          Stop();                     // ghost move: the corridor edge is a wall
+          break;
+        }
+
         CVec2 oldTarget = vShortTarget;
 
         if (RecomputePath())
@@ -1455,6 +1546,12 @@ void MovingUnit::TickMove(float timeDelta)
     CVec2 nextPos = origin + delta * toMove / dist;
     if ( !ValidatePos( nextPos ) )
     {
+      if ( IsOutsideGhostCorridor( nextPos ) )
+      {
+        Stop();                       // ghost move: the corridor edge is a wall
+        break;
+      }
+
       CVec2 oldTarget = vShortTarget;
 
       if (RecomputePath())

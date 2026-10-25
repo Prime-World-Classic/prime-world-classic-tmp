@@ -50,6 +50,12 @@ HRESULT D3D9Backend::GetSystemInfo(BackendSystemInfo& out) {
   // ConfigManager::CheckFormats переехал сюда без изменений — иначе на стенде
   // (базовый драйвер) caps остались бы другими и матчер config.txt разрешил бы
   // другой список пинов.
+  //
+  // hasDepthSRV здесь НЕ выставляется — и не должен. CheckDeviceFormat
+  // (DEPTHSTENCIL, TEXTURE) отвечает «да» и под Wine/DXVK, где читаемой
+  // глубины по D3D9-семантике нет; на реальном D3D9-железе она держалась на
+  // vendor-форматах (INTZ/RAWZ), удалённых из ствола. Бит ставит только
+  // NVRHI-бэкенд (см. nvrhibackend.cpp GetSystemInfo).
   out.features = 0;
   D3DDISPLAYMODE dm;
   if (SUCCEEDED(pD3D->GetAdapterDisplayMode(caps9.AdapterOrdinal, &dm))) {

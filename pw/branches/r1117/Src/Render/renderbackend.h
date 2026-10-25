@@ -109,6 +109,12 @@ enum EBackendFormat {
   bfR32F, bfG32R32F, bfA32B32G32R32F,
   bfDXT1, bfDXT2, bfDXT3, bfDXT4, bfDXT5,
   bfD24S8,
+  // D16 — формат глубины аппаратных карт теней на D3D9-бэкенде (ShadowMapPCF_DS,
+  // Src/Render/ShadowMap.cpp; в исходном стволе это D3DFMT_D16 при shadowFat=0).
+  // Без записи в словаре D3DFormatToBackend даёт bfUnknown, а D3D9-бэкенд на
+  // bfUnknown отвечает D3DERR_INVALIDCALL (подмена запрещена) — карта теней
+  // молча переставала создаваться.
+  bfD16,
   BACKEND_FORMAT_COUNT
 };
 

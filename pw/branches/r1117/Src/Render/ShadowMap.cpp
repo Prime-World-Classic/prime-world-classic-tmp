@@ -191,10 +191,22 @@ bool ShadowMapPCF_DS::Init(unsigned int _width, unsigned int _height, float _dep
   s_biasSlope = _biasSlope;
 
   const IConfigManager* const pConfigManager = GetIConfigManager();
-  // Vendor-форматы глубины (DF16/DF24/INTZ/RAWZ) удалены: под Vulkan/DX12
-  // аппаратные карты теней читаются как depth SRV (D24S8 / D32F),
-  // «жирная» глубина под них отдельным форматом не выражается.
-  D3DFORMAT format = D3DFMT_D24S8;
+  // Формат глубины аппаратной карты теней.
+  //
+  // D24S8 здесь был единственно возможным после зачистки vendor-форматов
+  // (a639d8319): под Vulkan/DX12 карта теней читается как depth SRV, и
+  // отдельного «жирного» формата не требуется. Но на D3D9-бэкенде это
+  // D3D9-текстура, а D3D9 читает глубину из текстуры только vendor-FOURCCами
+  // (INTZ/RAWZ/DF16/DF24), которых в стволе нет; при этом CheckDeviceFormat
+  // отвечает «D24S8 есть» и под Wine/DXVK, и на железе, где читаемой глубины
+  // нет. Результат — сэмплинг depth-аттачмента там, где семантика чтения не
+  // гарантирована (проблема 11 в docs/NVRHI_VULKAN_VS_DXVK_ISSUES.md).
+  //
+  // Гейт — тот же признак, что и для читаемой глубины сцены
+  // (ReadableDepthSupported): depth SRV есть только на NVRHI-бэкенде. Под
+  // D3D9 остаётся ровно то, что было в исходном стволе при shadowFat=0
+  // (dev-var удалён вместе с vendor-форматами) — D16.
+  D3DFORMAT format = pConfigManager->HasDepthSRV() ? D3DFMT_D24S8 : D3DFMT_D16;
   D3DSURFACE_DESC desc = { format, D3DRTYPE_SURFACE, D3DUSAGE_DEPTHSTENCIL, D3DPOOL_DEFAULT,
                            D3DMULTISAMPLE_NONE, 0, _width, _height };
   pDepth = Create<Texture2D>(desc);
@@ -536,9 +548,16 @@ ShadowMap* CreateShadowMap(NDb::ShadowMode _shadowMode)
   case NDb::SHADOWMODE_PCF:
     if(!s_forceMRT && pConfigManager->HasDSM() )
     {
+      // По строке в сессионном логе видно, каким путём пошли аппаратные карты
+      // теней: читаемый depth-аттачмент (D24S8, только NVRHI-бэкенд) или
+      // D3D9-эталон D16 — см. ShadowMapPCF_DS::Init и проблему 11 в docs/
+      // NVRHI_VULKAN_VS_DXVK_ISSUES.md.
+      DebugTrace("ShadowMap: PCF_DS, depth %s",
+                 pConfigManager->HasDepthSRV() ? "D24S8" : "D16");
       pShadowMap = new ReallocateWrapper<ShadowMapPCF_DS>;
       break;
     }
+    DebugTrace("ShadowMap: PCF (MRT), DSM недоступен");
     pShadowMap = new ShadowMapPCF;
     break;
 

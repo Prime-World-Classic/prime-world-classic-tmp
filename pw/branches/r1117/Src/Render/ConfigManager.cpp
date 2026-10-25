@@ -121,6 +121,12 @@ HRESULT ConfigManagerImpl::CheckDeviceCaps(IDirect3DDevice9* _pDevice)
   caps                         = backendInfo.features;
   if( ForceDsmRequested() )
     caps |= hasD16T | hasD24X | hasD24S;    // см. комментарий у dev-var'а
+  // По строке в сессионном логе видно, каким путём пойдёт глубина: читаемая
+  // (depth SRV — только NVRHI-бэкенд) или DoDepthOut (D3D9-путь, он же путь
+  // реального железа без vendor-форматов). Без этой строки контур A/B
+  // различим только по косвенным признакам (проблема 10, docs/
+  // NVRHI_VULKAN_VS_DXVK_ISSUES.md).
+  DebugTrace("Readable depth: %s (caps=0x%x)", ReadableDepthEnabled() ? "on" : "off", caps);
 
   D3DCAPS9 caps9;
   _pDevice->GetDeviceCaps(&caps9);
@@ -240,11 +246,17 @@ bool ConfigManagerImpl::CheckFeatureSupportExact(DWORD _features) const
 
 bool ConfigManagerImpl::ReadableDepthSupported() const
 {
-  // Читаемая глубина была завязана на vendor-форматы (INTZ/RAWZ/RESZ).
-  // Под Vulkan/DX12 depth-буфер читается как depth SRV всегда, так что
-  // гейт сводится к наличию depth-текстуры (она же — гейт аппаратных
-  // карт теней).
-  return 0 != (caps & (hasD16T|hasD24X|hasD24S));
+  // Читаемая глубина в исходном стволе была завязана на vendor-форматы
+  // (INTZ/RAWZ/RESZ). Под Vulkan/DX12 depth-буфер читается как depth SRV, но
+  // признак этого — hasDepthSRV, а НЕ наличие depth-текстуры по
+  // CheckDeviceFormat(): на D3D9-бэкенде (в т.ч. под Wine/DXVK) тот запрос
+  // отвечает «да», а прочитать D24S8 как текстуру там нечем — vendor-форматы
+  // из ствола удалены. Следствие для D3D9-пути: читаемая глубина выключена,
+  // глубина в пост-проходы идёт из DoDepthOut (шейдеры пишут её в R32F RT,
+  // см. PFRenderInterface.cpp GetRuntimePins().DoDepthOutValue) — тот же
+  // путь, что на железе без INTZ. Замер кадра: docs/
+  // NVRHI_VULKAN_VS_DXVK_ISSUES.md, проблема 10.
+  return 0 != (caps & hasDepthSRV);
 }
 
 
@@ -256,8 +268,10 @@ bool ConfigManagerImpl::StencilSupported(ERenderFormat _depthFormat) const
 
 ERenderFormat ConfigManagerImpl::GetDepthFormatPreffered() const
 {
-  // Vendor-форматы (INTZ/RAWZ/DF16) удалены: единый читаемый формат
-  // глубины со stencil — D24S8 (под Vulkan/DX12 -> D24_UNORM_S8_UINT).
+  // Vendor-форматы (INTZ/RAWZ/DF16) удалены: единый формат глубины со
+  // stencil — D24S8 (под Vulkan/DX12 -> D24_UNORM_S8_UINT). Как attachment он
+  // годится всегда, а как читаемая глубина — только при hasDepthSRV (см.
+  // ReadableDepthSupported() и строку «Readable depth:» выше).
   DebugTrace("DepthFormat: D24S8");
   return FORMAT_D24S8;
 }

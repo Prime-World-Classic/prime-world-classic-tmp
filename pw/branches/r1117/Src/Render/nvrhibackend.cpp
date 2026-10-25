@@ -399,6 +399,7 @@ static nvrhi::Format SurfaceFormat(EBackendFormat f)
   case bfDXT3:          return nvrhi::Format::BC2_UNORM;
   case bfDXT5:          return nvrhi::Format::BC3_UNORM;
   case bfD24S8:         return nvrhi::Format::D24S8;
+  case bfD16:           return nvrhi::Format::D16;
   default:              return nvrhi::Format::UNKNOWN;
   }
 }
@@ -3352,6 +3353,14 @@ HRESULT NvrhiBackend::GetSystemInfo(BackendSystemInfo& out)
     if (fp.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
       features |= depthBits[i];
   }
+  // hasDepthSRV — «глубину можно прочитать как текстуру». Здесь это правда по
+  // определению: seam держит depth-аттачмент в D24_UNORM_S8_UINT (см.
+  // nvrhi::Format::D24S8), а Vulkan читает depth-аспект depth-изображения
+  // через image view без vendor-форматов. Проверка та же, что для hasD24S:
+  // без читаемого depth-аттачмента не работает ни путь карт теней, ни
+  // DecodeZ. На D3D9-бэкенде этот бит не выставляется (d3d9backend.cpp).
+  if (features & hasD24S)
+    features |= hasDepthSRV;
   out.features = features;
   return S_OK;
 }
@@ -10093,7 +10102,8 @@ HRESULT NvrhiBackend::CreateSurface(EBackendSurfaceKind kind, unsigned width, un
   // (Vendor/NVRHI/src/vulkan/vulkan-device.cpp:817), поэтому имена ставим сами
   // через vkSetDebugUtilsObjectNameEXT (VkSetName).
   char nm[48];
-  snprintf(nm, sizeof(nm), "PW surf %ux%u%s", width, height, format == bfD24S8 ? " depth" : "");
+  snprintf(nm, sizeof(nm), "PW surf %ux%u%s", width, height,
+           (format == bfD24S8 || format == bfD16) ? " depth" : "");
   td.setDebugName(nm);
   // Формат берём из общего конвертера SurfaceFormat() — того же, что у
   // CreateTexture. Локальный switch покрывал только D24S8 и BGRA, поэтому
@@ -10119,7 +10129,7 @@ HRESULT NvrhiBackend::CreateSurface(EBackendSurfaceKind kind, unsigned width, un
     return E_FAIL;
   }
   td.setFormat(fmtSel);
-  const bool depth = (format == bfD24S8);
+  const bool depth = (format == bfD24S8 || format == bfD16);
   // глубина у NVRHI определяется форматом (setIsDepthStencil в этой версии
   // нет); без initialState+keepInitialState трекер состояний рвёт командный
   // список: «Unknown prior state of texture draw ds» (замер спайка)

@@ -264,6 +264,7 @@ EBackendFormat D3DFormatToBackend(D3DFORMAT fmt)
     case D3DFMT_DXT4:           return bfDXT4;
     case D3DFMT_DXT5:           return bfDXT5;
     case D3DFMT_D24S8:          return bfD24S8;
+    case D3DFMT_D16:            return bfD16;
     default:                    return bfUnknown;
   }
 }
@@ -320,6 +321,7 @@ bool BackendFormatToD3D(EBackendFormat fmt, D3DFORMAT* pOut)
     case bfDXT4:              f = D3DFMT_DXT4;           break;
     case bfDXT5:              f = D3DFMT_DXT5;           break;
     case bfD24S8:             f = D3DFMT_D24S8;          break;
+    case bfD16:               f = D3DFMT_D16;            break;
     default:                  if (pOut) *pOut = f;       return false;
   }
   if (pOut)

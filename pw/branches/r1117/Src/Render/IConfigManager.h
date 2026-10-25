@@ -51,6 +51,11 @@ struct NOVTABLE IConfigManager
   // NV/ATI Depth/Stencil textures (hardware shadow maps)
   bool HasDSM() const { return CheckFeatureSupport(hasD16T|hasD24X|hasD24S); }
 
+  // Глубина читается как depth SRV (Vulkan/DX12-семантика). Отдельно от
+  // HasDSM(): наличие depth-текстуры по CheckDeviceFormat ещё не значит,
+  // что её можно прочитать (под D3D9 для этого были vendor-форматы).
+  bool HasDepthSRV() const { return CheckFeatureSupport(hasDepthSRV); }
+
 protected:
   IConfigManager(void)  {}
   ~IConfigManager(void) {}

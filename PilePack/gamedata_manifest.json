@@ -113,8 +113,8 @@
     {
       "id": 153,
       "name": "gamedata011.pile",
-      "packed_size": 15340761,
-      "source_size": 17202370,
+      "packed_size": 15340669,
+      "source_size": 17202112,
       "files": [
         ["Audio/PVE_RU.fsb", 14233152, 2747846497],
         ["Audio/Ping/ping0.wav", 160442, 3855711462],
@@ -124,7 +124,7 @@
         ["Audio/Ping/ping4.wav", 171794, 1248809647],
         ["Audio/Ping/ping5.wav", 150146, 143989880],
         ["Audio/Ping/praise.wav", 116610, 596601841],
-        ["Audio/PrimeWorld.fev", 1860318, 4014503954]
+        ["Audio/PrimeWorld.fev", 1860060, 928978178]
       ]
     },
     {

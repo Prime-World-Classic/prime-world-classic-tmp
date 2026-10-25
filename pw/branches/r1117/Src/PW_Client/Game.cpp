@@ -1841,6 +1841,11 @@ int __stdcall PseudoWinMain( HINSTANCE hInstance, HWND hWnd, LPTSTR lpCmdLine, S
     {
       Render::SharedVB::UnlockAll(); // Don't hold VB's locked for too long
 
+      {
+        NI_PROFILE_BLOCK( "FrameLimit" );
+        NMainLoop::VSyncController::LimitFrameRate(); // gfx_max_fps
+      }
+
       NI_PROFILE_BLOCK( "RenderPresent" );
       mainPerf_Present.Start(true);
       //NMainLoop::VSyncController::WaitBeforePresent();

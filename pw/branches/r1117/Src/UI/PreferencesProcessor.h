@@ -64,6 +64,8 @@ private:
   void UpdateEnabledState( const string &enabledFromVarId, bool isEnabled );  
   void UpdateValue( const VarData &var, int value );
   void UpdateValue( const string &varId, int value );
+  void RefreshSameVariable( const VarData &var );
+  void ApplyAdvancedRow( const string &varId );
   void RestorePreset( const NDb::PreferencesPreset &preset );
   void StoreAllValues();
   void RestoreAllValues();

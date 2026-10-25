@@ -422,6 +422,13 @@ HRESULT D3D9Backend::CreateTexture2D(unsigned width, unsigned height, unsigned m
 
   IDirect3DTexture9* tex = 0;
   const HRESULT hr = pDevice->CreateTexture(width, height, mipLevels, d3dUsage, fmt, d3dPool, &tex, 0);
+  if (FAILED(hr)) {
+    // Отказ создания текстуры ищет клиент (NI_DX_WARN в texture.cpp), но он
+    // печатает СВОЁ desc, а не то, что реально ушло в устройство: под seam
+    // параметры строит словарь usage/pool, и расхождение видно только здесь.
+    DebugTrace("D3D9 CreateTexture2D %ux%u mips=%u usage=0x%x fmt=0x%x pool=%d -> 0x%08X",
+               width, height, mipLevels, d3dUsage, (unsigned)fmt, (int)d3dPool, hr);
+  }
   *pOut = MakeBackendHandle<HTexture>(tex);
   return hr;
 }

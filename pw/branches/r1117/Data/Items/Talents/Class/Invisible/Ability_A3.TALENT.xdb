@@ -58,9 +58,9 @@
 		<Item href="/Items/Talents/Class/Invisible/Ability_A3.TALENT" id="5130A344-E179-413F-B611-6714973D830A">
 			<ConditionFormula>
 				<condition>
-					<compiledString>FQAAAAAAAAAAVYvsg+wMi0UMixCLTQyLgrgAAAD/0ItNDIsRi00Mi4K8AAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoPi0UMixCLTQyLgiwBAAD/0A+28GoQi00MixGLTQyLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqD4tVDIsCi00Mi5AsAQAA/9IPtvBqEItFDIsQi00Mi4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UMiwKLTQyLkLgAAAD/0otFDIsQi00Mi4K8AAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IpF/F6L5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>rBaseStrength &gt;= rBaseIntellect</sString>
+					<sString>(pSecond-&gt;IsRecommended(15) &gt; pSecond-&gt;IsRecommended(16) ? 1 : pSecond-&gt;IsRecommended(15) &lt; pSecond-&gt;IsRecommended(16) ? 0 : rBaseStrength&gt;=rBaseIntellect)</sString>
 				</condition>
 				<name>Boost_Stat</name>
 			</ConditionFormula>

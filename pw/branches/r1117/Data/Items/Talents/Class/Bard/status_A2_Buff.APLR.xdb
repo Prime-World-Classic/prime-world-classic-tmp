@@ -56,9 +56,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FRUAAAACAAAASQAAAGIAAABCYXJkX0EydQAAAABCYXJkX0EydQBVi+yD7BSLRQyLEItNDIuCMAEAAP/Qi00MixGLTQyLgjQBAADdXfj/0Nxd+N/g9sQFelhoAAAAAItNCIsRi00Ii4KoAQAA/9CFwHQqaAwAAACLTQiLEYtNCIuCqAEAAP/QiUX0i030ixGLTfSLQgT/0IhF8+sExkXzAA+2TfOFyXQJx0XsAQAAAOsHx0XsAAAAAIpF7IvlXcM=</compiledString>
+					<compiledString>FRUAAAACAAAA3QAAAPYAAABCYXJkX0EydQAAAABCYXJkX0EydQBVi+yD7CBWag+LRQyLEItNDIuCLAEAAP/QD7bwahCLTQyLEYtNDIuCLAEAAP/QD7bIO/F+DMdF/AEAAADpgAAAAGoPi1UMiwKLTQyLkCwBAAD/0g+28GoQi0UMixCLTQyLgiwBAAD/0A+2yDvxfQnHRfgAAAAA60OLVQyLAotNDIuQuAAAAP/Si0UMixCLTQyLgrwAAADdXfD/0Nxd8N/g9sRBegnHRewBAAAA6wfHRewAAAAAi03siU34i1X4iVX8g338AHRYaAAAAACLRQiLEItNCIuCqAEAAP/QhcB0KmgMAAAAi00IixGLTQiLgqgBAAD/0IlF6ItN6IsRi03oi0IE/9CIRefrBMZF5wAPtk3nhcl0CcdF4AEAAADrB8dF4AAAAACKReBei+Vdww==</compiledString>
 					<returnType>bool</returnType>
-					<sString>rStrength  &gt; rIntellect &amp;&amp; tal("Bard_A2u")</sString>
+					<sString>(pSecond-&gt;IsRecommended(15) &gt; pSecond-&gt;IsRecommended(16) ? 1 : pSecond-&gt;IsRecommended(15) &lt; pSecond-&gt;IsRecommended(16) ? 0 : rBaseStrength&gt;=rBaseIntellect) &amp;&amp; tal("Bard_A2u")</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -103,9 +103,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FRUAAAACAAAASQAAAGIAAABCYXJkX0EydQAAAABCYXJkX0EydQBVi+yD7BSLRQyLEItNDIuCMAEAAP/Qi00MixGLTQyLgjQBAADdXfj/0Nxd+N/g9sQBdVhoAAAAAItNCIsRi00Ii4KoAQAA/9CFwHQqaAwAAACLTQiLEYtNCIuCqAEAAP/QiUX0i030ixGLTfSLQgT/0IhF8+sExkXzAA+2TfOFyXQJx0XsAQAAAOsHx0XsAAAAAIpF7IvlXcM=</compiledString>
+					<compiledString>FRUAAAACAAAA3QAAAPYAAABCYXJkX0EydQAAAABCYXJkX0EydQBVi+yD7CBWag+LRQyLEItNDIuCLAEAAP/QD7bwahCLTQyLEYtNDIuCLAEAAP/QD7bIO/F+DMdF/AEAAADpgAAAAGoPi1UMiwKLTQyLkCwBAAD/0g+28GoQi0UMixCLTQyLgiwBAAD/0A+2yDvxfQnHRfgAAAAA60OLVQyLAotNDIuQuAAAAP/Si0UMixCLTQyLgrwAAADdXfD/0Nxd8N/g9sRBegnHRewBAAAA6wfHRewAAAAAi03siU34i1X4iVX8g338AHVYaAAAAACLRQiLEItNCIuCqAEAAP/QhcB0KmgMAAAAi00IixGLTQiLgqgBAAD/0IlF6ItN6IsRi03oi0IE/9CIRefrBMZF5wAPtk3nhcl0CcdF4AEAAADrB8dF4AAAAACKReBei+Vdww==</compiledString>
 					<returnType>bool</returnType>
-					<sString>rStrength &lt;= rIntellect &amp;&amp; tal("Bard_A2u")</sString>
+					<sString>!(pSecond-&gt;IsRecommended(15) &gt; pSecond-&gt;IsRecommended(16) ? 1 : pSecond-&gt;IsRecommended(15) &lt; pSecond-&gt;IsRecommended(16) ? 0 : rBaseStrength&gt;=rBaseIntellect) &amp;&amp; tal("Bard_A2u")</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>

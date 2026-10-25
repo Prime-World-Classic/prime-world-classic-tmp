@@ -36,7 +36,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IUIRenderer* GetUIRenderer()
 {
-  static DeviceLostWrapper<UIRenderer> uiRenderer;
+  static ReallocateWrapper<UIRenderer> uiRenderer;
   return &uiRenderer;
 }
 
@@ -692,7 +692,7 @@ void UIRenderer::RenderPart( const SRenderPart & part, bool alphaTest )
     part.renderMaterial->PrepareRenderer();
 
   if ( alphaTest )
-    GetDevice()->SetRenderState( D3DRS_ALPHATESTENABLE, TRUE );
+    GetStatesManager()->SetStateDirect( D3DRS_ALPHATESTENABLE, TRUE );
 
   dipDesc.baseVertexIndex = part.quadFirst * QUAD_VERTEX_COUNT;	
   dipDesc.numVertices = part.quadCount * QUAD_VERTEX_COUNT;
@@ -701,7 +701,7 @@ void UIRenderer::RenderPart( const SRenderPart & part, bool alphaTest )
   SmartRenderer::DrawIndexedPrimitive( dipDesc );
 
   if ( alphaTest )
-    GetDevice()->SetRenderState( D3DRS_ALPHATESTENABLE, FALSE );
+    GetStatesManager()->SetStateDirect( D3DRS_ALPHATESTENABLE, FALSE );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -749,7 +749,7 @@ void UIRenderer::Render( ERenderWhat::Enum what, const Render::Texture2DRef& pMa
 
   GetStatesManager()->SetStateDirect( D3DRS_CULLMODE, D3DCULL_NONE );
 
-	FillVB( Get(pVB), queue.quadCounter * sizeof(QuadStride), &queue.quadsQueue, D3DLOCK_DISCARD );
+	FillVB( Get(pVB), queue.quadCounter * sizeof(QuadStride), &queue.quadsQueue, LOCK_DISCARD );
 
 	GetRenderer()->SetPixelShaderConstantsVector4( PSHADER_LOCALCONST3, resolutionCoefs );
 	GetRenderer()->SetVertexShaderConstantsVector4( VSHADER_LOCALCONST3, resolutionCoefs );

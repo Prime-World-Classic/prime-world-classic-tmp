@@ -4,6 +4,7 @@
 #include "PFBaseUnit.h"
 #include "AdventureScreen.h"
 #include "../Scene/Scene.h"
+#include "../Scene/CameraControllersContainer.h"
 #include "../Terrain/Terrain.h"
 #include "../Render/debugrenderer.h"
 #include "../Client/ScreenBase.h"
@@ -15,6 +16,31 @@
 extern int g_playerTeamId;
 extern int g_fixedTeamCam;
 REGISTER_VAR("fixedTeamCam", g_fixedTeamCam, STORAGE_USER)
+
+// --- обзорная камера: фиксированная над уровнем целиком (для A/B-сравнений рендера)
+// overview_camera=1 включает режим: камера ставится над центром уровня, а rod/FOV/
+// near/far считаются так, чтобы весь уровень (углы и верхняя точка рельефа включительно)
+// попал в кадр. Остальные переменные - ручная настройка (0/отрицательное = авторасчёт).
+static bool  gOverviewOn = false;
+static float gOverviewHeight = 0.f;      // высота камеры; 0 = расчёт под кадр
+static float gOverviewMargin = 0.08f;    // поле вокруг уровня (доля полуразмера уровня)
+static float gOverviewPitch = -90.f;     // градусы; -90 = строго вниз
+static float gOverviewYaw = -999.f;      // градусы; -999 = centerYaw из настроек камеры
+static float gOverviewFov = 0.f;         // градусы; 0 = fov из настроек камеры
+static float gOverviewNearBelow = 120.f; // near = дистанция до центра уровня минус это
+static float gOverviewFarAbove = 80.f;   // far = дистанция до дальнего угла плюс это
+static bool  gOverviewLog = true;
+static bool  gOverviewNoEffects = true;  // выключить эффекты камеры (тряску)
+REGISTER_VAR( "overview_camera", gOverviewOn, STORAGE_NONE )
+REGISTER_VAR( "overview_height", gOverviewHeight, STORAGE_NONE )
+REGISTER_VAR( "overview_margin", gOverviewMargin, STORAGE_NONE )
+REGISTER_VAR( "overview_pitch", gOverviewPitch, STORAGE_NONE )
+REGISTER_VAR( "overview_yaw", gOverviewYaw, STORAGE_NONE )
+REGISTER_VAR( "overview_fov", gOverviewFov, STORAGE_NONE )
+REGISTER_VAR( "overview_near_below", gOverviewNearBelow, STORAGE_NONE )
+REGISTER_VAR( "overview_far_above", gOverviewFarAbove, STORAGE_NONE )
+REGISTER_VAR( "overview_log", gOverviewLog, STORAGE_NONE )
+REGISTER_VAR( "overview_no_effects", gOverviewNoEffects, STORAGE_NONE )
 
 namespace NSoundScene
 {
@@ -732,6 +758,105 @@ namespace NGameX
     g_bPredict = _predict;
   }
 
+
+  // Обзорная камера: ставит камеру над центром уровня так, чтобы весь уровень целиком
+  // попал в кадр, и подбирает near/far под эту дистанцию тонким слоем (иначе на высоте
+  // ~600 единиц точности глубины не хватает). Расчёт повторяет поправку FOV из
+  // CCamera::Update() (Scene/Camera.cpp) и трактовку FOV из MakeProjective(): fFov -
+  // вертикальный, горизонтальный шире (при 4:3 ограничивающая ось - вертикаль).
+  static bool ApplyOverviewCamera( NScene::SCameraPosition* pResultPos, NScene::ICamera* pCamera,
+                                   NScene::IScene* pScene,
+                                   const AdventureCameraController::CameraSettings& settings )
+  {
+    if ( !IsValid( pCamera ) || !IsValid( pScene ) )
+      return false;
+
+    const Terrain::GridConstants& gc = pScene->GetGridConstants();
+    if ( !gc.valid || gc.worldSize.x < 1.f || gc.worldSize.y < 1.f )
+      return false;
+
+    const float halfX = gc.worldSize.x * 0.5f;
+    const float halfY = gc.worldSize.y * 0.5f;
+    const float zMax = gc.worldSize.z > 0.1f ? gc.worldSize.z : 50.f;
+
+    // эффективный вертикальный FOV (экран/вьюпорт + поправка аспекта)
+    float fov = gOverviewFov > 1.f ? gOverviewFov : settings.fov;
+    if ( fov < 1.f )
+      fov = 40.f;
+    const float sw = pCamera->GetScreenWidth();
+    const float sh = pCamera->GetScreenHeight();
+    const float vw = pCamera->GetViewportWidth();
+    const float vh = pCamera->GetViewportHeight();
+    const float fRad = 3.14159265f / 180.f;
+    float corrector = 1.f;
+    if ( vw > 0.01f && vh > 0.01f && sh > 0.01f )
+      corrector = atanf( sh * tanf( fov * 0.5f * fRad ) / vh ) / ( fov * fRad );
+    if ( sw > 0.01f && sh > 0.01f )
+    {
+      const float A0 = 4.f / 3.f;
+      const float A1 = sw / sh;
+      const float tgA = tanf( settings.fovCorrectionAngle * fRad );
+      const float fov1 = atanf( tanf( fov * 0.5f * fRad ) * ( 1.f + A0 * tgA ) / ( 1.f + A1 * tgA ) );
+      corrector *= fov1 * 2.f / fRad / fov;
+    }
+    const float tanV = tanf( fov * corrector * 0.5f * fRad );
+    const float tanH = ( sw > 0.01f && sh > 0.01f ) ? tanV * sw / sh : tanV;
+    if ( tanV < 1e-4f || tanH < 1e-4f )
+      return false;
+
+    // уровень вписывается по ограничивающей оси; сверху добавляется высота рельефа
+    const float margin = gOverviewMargin > 0.f ? gOverviewMargin : 0.f;
+    // чтобы поворот камеры не срезал уровень, берём проекцию прямоугольника worldSize на оси экрана:
+    // при yaw=45 протяжённость по экрану равна полудиагонали, а не половине стороны
+    const float yaw = gOverviewYaw < -900.f ? settings.centerYaw : gOverviewYaw * fRad;
+    const float cy = fabsf( cosf( yaw ) ), sy = fabsf( sinf( yaw ) );
+    const float offX = fabsf( settings.centerOffset.x ), offY = fabsf( settings.centerOffset.y );
+    // якорь камеры смещён из центра bbox (centerOffset), поэтому опорные протяжённости
+    // считаются от якоря: иначе дальняя сторона уровня срезана, ближняя имеет запас
+    float extR = ( halfX + offX ) * cy + ( halfY + offY ) * sy;
+    float extF = ( halfX + offX ) * sy + ( halfY + offY ) * cy;
+    const float tilt = fabsf( gOverviewPitch + 90.f ) * fRad;  // отклонение от вертикали
+    extF += zMax * sinf( tilt );           // на наклонной камере высоты лезут в кадр
+    const float fitR = extR * ( 1.f + margin ) / tanH;
+    const float fitV = extF * ( 1.f + margin ) / tanV;
+    const float fit = fitR > fitV ? fitR : fitV;
+    const float rod = gOverviewHeight > 1.f ? gOverviewHeight : fit + zMax;
+
+    const float farExtra = gOverviewFarAbove > 0.f ? gOverviewFarAbove : 0.f;
+    const float nearBelow = gOverviewNearBelow > 1.f ? gOverviewNearBelow : 1.f;
+    const float distCorner = sqrtf( rod * rod + halfX * halfX + halfY * halfY );
+    float nearPlane = rod - nearBelow;
+    if ( nearPlane < 1.f )
+      nearPlane = 1.f;
+    const float farPlane = distCorner + farExtra;
+    if ( farPlane <= nearPlane )
+      return false;
+
+    NScene::SCameraPosition pos;
+    pos.vAnchor = CVec3( halfX + settings.centerOffset.x, halfY + settings.centerOffset.y, 0.f );
+    pos.fRod = rod;
+    pos.fPitch = gOverviewPitch * fRad;
+    pos.fYaw = yaw;
+    pos.fRoll = 0.f;
+
+    pCamera->SetFOV( fov );
+    pCamera->SetPlanes( nearPlane, farPlane );
+
+    static bool s_logged = false;
+    if ( gOverviewLog && !s_logged )
+    {
+      s_logged = true;
+      systemLog( NLogg::LEVEL_MESSAGE ) << "overview: world " << gc.worldSize.x << "x" << gc.worldSize.y
+        << "x" << zMax << ", screen " << sw << "x" << sh << ", ext " << extR << "x" << extF
+        << ", fov " << fov << " (corrected "
+        << fov * corrector << "), rod " << rod << ", near " << nearPlane << ", far " << farPlane
+        << ", dist to corner " << distCorner << endl;
+    }
+
+    *pResultPos = pos;
+    return true;
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void AdventureCameraController::Update( NScene::SCameraPosition* pResultPos, const NScene::SCameraPosition& currentPos, const NScene::SCameraPosition& wantedPos, NScene::Time timeDiff )
   {
@@ -769,7 +894,16 @@ namespace NGameX
     if (IsValid(pCamera))
       pCamera->SetFOV(settings.fov);
 
-    UpdateInternal( pResultPos, currentPos, *actualWantedPos, avgDelta, true );	
+    UpdateInternal( pResultPos, currentPos, *actualWantedPos, avgDelta, true );
+    // обзорная камера перетирает результат обычной камеры (клампы зума, эллипс
+    // ограничений, пересечение с ландшафтом и слежение за героем её не касаются)
+    if ( gOverviewOn )
+    {
+      ApplyOverviewCamera( pResultPos, pCamera, pScene, settings );
+      if ( gOverviewNoEffects && IsValid( pScene ) && pScene->GetCameraControllers() )
+        pScene->GetCameraControllers()->EnableEffects( false );
+    }
+	
     //UpdateI( pResultPos, currentPos, *actualWantedPos, timeDiff );	
 
     // Experiments with Fixed Step :

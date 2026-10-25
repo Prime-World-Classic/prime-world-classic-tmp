@@ -5,6 +5,8 @@
 #include "stdafx.h"
 #include "DDS.h"
 #include "ReadDDS.h"
+#include "renderbackend.h"        // seam этапа 2: GetBackend()/HTexture
+#include "renderflagsconverter.h"  // D3DFormatToBackend()
 
 #ifndef V_RETURN
   #define V_RETURN(x) { hr = (x); if( FAILED(hr) ) return hr; }
@@ -305,19 +307,35 @@ public:
 class TextureHolder : public FaceHolder
 {
   DXTextureRef pTexture;
+  HTexture     hTexture;   // та же ручка, что внутри pTexture, но в форме seam'а
 
-  virtual HRESULT LockRect(UINT n) { return pTexture->LockRect(n, &lockedRect, NULL, 0); }
-  virtual void  UnlockRect(UINT n) { pTexture->UnlockRect(n); }
+  // Блокировка через seam. Раньше она была COM-вызом напрямую по
+  // ручке, которую вернул бэкенд. Для D3D9 это штатно, для
+  // NvrhiBackend это вызов по чужой vtable: замер 2026-10-16 — поток
+  // рендера висел на DDS 64x64 с mip-цепочкой.
+  virtual HRESULT LockRect(UINT n)
+  {
+    lockedRect.pBits = 0;
+    lockedRect.Pitch = 0;
+    unsigned pitch = 0;
+    const HRESULT res = GetBackend()->LockTexture2D(hTexture, n, 0u, NULL, LOCK_DEFAULT,
+                                                    &lockedRect.pBits, &pitch);
+    lockedRect.Pitch = (LONG)pitch;
+    return res;
+  }
+  virtual void  UnlockRect(UINT n) { GetBackend()->UnlockTexture2D(hTexture, n, 0u); }
 
 public:
   TextureHolder(UINT _mipCount, D3DFORMAT _fmt, UINT _width, UINT _height, const BYTE* _pSrcBound)
     : FaceHolder(_mipCount, _fmt, _width, _height, _pSrcBound)
   {
-    if( IDirect3DDevice9* const pDevice = GetDevice() )
+    if( GetDevice() )   // устройство есть (создание идёт через seam)
     {
-      IDirect3DTexture9* pTex = 0;
-      hr = pDevice->CreateTexture(_width, _height, _mipCount, 0, _fmt, D3DPOOL_MANAGED, &pTex, NULL);
-      pTexture.Attach(pTex);
+      HTexture hTex;
+      hr = GetBackend()->CreateTexture2D(_width, _height, _mipCount, usageNone,
+                                         D3DFormatToBackend(_fmt), BACKEND_POOL_MANAGED, &hTex);
+      pTexture.Attach(static_cast<IDirect3DTexture9*>(hTex.p));
+      hTexture = hTex;
     }
   }
   ~TextureHolder() {}
@@ -329,22 +347,34 @@ public:
 class CubeTextureHolder : public FaceHolder
 {
   DXCubeTextureRef pTexture;
+  HTexture         hTexture;   // та же ручка через seam (см. TextureHolder)
   D3DCUBEMAP_FACES face;
 
-  virtual HRESULT LockRect(UINT n) { return pTexture->LockRect(face, n, &lockedRect, NULL, 0); }
-  virtual void  UnlockRect(UINT n) { pTexture->UnlockRect(face, n); }
+  virtual HRESULT LockRect(UINT n)
+  {
+    lockedRect.pBits = 0;
+    lockedRect.Pitch = 0;
+    unsigned pitch = 0;
+    const HRESULT res = GetBackend()->LockTexture2D(hTexture, n, (unsigned)face, NULL,
+                                                    LOCK_DEFAULT, &lockedRect.pBits, &pitch);
+    lockedRect.Pitch = (LONG)pitch;
+    return res;
+  }
+  virtual void  UnlockRect(UINT n) { GetBackend()->UnlockTexture2D(hTexture, n, (unsigned)face); }
 
 public:
   CubeTextureHolder(UINT _mipCount, D3DFORMAT _fmt, UINT _width, UINT _height, const BYTE* _pSrcBound)
     : FaceHolder(_mipCount, _fmt, _width, _height, _pSrcBound), face()
   {
-    if( IDirect3DDevice9* const pDevice = GetDevice() )
+    if( GetDevice() )   // устройство есть (создание идёт через seam)
     {
       NI_VERIFY(_width == _height, "Wrong cubemap: width not equal to height", hr = D3DXERR_INVALIDDATA; return);
 
-      IDirect3DCubeTexture9* pTex = 0;
-      hr = pDevice->CreateCubeTexture(_width, _mipCount, 0, _fmt, D3DPOOL_MANAGED, &pTex, NULL);
-      pTexture.Attach(pTex);
+      HTexture hTex;
+      hr = GetBackend()->CreateTextureCube(_width, _mipCount, usageNone,
+                                           D3DFormatToBackend(_fmt), BACKEND_POOL_MANAGED, &hTex);
+      pTexture.Attach(static_cast<IDirect3DCubeTexture9*>(hTex.p));
+      hTexture = hTex;
     }
   }
   ~CubeTextureHolder() {}

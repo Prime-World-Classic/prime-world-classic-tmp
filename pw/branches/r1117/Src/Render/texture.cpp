@@ -1,11 +1,11 @@
 #include "stdafx.h"
 
 #include "renderflagsconverter.h"
+#include "renderbackend.h"   // seam этапа 2: GetBackend()/HTexture/HBuffer
 #include "texture.h"
 #include "renderresourcemanager.h"
 #include "IConfigManager.h"
 #include "ImmediateRenderer.h"
-#include "atir2vb.h"
 
 namespace Render
 {
@@ -16,7 +16,15 @@ REGISTER_VAR("debug_txtr_create_message", s_msg_enable, STORAGE_NONE);
 DECLARE_NULL_RENDER_FLAG
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-unsigned int Texture::GetMipSubLevelsCount() const { return pDXTexture->GetLevelCount(); }
+unsigned int Texture::GetMipSubLevelsCount() const
+{
+  // Уровни спрашивает бэкенд (шаг 13.2): у другого бэкенда у pDXTexture нет
+  // COM-метода GetLevelCount.
+  IRenderBackend::BackendTextureInfo info;
+  if (FAILED(GetBackend()->GetTextureInfo(MakeBackendHandle<HTexture>(Get(pDXTexture)), &info)))
+    return 0;
+  return info.levels;
+}
 
 inline void Texture::SetTexture(IDirect3DBaseTexture9 *_tex)
 {
@@ -30,20 +38,41 @@ inline void Texture::SetTexture(IDirect3DBaseTexture9 *_tex)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Texture2D::Texture2D(IDirect3DTexture9 *pTex, HandlerPriority deviceLostHandlerPriority)
   : TextureTyped(pTex)
-  , DeviceLostHandler(deviceLostHandlerPriority)
+  , ReallocateHandler(deviceLostHandlerPriority)
   , levels(0)
 {
   ZeroMemory(&desc, sizeof(desc));
 	if (!pTex)
 		return;
-	GetDXTexture()->GetLevelDesc(0, &desc);
-  levels = GetDXTexture()->GetLevelCount();
+  // Описание текстуры даёт бэкенд (шаг 13.2): под другим бэкендом у pTex нет
+  // COM-методов, а D3DSURFACE_DESC клиенту нужен — по нему текстура
+  // пересоздаётся после потери устройства. Для D3D9 значения берутся из того же
+  // GetLevelDesc(0)/GetLevelCount, что читал клиент раньше.
+  IRenderBackend::BackendTextureInfo info;
+  const HRESULT hrInfo = GetBackend()->GetTextureInfo(MakeBackendHandle<HTexture>(pTex), &info);
+  if (FAILED(hrInfo)) {
+    NI_DX_THROW(hrInfo, "Texture2D: GetTextureInfo");
+    return;
+  }
+  desc.Width  = info.width;
+  desc.Height = info.height;
+  if (!BackendFormatToD3D(info.format, &desc.Format))
+    NI_ASSERT(false, NStr::StrFmt("Texture2D: формат %d вне словаря D3D9", (int)info.format));
+  if (!BackendPoolUsageToD3D(info.pool, info.usage, &desc.Pool, &desc.Usage))
+    NI_ASSERT(false, NStr::StrFmt("Texture2D: пул %d вне словаря D3D9", (int)info.pool));
+  // Type = D3DRTYPE_TEXTURE — как у COM-описания. Это не косметика:
+  // OnResourcesReallocate пересоздаёт только desc.Type == D3DRTYPE_SURFACE, т.е.
+  // текстуры, созданные из COM-указателя, пересоздания не требуют (так и было).
+  desc.Type               = D3DRTYPE_TEXTURE;
+  desc.MultiSampleType    = D3DMULTISAMPLE_NONE;
+  desc.MultiSampleQuality = 0;
+  levels = info.levels;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Texture2D::Texture2D(D3DSURFACE_DESC const& desc_, HandlerPriority deviceLostHandlerPriority)
   : TextureTyped(0)
-  , DeviceLostHandler(deviceLostHandlerPriority)
+  , ReallocateHandler(deviceLostHandlerPriority)
   , desc(desc_)
   , levels(1)
 {
@@ -73,7 +102,14 @@ void Texture2D::CreateInternal()
 #ifdef TEXTURE_RETRY_CREATE
     for(int i = 0; i <= TEXTURE_NUM_RETRIES && FAILED(hr); ++i) {
 #endif
-      hr = GetDevice()->CreateTexture(desc.Width, desc.Height, levels, desc.Usage, desc.Format, desc.Pool, &pDirect3DTexture9, 0);
+      // Recreate с теми же параметрами: desc — D3D9-описание (замена на проектное
+      // описание — отдельная работа этапа 3), в seam уходит нейтральная лексика.
+      HTexture hTex;
+      hr = GetBackend()->CreateTexture2D(desc.Width, desc.Height, levels,
+                                         D3DUsageToBackend(desc.Usage),
+                                         D3DFormatToBackend(desc.Format),
+                                         D3DPoolToBackend(desc.Pool, desc.Usage), &hTex);
+      pDirect3DTexture9 = static_cast<IDirect3DTexture9*>(hTex.p);
 #ifdef TEXTURE_RETRY_CREATE
       if( SUCCEEDED(hr) )
         break;
@@ -109,13 +145,17 @@ LockedRect Texture2D::LockRect(unsigned int level, unsigned int left, unsigned i
 
 LockedRect Texture2D::LockRect(unsigned int level, RECT *pRect, ERenderLockType lockType)
 {
-	D3DLOCKED_RECT lockedRect;
-
-	HRESULT hr = GetDXTexture()->LockRect( level, &lockedRect, pRect, ConvertRenderLockType(lockType) );
+  // Загрузка бит — через seam (шаг 13.1/13.2): у Vulkan нет «приведённой»
+  // памяти, шаг строки обязан сообщать бэкенд.
+  void* data = 0;
+  unsigned pitch = 0;
+  const BackendRect r = MakeBackendRect(pRect->left, pRect->top, pRect->right, pRect->bottom);
+  HRESULT hr = GetBackend()->LockTexture2D(MakeBackendHandle<HTexture>(GetDXTexture()), level, 0u, &r,
+                                           lockType, &data, &pitch);
   NI_DX_THROW(hr, __FUNCTION__);
 
   if( SUCCEEDED(hr) )
-    return LockedRect(lockedRect.Pitch, (uchar*)lockedRect.pBits);
+    return LockedRect((int)pitch, (uchar*)data);
   else
     return LockedRect(0, 0);
 }
@@ -123,16 +163,17 @@ LockedRect Texture2D::LockRect(unsigned int level, RECT *pRect, ERenderLockType 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 LockedRect Texture2D::LockRect(unsigned int level, ERenderLockType lockType)
 {
-  D3DLOCKED_RECT lockedRect;
-
-	HRESULT hr = E_FAIL;
+  HRESULT hr = E_FAIL;
+  void* data = 0;
+  unsigned pitch = 0;
   if( !RENDER_DISABLED && GetDXTexture() ) {
-    hr = GetDXTexture()->LockRect( level, &lockedRect, NULL, ConvertRenderLockType(lockType) );
+    hr = GetBackend()->LockTexture2D(MakeBackendHandle<HTexture>(GetDXTexture()), level, 0u, 0,
+                                     lockType, &data, &pitch);
     NI_DX_THROW(hr, __FUNCTION__);
   }
 
   if( SUCCEEDED(hr) )
-    return LockedRect(lockedRect.Pitch, (uchar*)lockedRect.pBits);
+    return LockedRect((int)pitch, (uchar*)data);
   else
 	  return LockedRect(0, 0);
 }
@@ -142,7 +183,7 @@ LockedRect Texture2D::LockRect(unsigned int level, ERenderLockType lockType)
 void Texture2D::UnlockRect(unsigned int level)
 {
   if(!RENDER_DISABLED) {
-    HRESULT hr = GetDXTexture()->UnlockRect( level );
+    HRESULT hr = GetBackend()->UnlockTexture2D(MakeBackendHandle<HTexture>(GetDXTexture()), level, 0u);
     NI_DX_THROW(hr, __FUNCTION__);
   }
 }
@@ -150,94 +191,41 @@ void Texture2D::UnlockRect(unsigned int level)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 DXSurfaceRef Texture2D::GetSurface(unsigned int level) const
 {
-	IDirect3DSurface9* pSurf = 0;
-	HRESULT hr = GetDXTexture()->GetSurfaceLevel(level, &pSurf);
+  // Поверхность уровня спрашиваем у бэкенда (шаг 13.4c): под NvrhiBackend в
+  // pDXTexture лежит ручка бэкенда, GetSurfaceLevel() по ней = вызов по чужой
+  // vtable. Владение — как у COM: умный указатель присоединяет ссылку без AddRef.
+  HSurface surf;
+  const HRESULT hr = GetBackend()->GetTextureSurface(MakeBackendHandle<HTexture>(GetDXTexture()), level, &surf);
   NI_DX_THROW(hr, __FUNCTION__);
-	return DXSurfaceRef(pSurf, false);
+	return DXSurfaceRef(static_cast<IDirect3DSurface9*>(surf.p), false);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void GenerateSubLevels_1(uint _mipLevels, IDirect3DTexture9* _pTex)
-{
-  IDirect3DDevice9* const pDevice = GetDevice();
-  IDirect3DSurface9 *pSurf = 0;
-
-  HRESULT hr = _pTex->GetSurfaceLevel(0, &pSurf);
-  DXSurfaceRef pSrc(pSurf, false);
-  NI_DX_THROW(hr, "GenerateSubLevels_1: failed to lock");
-
-  for(uint n = 1; n < _mipLevels; ++n) {
-    hr = _pTex->GetSurfaceLevel(n, &pSurf);
-    NI_DX_THROW(hr, "GenerateSubLevels_1: failed to lock");
-
-    DXSurfaceRef pDest(pSurf, false);
-    hr = pDevice->StretchRect(Get(pSrc), 0, Get(pDest), 0, D3DTEXF_LINEAR);
-    NI_DX_THROW(hr, "GenerateSubLevels_1: failed to stretch");
-
-    Swap(pSrc, pDest);
-  }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void GenerateSubLevels_2(uint _mipLevels, IDirect3DTexture9* _pTex)
-{
-  if(_mipLevels <= 1)
-    return;
-
-  IDirect3DDevice9* const pDevice = GetDevice();
-  IDirect3DSurface9 *pSurf = 0;
-
-  HRESULT hr = _pTex->GetSurfaceLevel(0, &pSurf);
-  DXSurfaceRef pSrc(pSurf, false);
-  NI_DX_THROW(hr, "GenerateSubLevels_2: failed to lock");
-
-  D3DSURFACE_DESC desc;
-  hr = _pTex->GetLevelDesc(1, &desc);
-  hr = pDevice->CreateRenderTarget(desc.Width, desc.Height, desc.Format, D3DMULTISAMPLE_NONE, 0, FALSE, &pSurf, 0);
-  DXSurfaceRef tmp(pSurf, false);
-  NI_DX_THROW(hr, "GenerateSubLevels_2: failed to create temporary surface");
-
-  RECT rect = {0};
-  for(uint n = 1; n < _mipLevels; ++n) {
-    hr = _pTex->GetLevelDesc(n, &desc);
-    rect.right = desc.Width;
-    rect.bottom = desc.Height;
-    hr = pDevice->StretchRect(Get(pSrc), 0, Get(tmp), &rect, D3DTEXF_LINEAR);
-    NI_DX_THROW(hr, "GenerateSubLevels_2: failed to stretch");
-
-    hr = _pTex->GetSurfaceLevel(n, &pSurf);
-    NI_DX_THROW(hr, "GenerateSubLevels_2: failed to lock");
-
-    pSrc.Attach(pSurf);
-    hr = pDevice->StretchRect( Get(tmp), &rect, Get(pSrc), 0, D3DTEXF_LINEAR);
-    NI_DX_THROW(hr, "GenerateSubLevels_2: failed to stretch");
-  }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Texture2D::GenerateMipSubLevels_()
+// mip-цепочка (GenerateSubLevels_1/2) перенесена в d3d9backend.cpp — шаг 13.2:
+// она построена на COM-поверхностях, а способ её построения обязан выбирать
+// бэкенд, а не клиент.
+void Texture::GenerateMipSubLevels_()
 {
   if(!pDXTexture)
     return;
 
-  if( uint mipLevels = levels ? levels : pDXTexture->GetLevelCount() )
-    if( Compatibility::IsRunnedUnderCrossOverWine() )
-      GenerateSubLevels_1( mipLevels, GetDXTexture() );
-    else
-      GenerateSubLevels_2( mipLevels, GetDXTexture() );
+  const HRESULT hr = GetBackend()->GenerateMipmaps(MakeBackendHandle<HTexture>(Get(pDXTexture)));
+  if (FAILED(hr))
+    DebugTrace("Texture: GenerateMipmaps — НЕ УДАЛОСЬ 0x%08X", (unsigned)hr);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool Texture2D::Update(Texture2D* pTex) 
 {
-	HRESULT hr = GetDevice()->UpdateTexture(pTex->GetDXTexture(), GetDXTexture());
+	HRESULT hr = GetBackend()->UpdateTexture(MakeBackendHandle<HTexture>(pTex->GetDXTexture()),
+	                                        MakeBackendHandle<HTexture>(GetDXTexture()));
 	NI_VERIFY( hr == D3D_OK, "can't update texture!", return false );
 	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Texture2D::OnDeviceLost()
+void Texture2D::OnResourcesRelease()
 {
   if (!pDXTexture)
     return;
@@ -253,7 +241,7 @@ void Texture2D::OnDeviceLost()
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Texture2D::OnDeviceReset()
+void Texture2D::OnResourcesReallocate()
 {
   if (desc.Type == D3DRTYPE_SURFACE && desc.Pool == D3DPOOL_DEFAULT)
     CreateInternal();
@@ -269,14 +257,13 @@ void Texture2D::SetTexture( Texture2D const& theOther )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// R2VB texture - default-pool, RT, contains vertex data. Depending on actual hardware,
-// switches between Render-to-Vertex-Buffer and Vertex-Texture modes.
-
-TextureVtx::TextureVtx(const Sizes& _sizes, bool _preferR2VB /*= true*/)
-: pixelSize(8), sampler(UINT_MAX), stream(UINT_MAX), sizes(_sizes) 
+// Текстура с построчными данными для вершинной стадии (PostFX-коэффициенты).
+// Только vertex-texture путь: R2VB удалён (см. texture.h).
+TextureVtx::TextureVtx(const Sizes& _sizes)
+: pixelSize(8), sampler(UINT_MAX), sizes(_sizes)
 {
   desc.Format = D3DFMT_A16B16G16R16F;
-  desc.Type   = D3DRTYPE_SURFACE;
+  desc.Type   = D3DRTYPE_TEXTURE;
   desc.Usage  = D3DUSAGE_RENDERTARGET;
   desc.Pool   = D3DPOOL_DEFAULT;
   desc.MultiSampleType    = D3DMULTISAMPLE_NONE;
@@ -284,71 +271,30 @@ TextureVtx::TextureVtx(const Sizes& _sizes, bool _preferR2VB /*= true*/)
 
   levels = 1;
 
-  const IConfigManager* const pConfigManager = GetIConfigManager();
-  NI_ASSERT(pConfigManager->HasVT() || pConfigManager->HasR2VB(), "Vertex texures or R2VB required!");
-  if( _preferR2VB && pConfigManager->HasR2VB() )
-    desc.Usage |= D3DUSAGE_DMAP;
-  else {
-    if( !pConfigManager->HasVT16() ) {
-      if( pConfigManager->HasVT32() ) {
-        desc.Format = D3DFMT_A32B32G32R32F;
-        pixelSize = 16;
-      }
-      else
-        desc.Usage |= D3DUSAGE_DMAP;
-    }
-  }
-
-  OnDeviceReset();
+  OnResourcesReallocate();
 }
 
 
-void TextureVtx::Bind( unsigned int _sampler, unsigned int _stream /*= 1*/ )
+void TextureVtx::Bind( unsigned int _sampler )
 {
-  RenderStatesManager& statesManager = *GetStatesManager();
-  if( UsingR2VB() ) {
-    //statesManager.SetStateDirect( D3DRS_POINTSIZE, r2vbGlbEnable_Set(TRUE) );
-    stream  = _stream;
-    SmartRenderer::BindVertexBufferRaw(stream, const_cast<IDirect3DVertexBuffer9*>(GetImmRenderer()->GetFullVB()), pixelSize);
-  }
   sampler = _sampler;
-  statesManager.SetSampler(sampler, SamplerState::PRESET_CLAMP_POINT(), this);
-
-  if( UsingR2VB() ) {
-    const DWORD samplerID = R2VB_VSMP_OVR_VTX0 + sampler - Sampler::MIN_VS_SAMPLER_INDEX;
-    statesManager.SetStateDirect( D3DRS_POINTSIZE, r2vbVStrm2SmpMap_Set(stream, samplerID) );
-  }
+  GetStatesManager()->SetSampler(sampler, SamplerState::PRESET_CLAMP_POINT(), this);
 }
 
 
 void TextureVtx::UnBind()
 {
-  RenderStatesManager& statesManager = *GetStatesManager();
   if(UINT_MAX != sampler) {
-    if(UINT_MAX != stream) {
-      statesManager.SetStateDirect( D3DRS_POINTSIZE, r2vbVStrm2SmpMap_Set(stream, R2VB_VSMP_OVR_DIS) );
-    }
     SmartRenderer::UnBindTexture(sampler);
-    if(UINT_MAX != stream) {
-      SmartRenderer::UnBindVertexBufferRaw(stream);
-      stream = UINT_MAX;
-      //statesManager.SetStaD3DRS_POINTSIZE, r2vbGlbEnable_Set(FALSE) );
-    }
     sampler = UINT_MAX;
   }
 }
 
 
-void TextureVtx::OnDeviceReset()
+void TextureVtx::OnResourcesReallocate()
 {
-  if( UsingR2VB() ) {
-    desc.Width  = sizes.r2vb.cx;
-    desc.Height = sizes.r2vb.cy;
-  }
-  else {
-    desc.Width  = sizes.vtx.cx;
-    desc.Height = sizes.vtx.cy;
-  }
+  desc.Width  = sizes.tex.cx;
+  desc.Height = sizes.tex.cy;
   CreateInternal();
 }
 

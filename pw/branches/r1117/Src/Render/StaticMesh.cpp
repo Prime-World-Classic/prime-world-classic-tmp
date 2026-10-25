@@ -22,13 +22,17 @@ inline bool VertexHasColors(DXVertexDeclarationRef decl)
   if(RENDER_DISABLED)
     return false;
 
-  D3DVERTEXELEMENT9  elements[MAXD3DDECLLENGTH];
-  unsigned int n;
-  decl->GetDeclaration(elements, &n);
+  // Шаг 13.4c: декларация читается через seam (в D3D9 это был GetDeclaration по
+  // COM-ручке; по ручке другого бэкенда такого метода нет).
+  Render::VertexElementDescriptor elements[IRenderBackend::kMaxVertexElements];
+  unsigned int n = 0;
+  if (FAILED(GetBackend()->GetInputLayoutElements(MakeBackendHandle<HInputLayout>(Get(decl)),
+                                                  elements, IRenderBackend::kMaxVertexElements, &n)))
+    return false;
 
   for (unsigned int i = 0; i < n; ++i)
   {
-    if (elements[i].Usage == D3DDECLUSAGE_COLOR)
+    if (elements[i].usage == Render::VERETEXELEMENTUSAGE_COLOR)
     {
       return true;
     }
@@ -41,7 +45,6 @@ inline bool VertexHasColors(DXVertexDeclarationRef decl)
 
 DECLARE_INSTANCE_COUNTER(StaticMesh);
 
-static UINT s_QueryTriBound = 1000;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 StaticMesh::StaticMesh()
@@ -244,23 +247,6 @@ void StaticMesh::RenderToQueue( BatchQueue& queue )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-OcclusionQueries* StaticMesh::GetQueries() const
-{
-  return GetTriangleCount() > s_QueryTriBound ? &queries : 0;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool StaticMesh::FillOBB(CVec3 (&_vertices)[8]) const
-{
-  if(GetTriangleCount() <= s_QueryTriBound)
-    return false;
-
-  RenderComponent::FillOBB(localAABB, worldMatrix, &_vertices[0]);
-  return true;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void StaticMesh::SetQueryTriBound(UINT _bound) { s_QueryTriBound = _bound; }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void StaticMesh::PrepareRendererAfterMaterial( unsigned int elementNumber ) const
@@ -404,15 +390,18 @@ void StaticMesh::DoCalculateLighting(const SceneConstants& sceneConst, const DXV
   }
 
   // calculate vertex stride
-  D3DVERTEXBUFFER_DESC desc;
-  pMeshGeom->primitives[0]->GetVertexBuffer()->GetDesc(&desc);
-  unsigned int stride = desc.Size / numVertices;
+  // Размер буфера — через seam: ручка бэкенда, GetDesc по ней = вызов по чужой
+  // vtable под другим бэкендом (шаг 13.4c).
+  unsigned vbSize = 0;
+  if (FAILED(GetBackend()->GetBufferInfo(MakeBackendHandle<HBuffer>(Get(pMeshGeom->primitives[0]->GetVertexBuffer())), &vbSize)))
+    return;
+  unsigned int stride = vbSize / numVertices;
 
-  NI_ASSERT(stride * numVertices == desc.Size, "Invalid number of vertices");
+  NI_ASSERT(stride * numVertices == vbSize, "Invalid number of vertices");
   NI_ASSERT(stride >= sizeof(Vertex), "Vertex too small to hold required data");
 
-  unsigned char *geovb = LockVB<unsigned char>(Get(pMeshGeom->primitives[0]->GetVertexBuffer()), 0);
-  Render::Color *colors = LockVB<Render::Color>(Get(vb), 0);
+  unsigned char *geovb = LockVB<unsigned char>(Get(pMeshGeom->primitives[0]->GetVertexBuffer()), LOCK_DEFAULT);
+  Render::Color *colors = LockVB<Render::Color>(Get(vb), LOCK_DEFAULT);
 
   for (int i = 0; i < pMeshGeom->fragmentCount; ++i)
   {
@@ -470,8 +459,8 @@ void StaticMesh::DoCalculateLighting(const SceneConstants& sceneConst, const DXV
     }
   }
 
-  vb->Unlock();
-  pMeshGeom->primitives[0]->GetVertexBuffer()->Unlock();
+  BackendUnlockBuffer(Get(vb));
+  BackendUnlockBuffer(Get(pMeshGeom->primitives[0]->GetVertexBuffer()));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -510,11 +499,12 @@ void StaticMesh::AddGeometryCRC(Crc32Checksum &crc)
   if(RENDER_DISABLED)
     return;
 
-  D3DVERTEXBUFFER_DESC desc;
-  pMeshGeom->primitives[0]->GetVertexBuffer()->GetDesc(&desc);
-  unsigned char *geovb = LockVB<unsigned char>(Get(pMeshGeom->primitives[0]->GetVertexBuffer()), 0);
-  crc.Add(geovb, desc.Size);
-  pMeshGeom->primitives[0]->GetVertexBuffer()->Unlock();
+  unsigned vbSize = 0;
+  if (FAILED(GetBackend()->GetBufferInfo(MakeBackendHandle<HBuffer>(Get(pMeshGeom->primitives[0]->GetVertexBuffer())), &vbSize)))
+    return;
+  unsigned char *geovb = LockVB<unsigned char>(Get(pMeshGeom->primitives[0]->GetVertexBuffer()), LOCK_DEFAULT);
+  crc.Add(geovb, vbSize);
+  BackendUnlockBuffer(Get(pMeshGeom->primitives[0]->GetVertexBuffer()));
 }
 
 }; // namespace Render

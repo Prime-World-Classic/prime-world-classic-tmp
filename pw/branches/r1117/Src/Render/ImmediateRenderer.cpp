@@ -5,6 +5,8 @@
 #include "primitive.h"
 #include "renderresourcemanager.h"
 #include "shadercompiler.h"
+#include "renderbackend.h"   // seam этапа 2: GetBackend()/BackendViewport
+#include "shadercontainer.h" // Materials::ShaderTargetTag — выбор слоя шейдеров
 #include "GlobalMasks.h"
 
 namespace Render
@@ -21,18 +23,75 @@ struct ImmRendererVertex
 	float u, v;
 };
 
+// Шаг 14 (срез A): блобы OnlineShaders — SM3 DXIL, а Vulkan-бэкенд умеет
+// только SPIR-V. Рядом с блобом лежит sidecar `<блоб>.spv` (пишет
+// tools/online_shaders/build.py из HLSL-портов в OnlineShaders/port/; сам
+// блоб не меняется — D3D9-путь обязан остаться побайтово прежним).
+// Слой объявляет БЭКЕНД, а не dev-var: иначе цель, которую бэкенд не умеет
+// создавать, даёт молчаливый фолбэк. Замер: за 100 с прогона 2869 обращений к
+// VertexShader.vsb/DiffuseMap.psb — это композит кадра (экран-квад
+// RenderScreenQuad), без него кадр чёрный при полностью исправном выводе.
+// Возвращает открытый sidecar (или пустой указатель, если слоя нет / бэкенд
+// его не объявил). Пустой CObj() здесь корректен: политика CObj добавляет
+// ссылку при копировании.
+static CObj<Stream> OpenSpvSidecar(char const* pFileName, unsigned* pSizeOut)
+{
+	if (GetBackend()->GetShaderTargetTag() != (unsigned)Materials::stSpirv)
+		return CObj<Stream>();
+	nstl::string spv(pFileName);
+	spv += ".spv";
+	CObj<Stream> pSpv(RootFileSystem::OpenFile(spv.c_str(), FILEACCESS_READ, FILEOPEN_OPEN_EXISTING));
+	if (!pSpv || !pSpv->IsOk() || pSpv->GetSize() == 0)
+	{
+		DebugTrace("OnlineShader: %s — SPIR-V sidecar не открылся, беру DXBC", spv.c_str());
+		return CObj<Stream>();
+	}
+	*pSizeOut = (unsigned)pSpv->GetSize();
+	return pSpv;
+}
+
 DXVertexShaderRef LoadVertexShader(char const* pFileName)
 {
+	// Сначала SPIR-V-слой, если бэкенд его объявил.
+	unsigned spvSize = 0;
+	CObj<Stream> pSpv(OpenSpvSidecar(pFileName, &spvSize));
+	if (pSpv)
+	{
+		DXVertexShaderRef shSpv = GetRenderer()->CreateVertexShader(
+			(unsigned char const*)pSpv->GetBuffer(), spvSize);
+		if (Get(shSpv))
+			return shSpv;
+		DebugTrace("OnlineShader: %s.spv (%u Б) — бэкенд не создал VS из SPIR-V", pFileName, spvSize);
+	}
 	CObj<Stream> pStream(RootFileSystem::OpenFile(pFileName, FILEACCESS_READ, FILEOPEN_OPEN_EXISTING));
 	NI_VERIFY(pStream && pStream->IsOk(), NStr::StrFmt("Cannot open file for reading: %s", pFileName), return DXVertexShaderRef(); );
-	return GetRenderer()->CreateVertexShader((unsigned char const*)pStream->GetBuffer());
+	// Без имени файла сбой неотличим от «шейдер вообще не просили».
+	DXVertexShaderRef sh = GetRenderer()->CreateVertexShader((unsigned char const*)pStream->GetBuffer());
+	if (!Get(sh))
+		DebugTrace("OnlineShader: %s (%u Б) — бэкенд не создал VS", pFileName,
+			(unsigned)pStream->GetSize());
+	return sh;
 }
 
 DXPixelShaderRef LoadPixelShader(char const* pFileName)
 {
+	unsigned spvSize = 0;
+	CObj<Stream> pSpv(OpenSpvSidecar(pFileName, &spvSize));
+	if (pSpv)
+	{
+		DXPixelShaderRef shSpv = GetRenderer()->CreatePixelShader(
+			(unsigned char const*)pSpv->GetBuffer(), spvSize);
+		if (Get(shSpv))
+			return shSpv;
+		DebugTrace("OnlineShader: %s.spv (%u Б) — бэкенд не создал PS из SPIR-V", pFileName, spvSize);
+	}
 	CObj<Stream> pStream(RootFileSystem::OpenFile(pFileName, FILEACCESS_READ, FILEOPEN_OPEN_EXISTING));
 	NI_VERIFY(pStream && pStream->IsOk(), NStr::StrFmt("Cannot open file for reading: %s", pFileName), return DXPixelShaderRef(); );
-	return GetRenderer()->CreatePixelShader((unsigned char const*)pStream->GetBuffer());
+	DXPixelShaderRef sh = GetRenderer()->CreatePixelShader((unsigned char const*)pStream->GetBuffer());
+	if (!Get(sh))
+		DebugTrace("OnlineShader: %s (%u Б) — бэкенд не создал PS", pFileName,
+			(unsigned)pStream->GetSize());
+	return sh;
 }
 
 } // anonymous namespace
@@ -42,8 +101,8 @@ DXPixelShaderRef LoadPixelShader(char const* pFileName)
 
 void ImmRenderer::BasicParams::BindMaterial( const CTRect<float> *rect /*= NULL*/ ) const
 {
-  D3DVIEWPORT9 vp;
-  GetDevice()->GetViewport(&vp);
+  BackendViewport vp;
+  GetBackend()->GetViewport(vp);
 
   if(!rect)
     rect = &s_fullScreen;
@@ -52,8 +111,8 @@ void ImmRenderer::BasicParams::BindMaterial( const CTRect<float> *rect /*= NULL*
   CVec4 madValuePos;
   madValuePos.x = 0.5f * (rect->maxx - rect->minx);
   madValuePos.y = 0.5f * (rect->maxy - rect->miny);
-  madValuePos.z = 0.5f * (rect->maxx + rect->minx) - 1.0f / vp.Width;  // NOT 0.5f/width because full range is -1..1
-  madValuePos.w = 0.5f * (rect->maxy + rect->miny) + 1.0f / vp.Height; // sign inversion occurs in screen-space to viewport conversion
+  madValuePos.z = 0.5f * (rect->maxx + rect->minx) - 1.0f / vp.width;  // NOT 0.5f/width because full range is -1..1
+  madValuePos.w = 0.5f * (rect->maxy + rect->miny) + 1.0f / vp.height; // sign inversion occurs in screen-space to viewport conversion
 
   GetRenderer()->SetVertexShaderConstantsVector4(VSHADER_LOCALCONST1, madValuePos);
   GetRenderer()->SetVertexShaderConstantsVector4(VSHADER_LOCALCONST0, madValueUV);
@@ -150,7 +209,7 @@ void ImmRenderer::RenderScreenQuad( const CTPoint<float> poly[4], const BasicPar
 	// prepare the mesh
 	IDirect3DVertexBuffer9* pVB = ::Get( pFullVB );
 	if( poly )
-		if( float* pData = LockVB<float>(::Get(pRectVB), D3DLOCK_DISCARD) )
+		if( float* pData = LockVB<float>(::Get(pRectVB), LOCK_DISCARD) )
     {
 		  *(pData++) = poly[0].x;
 		  *(pData++) = poly[0].y;
@@ -168,7 +227,7 @@ void ImmRenderer::RenderScreenQuad( const CTPoint<float> poly[4], const BasicPar
 		  *(pData++) = poly[3].y;
 		  *(pData++) = 1.0f;
 		  *(pData++) = 1.0f;
-		  pRectVB->Unlock();
+		  BackendUnlockBuffer( ::Get( pRectVB ) );
 		  pVB = ::Get( pRectVB );
 	  }
 
@@ -209,15 +268,15 @@ void ImmRenderer::RenderScreenQuad(CTRect<float> const& rect, BasicParams const&
 
 void ImmRenderer::RenderScreenQuad(CTRect<int> const& rect, BasicParams const& params)
 {
-  D3DVIEWPORT9 vp;
-  GetDevice()->GetViewport(&vp);
+  BackendViewport vp;
+  GetBackend()->GetViewport(vp);
 
 	// convert coordinates
 	CTRect<float> rectFloat;
-	rectFloat.minx = 2.0f * float(rect.minx) / float(vp.Width) - 1.0f;
-	rectFloat.maxx = 2.0f * float(rect.maxx) / float(vp.Width) - 1.0f;
-	rectFloat.miny = -2.0f * float(rect.maxy) / float(vp.Height) + 1.0f;
-	rectFloat.maxy = -2.0f * float(rect.miny) / float(vp.Height) + 1.0f;
+	rectFloat.minx = 2.0f * float(rect.minx) / float(vp.width) - 1.0f;
+	rectFloat.maxx = 2.0f * float(rect.maxx) / float(vp.width) - 1.0f;
+	rectFloat.miny = -2.0f * float(rect.maxy) / float(vp.height) + 1.0f;
+	rectFloat.maxy = -2.0f * float(rect.miny) / float(vp.height) + 1.0f;
 
 	// forward
 	RenderScreenQuad(rectFloat, params);

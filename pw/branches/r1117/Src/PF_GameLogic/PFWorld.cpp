@@ -45,6 +45,7 @@
 #include "../Scene/VertexColorManager.h"
 #include "PFMaleHero.h"
 #include "PFTalent.h"
+#include "PFApplMod.h"
 
 #include "HeroSpawn.h"
 #include "../System/Win32Random.h"
@@ -1055,6 +1056,14 @@ bool PFWorld::Step(float dtInSeconds, float dtLocal)
   // step statistics system
   pStatistics->OnStep(dtInSeconds);
 
+  // "Closed Ranks" for allies of players who left the battle: sync stacks once a second
+  {
+    const int stepsPerSecond = stepLength > 0 ? 1000 / stepLength : 10;
+    const int leaverBonusPeriod = stepsPerSecond > 0 ? stepsPerSecond : 1;
+    if ( step % leaverBonusPeriod == 0 )
+      UpdateLeaverBonus();
+  }
+
   if( IsValid( triggerMarkerHandler ) )
     triggerMarkerHandler->Step(dtInSeconds);
 
@@ -1335,6 +1344,92 @@ void PFWorld::RemoveAI( PFBaseHero* hero )
 
   if (pAIContainer)
     pAIContainer->Remove( hero );
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// "Closed Ranks" (Сплочённые ряды): every hero gets one stack of the status for each ally player who has left the battle
+// (PFPlayer::HasLeftBattle). The stack is removed when that player returns. Works in every mode: it doesn't depend
+// on map objects (main building etc.), only on players and heroes. Data: Heroes/DefaultStatus/LeaverBonus.ABLT/.APLR.
+namespace
+{
+  const char * const LEAVER_BONUS_ABILITY = "Heroes/DefaultStatus/LeaverBonus.ABLT.xdb";
+
+  struct LeaverBonusCollector : public NonCopyable
+  {
+    NDb::DBID statusId;
+    vector<PFBaseApplicator*> statuses;
+
+    explicit LeaverBonusCollector( const NDb::DBID & _statusId ) : statusId( _statusId ) {}
+
+    void operator()( PFBaseApplicator * pAppl )
+    {
+      if ( pAppl && pAppl->IsAlive() && pAppl->GetTypeId() == PFApplStatus::typeId && pAppl->GetDBBase()->GetDBID() == statusId )
+        statuses.push_back( pAppl );
+    }
+  };
+}
+
+void PFWorld::UpdateLeaverBonus()
+{
+  NI_PROFILE_FUNCTION
+
+  const NDb::Ptr<NDb::Ability> pAbility = NDb::Get<NDb::Ability>( NDb::DBID( LEAVER_BONUS_ABILITY ) );
+  if ( !IsValid( pAbility ) || pAbility->applicators.empty() || !IsValid( pAbility->applicators[0] ) )
+    return;
+
+  const NDb::DBID & statusId = pAbility->applicators[0]->GetDBID();
+
+  // Players who left the battle, by faction
+  int leftCount[NDb::KnownEnum<NDb::EFaction>::sizeOf] = { 0 };
+  for ( vector<CObj<PFPlayer> >::const_iterator it = players.begin(), end = players.end(); it != end; ++it )
+  {
+    const PFPlayer * pPlayer = *it;
+    if ( !pPlayer || !pPlayer->HasLeftBattle() )
+      continue;
+    if ( const PFBaseHero * pHero = pPlayer->GetHero() )
+    {
+      const int faction = pHero->GetFaction();
+      if ( faction > NDb::FACTION_NEUTRAL && faction < NDb::KnownEnum<NDb::EFaction>::sizeOf )
+        ++leftCount[faction];
+    }
+  }
+
+  for ( vector<CObj<PFPlayer> >::const_iterator it = players.begin(), end = players.end(); it != end; ++it )
+  {
+    PFPlayer * pPlayer = *it;
+    if ( !pPlayer )
+      continue;
+
+    PFBaseHero * pHero = pPlayer->GetHero();
+    if ( !IsValid( pHero ) )
+      continue;
+
+    const int faction = pHero->GetFaction();
+    if ( faction <= NDb::FACTION_NEUTRAL || faction >= NDb::KnownEnum<NDb::EFaction>::sizeOf )
+      continue;
+
+    // Allies only: the player doesn't get a stack for himself
+    const int wanted = leftCount[faction] - ( pPlayer->HasLeftBattle() ? 1 : 0 );
+
+    LeaverBonusCollector collector( statusId );
+    pHero->ForAllAppliedApplicators( collector );
+    const int current = collector.statuses.size();
+
+    if ( current > wanted )
+    {
+      for ( int i = wanted; i < current; ++i )
+      {
+        CObj<PFBaseApplicator> pAppl( collector.statuses[i] );
+        pAppl->Stop();
+        MemorizeApplicator( pAppl );
+      }
+    }
+    else
+    {
+      for ( int i = current; i < wanted; ++i )
+        pHero->UseExternalAbility( pAbility, Target( pHero ) );
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -141,7 +141,7 @@ struct DropCooldownParams : public NonCopyable
 
   int flags;
   PFAbilityData const* exceptAbility;
-  vector<NDb::Ptr<NDb::Ability>> const& talentsList;
+  vector<NDb::Ptr<NDb::Ability>> talentsList; // a copy: a reference to the default argument dangled after the constructor
   NDb::EUseMode mode;
   float cooldownReduction;
   bool reduceByPercent;

@@ -657,6 +657,16 @@ private:
       if (!bDot && !bArrow) break;
       if (bArrow) m_lex.Next();
       m_lex.Next();
+      // vec.x / vec.y (rPos.x): компонента CVec2
+      if (bDot && m_lastType == FT_V && m_lex.Cur().nKind == TK_ID
+          && (!strcmp(m_lex.Cur().id, "x") || !strcmp(m_lex.Cur().id, "y")))
+      {
+        E(FormulaVM::OP_VCOMP, m_lex.Cur().id[0] == 'x' ? 0 : 1);
+        m_lex.Next();
+        m_lastType = FT_F; m_lastKind = FR_NONE;
+        t = FT_F;
+        continue;
+      }
       if (m_lastType != FT_P) { Err("обращение к члену не у объекта"); break; }
       t = ParseMember();
     }
@@ -1665,7 +1675,11 @@ FormulaVM::Val const * FormulaVM::Run(void const * pFirst, void const * pSecond,
                     (pOp->nOp == OP_EQ || pOp->nOp == OP_NE);
         if (bPtr)
         {
-          r = (a.p == b.p);
+          // число (pSecond == 0) лежит в i: на x64 старшие байты p у него - мусор,
+          // поэтому число сравнивается как указатель из своего значения, а не из p
+          void const * pa = (a.t == FT_P || a.t == FT_U) ? a.p : (void const *)(intptr_t)V2I(a);
+          void const * pb = (b.t == FT_P || b.t == FT_U) ? b.p : (void const *)(intptr_t)V2I(b);
+          r = (pa == pb);
           if (pOp->nOp == OP_NE) r = !r;
         }
         else
@@ -1712,6 +1726,15 @@ FormulaVM::Val const * FormulaVM::Run(void const * pFirst, void const * pSecond,
         if (sp < 2) { m_nRuntimeErr = 23; pOp = 0; break; }
         Val r = st[sp - 1];
         sp -= 2; st[sp] = r; ++sp;
+        break;
+      }
+
+      case OP_VCOMP:
+      {
+        if (sp < 1 || st[sp - 1].t != FT_V) { m_nRuntimeErr = 25; pOp = 0; break; }
+        Val & v = st[sp - 1];
+        float f = pOp->nA ? v.v2.y : v.v2.x;
+        v.t = FT_F; v.f = f;
         break;
       }
 

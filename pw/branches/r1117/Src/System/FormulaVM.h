@@ -78,6 +78,7 @@ private:
     OP_NOT, OP_JZ, OP_JNZ, OP_JMP,
     OP_VEC2,           // два float -> CVec2
     OP_COMMA,          // оператор запятой C++: левое значение отбрасывается
+    OP_VCOMP,          // nA = 0/1: компонента x/y вектора (rPos.x)
     OP_CONV,           // nA = тип значения, nB = целевой тип (-1 = ещё не патчен)
     OP_COUNT
   };

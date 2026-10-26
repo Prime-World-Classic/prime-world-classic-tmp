@@ -24,6 +24,7 @@ include ("Maps/Multiplayer/Myth/Objective_RatsInvasion.lua") -- Задание "
 debageTraceOn = true -- используется исключительно в функции DebugTrace(). Если выставить в false функция DebugTrace() ничего не будет выводить в консоль
 
 debugSkipKobolds = false -- если true, то пропустить задание про кобольдов, отбивающих флаги после взрыва артефакта
+debugSkipEnemyHeroes = false -- если true, то пропустить выход Клыка после первого взрыва артефакта и пропустит выход Когтя и Клыка после второго взрыва артефакта
 
 debugGorynych = false -- если true, то запустить в начале миссии задание про Горыныча. При этом герои будут иметь 29-й уровень.
 debugGorynychFast = false -- если true, то в начале миссии не будет паузы в 60 секунд при тестировании Горыныча ( переменная debugGorynych = true)
@@ -60,7 +61,6 @@ debugMushrromDay = false -- если true, то в начале миссии з�
 -- begin ==========================     CONSTANS AND VARIABLES =============================================================================
 -- Раздел глобальных констант и переменных
 
-FACTION_MAIN = 0
 FACTION_DOCT = 1
 FACTION_ADORN = 2
 FACTION_NEUTRAL = 0
@@ -77,7 +77,8 @@ MinmapIconBridgePassable = 22 -- иконка для открытого напр
 -- MinmapIconBridgeImpassable = 23 -- иконка для закрытого направления. В данный момент не используется. Но вдруг понадобится.
 MinmapIconCreepsStrong = 11 -- икона для домиков чуди рядом с флагами. 
 
-allyHeroes = {}
+allyHeroes = {} 
+enemyHeroes = {}
 enemyStats = {}
 heroesWave = 0
 ivaCreep = "iva_spawner_w1_c1" -- Ива - это крип. А это ее имя.
@@ -97,12 +98,21 @@ leaders = 0
 
 -- begin ========================         FUNCTIONS          =============================================================================
 -- Далее идет код полный ужаса и безысходности
--- Правда? Привет от ifst
+
+local _enemyHeroes
+
+MAX_ALLY_HEROES = 10 -- на карте 10 точек появления команды игроков (5 в Coop1)
+
+-- Имена героев команды для скрипта: "00".."09" — команда 1, "10".."19" — команда 2.
+function TeamHeroNames( team, count )
+	local names = {}
+	for i = 0, count - 1 do
+		table.insert( names, tostring( team ) .. tostring( i ) )
+	end
+	return names
+end
 
 function Init( reconnecting )
-	
-	FACTION_MAIN = Family()
-	
 	-- Здесь инициализируем переменные и настройки карты
 	PvECommonInit( reconnecting )
 	SpawnersInit( reconnecting )
@@ -110,19 +120,24 @@ function Init( reconnecting )
 	
 	FillCreepStatsArray() -- заполняем массив STATS_BUDGET_BY_LEVEL из CreepStats.lua 
 	
-	if FACTION_MAIN == FACTION_DOCT then --если играем за доктов
+	if LuaGetLocalFaction() == FACTION_DOCT then --если играем за доктов
 		factionPlayer = FACTION_DOCT -- наша фракция - докты
 		towers = TOWERS_DOCT -- наши башни - доктовские
 		CreatureListHide( TOWERS_ADORN, true ) -- адорнийские башни убираем с карты
+		_enemyHeroes = TeamHeroNames( 1, 5 )
 	else --если играем за адорнийцев, то все как выше, только наоборот
 		factionPlayer = FACTION_ADORN
 		towers = TOWERS_ADORN
 		CreatureListHide( TOWERS_DOCT, true )
+		_enemyHeroes = TeamHeroNames( 0, 5 )
 	end
+
+	enemyHeroes = { unpack(_enemyHeroes, 1, #SECOND_WAVE_HEROES) }
 
 	factionEnemy = FACTION_NEUTRAL
 	enemyFactionFlag = 1 
 
+	
 	outerTowers = {} -- 4 башни, которые стоят по периметру
 	for i=1, #towers-1 do
 		outerTowers[i] = towers[i]
@@ -147,10 +162,12 @@ function Init( reconnecting )
 			LuaCreatureHide( "bottomAdorn", true ) -- убираем адорнийскую подложку под Ивой
 			LuaCreatureHide( "bottom2Adorn", true ) -- убираем адорнийскую подложку рядом с храмом
 			LuaCreatureHide( "templeAdorn", true ) -- убираем адорнийский храм
+			CreatureListHide( _enemyHeroes, true ) -- прячем героев-адорнийцев
 		else -- если мы адорнийцы, то, соответственно, все наоборот.
 			LuaCreatureHide( "bottomDoct", true ) 
 			LuaCreatureHide( "bottom2Doct", true )
 			LuaCreatureHide( "templeDoct", true )					
+			CreatureListHide( _enemyHeroes, true )
 		end
 		
 		-- инициализация глобальных переменных и массивов
@@ -186,38 +203,13 @@ function Init( reconnecting )
 	end
 end
 
-function Family()
-	
-	local faction = LuaRandom( 1, 2 )
-	
-	for team = 0, 1 do
-	
-		for hero = 0, 4 do
-			
-			local heroNameId = tostring( team ) .. tostring( hero )
-			
-			local dead, found = LuaUnitIsDead( heroNameId )
-			
-			if found then
-				
-				LuaSetCreepFaction( heroNameId, faction )
-				
-				LuaSetCreepWarfogFaction( heroNameId, faction  )
-				
-			end
-			
-		end
-		
-	end
-	
-	return faction
-	
-end
-
 function InitBonusPoints ()
 	COMMON_STATS_BONUS = { stats = {StatLife, StatStrength, StatIntellect, StatStamina, StatWill, StatDexterity, StatAttackSpeed, StatEnergy } }
 	local distributedBonusPoints = {}
 	for i=1, #COMMON_STATS_BONUS["stats"] do table.insert( distributedBonusPoints, 0 ) end
+	for i=1, #enemyHeroes do			
+		SetGlobalVar( "distributedBonusPoints"..enemyHeroes[i], distributedBonusPoints ) -- для каждого героя заводим глобальный массив, в котором будем запоминать количество очков статов, которые уже ему были выданы ранее.
+	end
 end
 
 function Reconnect() -- запускается при реконнекте
@@ -269,8 +261,37 @@ function Main()
 		local _, found = LuaUnitIsDead(id)
 		return found
 	end
+	
+	-- получаем координаты точки, в которой будем респавнить вражеских героев
+	local x,y,r = LuaGetScriptArea( "enemyHeroRespawnPoint" )
+
+	-- Назначаем им точку респавна в зоне "enemyHeroRespawnPoint" (см. выше)
+	-- после чего телепортим в эту всех героев
+	for _, id in ipairs(_enemyHeroes) do
+		if heroExists(id) then
+			LuaApplyPassiveAbility(id, "flagpolesBonus") -- Даем вражеским героям бонус от флагов ( + к воле, стойкости и скорости)
+			--LuaCreatureHide(id, true)
+			LuaCreatureTeleportTo(id, x, y)
+			LuaHeroSetRespawnPoint(id, x, y)
+			LuaHeroSetForbidRespawn(id, true) -- Запрещаем вражеским героям респавнится стандартным образом
+			LuaHeroSetRefineRate(id, ENEMY_HERO_REFINE_RATE) -- Заточка сета зависит от уровня сложности. Степень заточки хранится в ENEMY_HERO_REFINE_RATE, задается в Bootstrap_<color>.lua			
+			LuaKillUnit(id) -- Убиваем их на всякий случай
+		end
+	end
+	
+	for _, id in ipairs(enemyHeroes) do
+		LuaCreatureHide(id, false)
+	end	
+
 	--На уровнях сложности Red и Orange вражеским героям при левелапе выдаются дополнительные статы.
 	LuaDebugTrace("XXXX WWWWWW")
+	--for i=1, #ENEMY_HERO_STATS_BONUS["stats"] do table.insert( distributedBonusPoints, 0 ) end
+	for i=1, #enemyHeroes do			
+		--SetGlobalVar( "distributedBonusPoints"..enemyHeroes[i], distributedBonusPoints ) -- для каждого героя заводим глобальный массив, в котором будем запоминать количество очков статов, которые уже ему были выданы ранее.
+		LuaSubscribeUnitEvent( enemyHeroes[i], EventResurrect, "UpdateHeroStats") -- подписываемся на событие "возрождение героя". В момент его возрождения, ему будут выданы дополнительные статы.			
+	end
+
+	
 	-- Всем союзным героям на карте скорость передвижения увеличена на 10%
 	-- А скорость регенерации энергии 0.6%
 	for i=1, #allyHeroes do
@@ -353,6 +374,16 @@ function Main()
 		return 
 	end
 	
+	if debugHeroFirstAttack then -- Если хотим потестить приход Клыка
+		SpawnEnemyHeroes( 1 )
+		return
+	end
+	
+	if debugHeroSecondAttack then -- Если хотим потестить приход Клыка и Когтя
+		SpawnEnemyHeroes( 2 )
+		return
+	end
+	
 	-- end ==== DEBUG SECTION ===
 	
 	AddTriggerEnd( Superability )	-- Запускаем функциональность суперабилки (лежит в Superability.lua )
@@ -369,8 +400,9 @@ end
 
 -- Здесь сохраняем в массив allyHeroes героев нашей команды и перекрашиваем террейн в родную землю нашей фракции
 function InitHeroes()
-	local allyCandidates = { "00","01","02","03","04","10","11","12","13","14" }
+	local allyCandidates = TeamHeroNames( 1, MAX_ALLY_HEROES )
 	if factionPlayer == FACTION_DOCT then 
+		allyCandidates = TeamHeroNames( 0, MAX_ALLY_HEROES )
 		LuaChangeNatureMap("allMap", FACTION_ADORN, FACTION_DOCT)
 	end
 	
@@ -397,8 +429,8 @@ function IvaSetup()
 	LuaPlaceAttachedEffect( "healEffect", "centerAreaHeal", ivaCreep ) 
 	-- Запрещаем Иве атаковать, быть интерактивной, двигаться и быть управляемой игроком
 	SetUnitsFlagList( {ivaCreep}, {ForbidAutoAttack, ForbidInteract, ForbidPlayerControl, ForbidAttack, ForbidMove}, true )	
-	LuaSetUnitStat( ivaCreep, StatLife, 8000 ) -- Выставляем Иве 4000 здоровья
-	LuaSetUnitStat( ivaCreep, StatLifeRegeneration, 4 ) -- Делаем лайфреген 2%
+	LuaSetUnitStat( ivaCreep, StatLife, 8000 ) -- Выставляем Иве 8000 здоровья (на 10 игроков)
+	LuaSetUnitStat( ivaCreep, StatLifeRegeneration, 4 ) -- Делаем лайфреген 4%
 	AddTriggerEnd( IvaMustSurvive, ivaCreep ) -- Запускаем проверку условия поражения. Если Ива погибла - мы проиграли
 end
 
@@ -654,7 +686,9 @@ function ObjectiveMain_DefendCastle()
 						end
 						table.remove( questIDs, questIDIndex ) -- удаляем из массива идентификатор выданного квеста
 					end
-				end
+				end 
+				-- После того, как квест закончится, выпускаем вражеских героев. 
+				if not debugSkipEnemyHeroes then SpawnEnemyHeroes( superabilityUsesCount ) end -- superabilityUsesCount - количество взрывов артефакта. От него зависит количество героев, которые придут атаковать 
 				SetGlobalVar("AfterExplosionTimeInterval", false)
 			else 
 				SpawnGorynych() -- в противном случае выпускаем Горыныча
@@ -1036,6 +1070,116 @@ function SpawnGorynych()
 	GorynychObjective( directions[1] )
 end
 
+-- Функция, которая выдает задание про Клыка после первого взрыва и задание про Когтя и Клыка после второго взрыва.
+-- принимает в качестве параметра heroesNumber. Если 1 - значит только Клык. Если 2 - значит и Коготь и Клык.
+-- по счастливому стечению обстоятельств необходимое количество вражеских героев равно количеству произведенных взрывов.
+-- так что при вызове в нее передеается именно количество взрывов. 
+function SpawnEnemyHeroes( waveNumber )
+	LuaDebugTrace("STARTED: [SpawnEnemyHeroes]")	
+	local heroes = ReturnHeroWaveParams( waveNumber )	
+	
+	if  #heroes == 1 then				
+		AddQuest("defeatEnemyHero", true, false)
+		
+		-- Если герой 1, то выдать задание "Одолейте вражеского героя" (одного)
+		DefeatEnemyHeroes( ReturnHeroWaveParams( waveNumber ) )
+			
+		CompleteQuest("defeatEnemyHero", true, false)		
+	else 
+		AddQuest("defeatEnemyHeroes", true, false)
+		
+		-- Если героев больше 1-го, то выдать задание "Одолейте вражеских героев" (много)
+		DefeatEnemyHeroes( ReturnHeroWaveParams( waveNumber ) )
+		
+		CompleteQuest("defeatEnemyHeroes", true, false)	
+	end
+	
+	AddQuest( "chargeArtefact" )	-- после того, как герой (герои) уничтожен, снова выдать квест про зарядку артефакта
+		
+	LuaDebugTrace("FINISHED: [SpawnEnemyHeroes]")
+end
+
+-- Здесь мы ставим на карту вражеских героев. Выдаем им свиту. Ждем, когда они будут уничтожены.
+-- supportUnits - массив из которого будем роллить свиту. 
+-- supportUnitsCount - количество групп, которые надо нароллить из supportUnits
+function DefeatEnemyHeroes( heroes, supportUnits, supportUnitsCount )	
+
+	local directions = GetAvailableDirections()
+	local direction = directions[LuaRandom( 1, #directions )] -- выбираем случайное направление для атаки
+	local heroesWave = superabilityUsesCount -- определяем как волна героев сейчас
+	local heroesInterval, supportUnitsInterval
+	
+	if heroesWave == 1 then
+		heroesInterval = 6
+		supportUnitsInterval = 12
+	else
+		heroesInterval = 11
+		supportUnitsInterval = 16
+	end
+
+	-- Раз в 4 секунды спавним одну случайную группу свиты. 
+	local spawned = {}
+	if supportUnits ~= nil then
+		for i=1, supportUnitsCount do
+			local group = ReturnRandomGroup( supportUnits )
+			spawned = SpawnerSpawn( group, factionEnemy )
+			supportUnits[ group ] = nil
+			
+			PushPathAndApplyFlagBonus( spawned, direction )
+			local supportUnitsInterval = supportUnitsInterval / supportUnitsCount
+			WaitState( supportUnitsInterval )	
+		end
+	end
+
+	-- если герои были дохлые, резурректим
+	for k=1, #heroes do
+		local dead, exist = LuaUnitIsDead( heroes[k] )	
+		if dead then 
+			LuaHeroRespawn( heroes[k] ) 
+			DebugTrace("[DefeatEnemyHeroes] hero .."..heroes[k].." has respawned")
+		end
+	end
+	
+	local x,y,r = LuaGetScriptArea( direction.."EnemySpawnerArea" )
+	--local maxLevel = GetMaxAllyHeroesLevel() -- узнаем, какой сейчас левел у самого крутого игрока в команде
+	local maxLevel = GetGlobalVar("LastCreepLevel")
+	
+	SleepState()
+	
+	for k=1, #heroes do
+		LevelUpHero2( heroes[k], maxLevel + heroesInterval )	-- Выдаем героям левел превышающий уровень крипов
+		
+		LuaCreatureTeleportTo( heroes[k], x, y )
+		LuaHeroAIPushPath( heroes[k], direction.."Path", false ) -- отправляем героев пушить выбранную линию
+		if not GetGlobalVar( "towerIsDestroyed" ) then
+			AddTriggerEnd( DestroyBase, heroes[k] ) -- Костыль от затупа героя в центре заставы. Чтобы шел крушить доступные цели, если они есть.
+		end
+		LuaDebugTrace("hero "..heroes[k].." choose direction "..direction)
+		SleepState()
+	end	
+	
+	WaitState( 2.0 )
+	-- Ждем пока герои не сдохнут
+	for k=1, #heroes do
+		local dead, exist
+		repeat 
+			SleepState()
+			dead, exist = LuaUnitIsDead( heroes[k] ) 
+		until dead 
+	end
+end
+
+-- Заставляет вражеского героя не тупить в центре, а искать на заставе доступные цели
+function DestroyBase( hero )
+	WaitForUnitInArea( hero, "ruinedCastle" )
+	if not GetGlobalVar( "towerIsDestroyed" ) then
+		LuaHeroAIGuardScriptArea( hero, "ruinedCastle", false )
+		LuaDebugTrace("[DestroyBase]: hero "..hero.." looks for target within base")
+	end
+end
+
+
+
 -- ========================== MISC =============================
 -- #############################################################
 
@@ -1164,6 +1308,43 @@ function GetMaxAllyHeroesLevel()
 		end
 	end	
 	return maxLevel
+end
+
+-- Апдейтит статы героя в момент его возрождения
+function UpdateHeroStats( hero )
+	LuaDebugTrace("[UpdateHeroStats] for hero "..hero)
+	local index = 0
+	for i=1, #enemyHeroes do 
+		if hero == enemyHeroes[i] then
+			index = i
+			break
+		end
+	end
+	LuaDebugTrace("[UpdateHeroStats] index is "..index)	
+	if index then
+		LuaDebugTrace("[UpdateHeroStats] hero is "..enemyHeroes[index])
+		UnicHeroStats (hero, enemyStats [index])
+	end
+end
+
+function UnicHeroStats( hero, statsData )
+	LuaDebugTrace("[UnicHeroStats] for hero "..hero)
+	local stats = statsData["stats"]
+	local bonus = statsData["bonus"]
+	local distributedBonusPoints = CopyArray( GetGlobalVar("distributedBonusPoints"..hero) )
+	PrintArray( distributedBonusPoints )
+	local points = 0
+	local level = GetGlobalVar("LastCreepLevel") or GetGlobalVar("enemyHeroLevel") -- на случай, если крипы еще не вышли берем уровень героев
+	for i=1, #stats do
+		LuaDebugTrace("level = "..level..", bonus = "..bonus[i]..", distributedBonusPoints = "..distributedBonusPoints[i])
+		points = level * bonus[i] / 36 - distributedBonusPoints[i]
+		distributedBonusPoints[i] = distributedBonusPoints[i] + points		
+		LuaDebugTrace("[UnicHeroStats]: points = "..points..", distributedBonusPoints["..i.."] = "..distributedBonusPoints[i])
+		LuaDebugTrace("[UnicHeroStats]: hero ".." init stat "..tostring(stats[i]).." = "..LuaGetUnitStat( hero, stats[i] ))
+		LuaSetUnitStat( hero, stats[i], LuaGetUnitStat( hero, stats[i] ) + points)
+		LuaDebugTrace("[UnicHeroStats]: hero ".." updated stat "..tostring(stats[i]).." = "..LuaGetUnitStat( hero, stats[i] ))
+	end
+	SetGlobalVar("distributedBonusPoints"..hero, distributedBonusPoints)
 end
 
 function GetTimeInvetval ()

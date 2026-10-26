@@ -10,8 +10,9 @@
 }
  
  TOWER_LIFE_INCREMENT = 8000
- RED_DIFFICULTY = true -- всё, что включено на красной, работает и на чёрной
- BLACK_DIFFICULTY = true
+ -- Золотая сложность. Файлы карты остаются Black.*: этот путь передаёт бэкенд (режим 4).
+ RED_DIFFICULTY = true -- всё, что включено на красной, работает и на золотой
+ GOLD_DIFFICULTY = true
  INIT_CREEP_STAT_MODIFIER = 3.625 -- красная (1.45) x2.5: все статы чуди x2.5
 
   -- Тут были оранжевые талантсеты с 9 звездами
@@ -39,6 +40,6 @@ ENEMY_HERO_STATS_BONUS = { stats = {StatLife, StatStrength, StatIntellect, StatS
  WAVE_SPAWN_INTERVALS = { 12, 13, 14, 14 }
  WAVE_SPAWN_INTERVALS_MAIN_DIR = { 9, 9, 10, 10 }
  
- LuaDebugTrace("Difficulty is BLACK")
+ LuaDebugTrace("Difficulty is GOLD")
  
  include ("Maps/Multiplayer/Myth/script.lua")

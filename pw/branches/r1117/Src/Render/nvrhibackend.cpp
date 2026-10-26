@@ -7750,6 +7750,52 @@ HRESULT NvrhiBackend::DrawImpl(ERenderPrimitiveType type, bool indexed, unsigned
     if (d.traceConstLogged < 3u)
       DebugTrace("VkTraceC: ps=%u zNear := %.6g", d.curPs, s_znear);
   }
+  // PW_VK_ZNEAR_FOG=<float> — то же правка PS c21.x (zNear), но без привязки к
+  // seam-индексу PS: он нестабилен между прогонами (замер 2026-10-26: в одном
+  // прогоне пост-проход — ps=65, в другом ps=65 — это геометрия с vtx=2406).
+  // Вывод опознаётся по признаку самой war fog-ветки: пиксельный шейдер
+  // ОБРАЩАЕТСЯ к binding 10 = WARFOGSAMPLERINDEX (GlobalMasks.h) — список
+  // ресурсов пары даёт это точно. Первый вариант предиката «слот 10 занят»
+  // (d.texBound[10]) годился плохо: привязка остаётся от предыдущего вывода, и
+  // zNear=1e9 уезжал в c21 материалов, где c21 — строка INSTANCE_DATA
+  // (GlobalMasks.h:96): прогон abS_vk_fogOFF дал яркость 134,8 против 68,5 и
+  // B-R −185,75, т.е. вместо «туман выключен» получилась порча констант сцены.
+  // 1e9 -> ветка `z > zNear` (FullScreenMaterial.hlsl:246) не выполняется
+  // нигде: war fog выключен, весь остальной пост (sharp/colorcorrect/bloom)
+  // работает, вариант шейдера не меняется; -1 -> выполняется везде. Это чистый
+  // контроль «туман включён/выключен» внутри одного контура: в отличие от
+  // `warfogDisable` (снимает пин WarFog -> другой вариант -> у SPIR-V-цели такой
+  // комбинации нет -> пропускается весь проход) и от `PW_VK_NOREADDEPTH` (меняет
+  // пины всех сценовых материалов и роняет сцену в черноту).
+  static float s_znearFog = 1e30f;
+  static bool s_znearFogRead = false;
+  if (!s_znearFogRead)
+  {
+    s_znearFogRead = true;
+    char bz2[64]; bz2[0] = 0;
+    if (GetEnvironmentVariableA("PW_VK_ZNEAR_FOG", bz2, sizeof(bz2) - 1) > 0)
+      s_znearFog = (float)atof(bz2);
+  }
+  if (s_znearFog < 1e29f)
+  {
+    const int rmFog = FindOrCreateResMap(d);
+    bool fogSampler = false;
+    if (rmFog >= 0 && rmFog < (int)d.resMaps.size())
+    {
+      const std::vector<NvrhiBackendImpl::ResItem>& items = d.resMaps[rmFog].items;
+      for (size_t k = 0u; k < items.size(); ++k)
+        if (items[k].binding == 10u) { fogSampler = true; break; }
+    }
+    if (fogSampler)
+    {
+      m_constShadow[csPixel][21 * 4] = s_znearFog;
+      if (d.traceConstLogged < 3u)
+      {
+        DebugTrace("VkTraceC: ps=%u warfog (binding 10) zNear := %.6g", d.curPs, s_znearFog);
+        ++d.traceConstLogged;
+      }
+    }
+  }
   if (d.curPs == s_traceConst && d.traceConstLogged < 24u && d.model.colorWriteEnable)
   {
     ++d.traceConstLogged;

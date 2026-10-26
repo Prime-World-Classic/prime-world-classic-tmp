@@ -18,7 +18,7 @@ REGISTER_VAR( "anim_spring_gravity",   s_springGravity,   STORAGE_NONE );
 REGISTER_VAR( "anim_spring_max_angle", s_springMaxAngle,  STORAGE_NONE );
 
 // Turn lean tuning from the console: a value >= 0 overrides the skeleton table below
-static bool  s_turnEnable    = true;
+static bool  s_turnEnable    = false;  // off by default: anim_turn_enable 1 from the console
 static bool  s_turnAll       = false;  // every skeleton with the standard spine bones, not only the table ones
 static bool  s_turnLeanFlip  = false;  // lean the other way
 static float s_turnLean      = -1.0f;

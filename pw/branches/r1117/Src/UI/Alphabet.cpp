@@ -95,6 +95,13 @@ void Alphabet::LoadAlphabet( FT_Library ftLibrary, const char* _ttfFileName, int
     widthK = UI::GetScreenResolution().x > 0 ? ( float( UI::GetUIScreenResolution().x ) / float( UI::GetScreenResolution().x ) ) : 1.0f;
     heightK = UI::GetScreenResolution().y > 0 ? ( float( UI::GetUIScreenResolution().y ) / float( UI::GetScreenResolution().y ) ) : 1.0f;
 
+    // a TextField created in flash code may ask for a 0 px font (no size request is possible then)
+    if ( _fontSize < 1 )
+    {
+      DebugTrace( "Font '%s' asked with size %d, 1 is used", _ttfFileName ? _ttfFileName : "", _fontSize );
+      _fontSize = 1;
+    }
+
     FT_Size_RequestRec  req;
 
     req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;

@@ -177,9 +177,13 @@ python3 -B "$ROOT/pw/branches/r1117/Src/LinuxBootstrap/ruffle_eval/replay_gate.p
 ```
 
 This gate requires matching actor IDs, exact timeline and command/status totals,
-no autonomous replay input, and one identical purchase, cast and mana-payment
-receipt. The real C120 comparison passes; this is not full-world CRC equivalence.
-Replay camera framing still differs from the ordinary live view.
+no autonomous replay input, one identical purchase, cast and mana-payment receipt,
+and matching default camera focus, zoom and angles. Replay follows the human UID
+retained from its header, not the placeholder local scheduler. Manual pan detaches
+follow; Home/reset restores it. Missing ownership freezes the view rather than
+selecting a bot. These viewing controls do not permit gameplay commands in replay.
+The real original-SWF replay comparison passes in C121; this is not full-world
+CRC equivalence, complete Windows visual parity or a recorded camera-input track.
 
 Keep the `.pwrp.info` sidecar with its matching `.pwrp` file. Play a recording with:
 

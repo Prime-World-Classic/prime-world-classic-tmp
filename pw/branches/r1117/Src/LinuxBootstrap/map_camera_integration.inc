@@ -44,8 +44,9 @@ static LinuxBootstrap::SceneWindowRequest ResolveLinuxMapSceneRequest(
 	return request;
 }
 
-/** Follow only the scheduler's own playing human. Losing ownership freezes the camera,
- * never retargeting a bot. Manual pan/minimap navigation detach follow until Home/reset.
+/** Follow the live or recorded playing human without granting replay command authority.
+ * Losing ownership freezes the camera, never retargeting a bot. Manual pan/minimap
+ * navigation detach follow until Home/reset. The replay UID is retained at header load.
  */
 static void UpdateLinuxLocalMapCamera(const LinuxClientLaunchSettings& settings,
 	const LinuxSelectedMapPreview& map, LinuxBootstrapScreenRuntime* runtime)
@@ -60,10 +61,16 @@ static void UpdateLinuxLocalMapCamera(const LinuxClientLaunchSettings& settings,
 		return;
 	}
 	auto* world = GetLinuxBootstrapRuntimeWorld(runtime);
-	auto* player = !settings.spectator && !runtime->replayFileInputActive && world && runtime->localScheduler
-		? world->GetPlayerByUID(runtime->localScheduler->GetMyClientID()) : nullptr;
-	auto* hero = player && !player->IsBot() && player->IsPlaying() ? player->GetHero() : nullptr;
-	if (!hero || !std::isfinite(hero->GetPosition().x) || !std::isfinite(hero->GetPosition().y)) return;
+	const int clientId = runtime->replayFileInputActive
+		? (runtime->replayInputHeaderReady ? runtime->replayInputClientId : -1)
+		: (runtime->localScheduler ? runtime->localScheduler->GetMyClientID() : -1);
+	auto* player = !settings.spectator && world && clientId > 0 ? world->GetPlayerByUID(clientId) : nullptr;
+	if (!IsValid(player) || player->GetWorld() != world || !world->IsSubscribed(player) ||
+		player->IsBot() || !player->IsPlaying()) return;
+	auto* hero = player->GetHero();
+	if (!IsValid(hero) || hero->GetWorld() != world || hero->GetPlayer() != player ||
+		world->FindLinuxUnitByObjectId(hero->GetObjectId()) != hero ||
+		!std::isfinite(hero->GetPosition().x) || !std::isfinite(hero->GetPosition().y)) return;
 	const auto& bounds = map.tactical;
 	const float range = std::max(1.f, std::max(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY));
 	const float scale = 92.f / range;

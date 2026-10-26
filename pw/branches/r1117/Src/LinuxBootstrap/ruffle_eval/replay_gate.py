@@ -4,7 +4,7 @@
 import argparse
 from pathlib import Path
 
-from gameplay_gate import fields, integer, pair, record, require, validate
+from gameplay_gate import fields, integer, number, pair, record, require, validate
 
 
 def validate_replay(live_stdout, live_log, replay_stdout, replay_log):
@@ -33,6 +33,18 @@ def validate_replay(live_stdout, live_log, replay_stdout, replay_log):
 		key = 'finalLiveHero' + suffix
 		require(integer(record(live_log, key, '=')) == integer(record(replay_log, key, '=')),
 			f'Replay hero {suffix} differs from live')
+	for log in (live_log, replay_log):
+		camera = fields(record(log, 'finalLocalMapCamera', '='), ':', 'active follow updates focusHeight')
+		require(integer(camera['active']) == integer(camera['follow']) == 1 and
+			integer(camera['updates']) > 0, 'Replay comparison requires recorded-human camera follow')
+		number(camera['focusHeight'])
+	for suffix in ('BaseYaw', 'RenderedYaw', 'Pitch', 'RenderedPitch', 'Zoom'):
+		key = 'finalMap3DPreview' + suffix
+		require(abs(number(record(live_log, key, '=')) - number(record(replay_log, key, '='))) <= .0001,
+			f'Replay camera {suffix} differs from live')
+	live_pan = pair(record(live_log, 'finalMap3DPreviewPan', '='), ',', number)
+	replay_pan = pair(record(replay_log, 'finalMap3DPreviewPan', '='), ',', number)
+	require(all(abs(a - b) <= .0001 for a, b in zip(live_pan, replay_pan)), 'Replay camera focus differs from live')
 	for key in ('Native local talent purchase', 'Native local talent cast', 'Native talent formula payment'):
 		require(record(live_stdout, key, ': ') == record(replay_stdout, key, ': '), f'Replay receipt differs: {key}')
 	return dict(live, replay_ticks=ticks)

@@ -99,6 +99,12 @@ class GameplayGateTests(unittest.TestCase):
 		replay_log = ('finalLiveHeroObjectId=7502\nfinalLiveHeroPlayerId=2\nfinalLiveHeroUserId=1984\n'
 			'finalLinuxAIControllers=auto:0/0 add:0/0 active:0 commands:0/0 fallback:0\n'
 			'finalReplayFileLiveWorldCreated=no\n')
+		camera = ('finalLocalMapCamera=active:1 follow:1 updates:100 focusHeight:7.28\n'
+			'finalMap3DPreviewBaseYaw=-42\nfinalMap3DPreviewRenderedYaw=318\n'
+			'finalMap3DPreviewPitch=56\nfinalMap3DPreviewRenderedPitch=56\n'
+			'finalMap3DPreviewZoom=9\nfinalMap3DPreviewPan=2,3\n')
+		live_log += camera
+		replay_log += camera
 		self.assertEqual(validate_replay(live, live_log, replay, replay_log)['replay_ticks'], 1001)
 		for before, after in ((LOCAL_PURCHASE, ''), (LOCAL_CAST, ''), (PAYMENT, ''),
 			(PAYMENT, PAYMENT + PAYMENT), ('step=496', 'step=495'), ('before=725', 'before=724'),
@@ -107,7 +113,10 @@ class GameplayGateTests(unittest.TestCase):
 				validate_replay(live, live_log, replay.replace(before, after), replay_log)
 		for before, after in (('ObjectId=7502', 'ObjectId=7501'), ('PlayerId=2', 'PlayerId=1'),
 			('UserId=1984', 'UserId=1985'), ('commands:0/0', 'commands:1/1'), ('active:0', 'active:9'),
-			('fallback:0', 'fallback:1'), ('LiveWorldCreated=no', 'LiveWorldCreated=yes')):
+			('fallback:0', 'fallback:1'), ('LiveWorldCreated=no', 'LiveWorldCreated=yes'),
+			('active:1', 'active:0'), ('follow:1', 'follow:0'), ('updates:100', 'updates:0'),
+			('Zoom=9', 'Zoom=1.18'), ('Pan=2,3', 'Pan=3,2'), ('Pitch=56', 'Pitch=40'),
+			('RenderedYaw=318', 'RenderedYaw=nan'), ('focusHeight:7.28', 'focusHeight:inf')):
 			with self.subTest(before=before), self.assertRaises(gate.EvidenceError):
 				validate_replay(live, live_log, replay, replay_log.replace(before, after))
 

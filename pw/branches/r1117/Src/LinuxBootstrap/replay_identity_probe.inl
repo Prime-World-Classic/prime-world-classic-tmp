@@ -87,6 +87,90 @@ static bool RunLinuxReplayIdentityProbe()
 	ValidateLinuxBootstrapReplayFileProof(settings.replayFile, &proof, true);
 	check(proof.validated && !proof.liveWorldCreated && proof.liveWorldValidationError == "map-desc-missing",
 		"explicit diagnostics still attempt the offline map validation path");
+	// Camera presentation must use the recorded human without granting command ownership.
+	LinuxBootstrapScreenRuntime camera;
+	camera.loadingInitialized = true;
+	camera.loadingScreen = replay.loadingScreen;
+	camera.sessionPresentation = LinuxBootstrap::SessionPresentation::World;
+	camera.transceiverWorld = CreateLinuxReplayWorld();
+	auto* cameraWorld = dynamic_cast<NWorld::PFWorld*>(camera.transceiverWorld.GetPtr());
+	auto* terrain = new NDb::Terrain;
+	terrain->elemXCount = terrain->elemYCount = 20; terrain->tilesPerElement = 2;
+	auto* dbMap = new NDb::AdvMap; dbMap->terrain = terrain;
+	auto* desc = new NDb::AdvMapDescription; desc->map = dbMap;
+	NDb::Ptr<NDb::AdvMapDescription> description = desc;
+	check(cameraWorld->LoadMap(description, nullptr, live.loadingMapStartInfo.playersInfo, nullptr,
+		false, NWorld::PFResourcesCollection::TalentMap()), "camera fixture loads real map and player registry");
+	auto* owner = cameraWorld->GetPlayerByUID(1984);
+	check(owner != nullptr, "camera fixture contains the recorded human");
+	if (!owner) return false;
+	NWorld::PFBaseHero::SpawnInfo spawn;
+	spawn.pHero = new NDb::Hero;
+	spawn.placement = Placement(CVec3(50, 60, 0), QNULL, CVec3(1, 1, 1));
+	CObj<NWorld::PFBaseMaleHero> hero = new NWorld::PFBaseMaleHero(cameraWorld, spawn,
+		NDb::FACTION_FREEZE, NDb::FACTION_FREEZE);
+	hero->AttachToPlayer(owner);
+	camera.localScheduler = new Game::LocalCmdScheduler(1984);
+	LinuxSelectedMapPreview map;
+	map.descriptor = "mock-camera-map";
+	map.tactical.ready = true;
+	map.tactical.minX = map.tactical.minY = 0;
+	map.tactical.maxX = map.tactical.maxY = 200;
+	UpdateLinuxLocalMapCamera(settings, map, &camera);
+	const float liveZoom = camera.mapPreviewZoom, liveX = camera.mapPreviewPanX, liveY = camera.mapPreviewPanZ;
+	check(camera.localMapCamera && liveZoom > 1.18f, "live camera starts in a close human view");
+	camera.replayFileInputActive = true;
+	camera.replayInputStorage = replay.replayInputStorage;
+	camera.replayInputHeaderReady = replay.replayInputHeaderReady;
+	camera.replayInputClientId = replay.replayInputClientId;
+	check(camera.replayInputClientId == 1984, "actual replay setup retains the recorded client ID");
+	camera.localScheduler = new Game::LocalCmdScheduler(999);
+	camera.localMapCamera = false;
+	ResetLinuxMapPreviewCamera(&camera, "probe-replay");
+	UpdateLinuxLocalMapCamera(settings, map, &camera);
+	check(camera.localMapCamera && camera.localMapFollow && camera.mapPreviewZoom == liveZoom &&
+		camera.mapPreviewPanX == liveX && camera.mapPreviewPanZ == liveY,
+		"replay follows the recorded human, not the placeholder scheduler identity");
+	check(!ResolveLinuxLocalPlayerHero(&camera, cameraWorld), "replay camera grants no gameplay command ownership");
+	PanLinuxMapPreview(&camera, 1, 1, "probe-pan");
+	const float panX = camera.mapPreviewPanX, panY = camera.mapPreviewPanZ;
+	const auto updates = camera.localMapFocusUpdates;
+	UpdateLinuxLocalMapCamera(settings, map, &camera);
+	check(camera.localMapCamera && !camera.localMapFollow && camera.localMapFocusUpdates == updates &&
+		camera.mapPreviewPanX == panX && camera.mapPreviewPanZ == panY,
+		"manual replay pan detaches follow without reinitializing the view");
+	ResetLinuxMapPreviewCamera(&camera, "probe-reset");
+	UpdateLinuxLocalMapCamera(settings, map, &camera);
+	check(camera.localMapCamera && camera.localMapFollow && camera.mapPreviewPanX == liveX &&
+		camera.mapPreviewPanZ == liveY && camera.mapPreviewZoom == liveZoom, "reset restores recorded-human follow");
+	for (int mode : {0, 1, 2, 3, 4})
+	{
+		const auto before = camera.localMapFocusUpdates;
+		settings.spectator = mode == 0;
+		camera.replayInputHeaderReady = mode != 1;
+		owner->SetIsPlaying(mode != 2);
+		owner->SetUserID(mode == 3 ? -1 : 1984);
+		camera.replayInputClientId = mode == 4 ? 999 : 1984;
+		UpdateLinuxLocalMapCamera(settings, map, &camera);
+		check(camera.localMapFocusUpdates == before, "spectator, missing header/owner, inactive or bot owner cannot retarget camera");
+	}
+	settings.spectator = false;
+	camera.replayInputHeaderReady = true;
+	camera.replayInputClientId = 1984;
+	owner->SetIsPlaying(true); owner->SetUserID(1984);
+	const auto beforeDetach = camera.localMapFocusUpdates;
+	hero->DetachFromPlayer();
+	UpdateLinuxLocalMapCamera(settings, map, &camera);
+	check(camera.localMapFocusUpdates == beforeDetach, "detached hero cannot update camera");
+	hero->AttachToPlayer(owner);
+	camera.mapPreviewYawDegrees = 18; camera.mapPreviewPitchDegrees = 40; camera.mapPreviewZoom = 4;
+	UpdateLinuxLocalMapCamera(settings, map, &camera);
+	check(camera.localMapFocusUpdates > beforeDetach && camera.mapPreviewRenderedYawDegrees == 18 &&
+		camera.mapPreviewRenderedPitchDegrees == 40 && camera.mapPreviewZoom == 4,
+		"follow resumes without overriding user rotation, tilt or zoom");
+	camera.sessionPresentation = LinuxBootstrap::SessionPresentation::Loading;
+	UpdateLinuxLocalMapCamera(settings, map, &camera);
+	check(!camera.localMapCamera, "leaving replay world presentation restores overview");
 	fprintf(stdout, "Replay identity: %d checks, %d failures\n", checks, failures);
 	return failures == 0;
 }

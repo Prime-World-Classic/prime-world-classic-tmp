@@ -4459,6 +4459,7 @@ struct LinuxBootstrapScreenRuntime
   bool replayFileInputActive;
   bool replayInputReady;
   bool replayInputHeaderReady;
+	int replayInputClientId = -1;
   bool replayInputWorldAttached;
   bool replayInputStepCountMatches;
   bool replayInputCommandCountMatches;
@@ -41345,6 +41346,7 @@ void EnsureLinuxBootstrapGameScheduler(
     runtime->replayInputTransceiver = 0;
     runtime->replayInputReady = false;
     runtime->replayInputHeaderReady = false;
+		runtime->replayInputClientId = -1;
     runtime->replayInputWorldAttached = false;
     runtime->replayInputStepCountMatches = false;
     runtime->replayInputCommandCountMatches = false;
@@ -42151,6 +42153,7 @@ void EnsureLinuxBootstrapGameScheduler(
       {
         runtime->replayInputPaceMs = static_cast<size_t>(runtime->replayInputStepLength);
       }
+			runtime->replayInputClientId = replayHeaderClientId;
 
       runtime->replayInputLoadedSegments = runtime->replayInputStorage->GetLinuxReplayTimelineSteps();
       runtime->replayInputLoadedCommands = runtime->replayInputStorage->GetLinuxReplayLoadedCommands();

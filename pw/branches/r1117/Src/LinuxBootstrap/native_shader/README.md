@@ -69,6 +69,13 @@ unweighted; subsequent layer alphas are weighted. Overburn multiplies the
 already nature-weighted RGB, not an independent additive light.
 
 `IndexedDraw` borrows independent day/night/weight streams and live 2D textures.
+Draw validates the original source layout and budgets, then uploads the smallest
+contiguous referenced vertex span with rebased staged indices. Baked/terrain
+colour uploads use the matching slice; CPU colour staging and its existing limits
+are unchanged. Unreferenced prefixes/tails and unused final-vertex attributes are
+not uploaded. There is no cross-draw geometry cache or new GL resource lifetime.
+`Diagnostics` reports submitted vertex/index/colour bytes separately from draws
+and upstream allocator usage; these counters are not allocated GPU memory.
 Global variants ignore unused UV layout/data. Off writes RGBA/depth;
 AddColor supports later nature passes while preserving destination alpha/depth.
 Other terrain blend modes, cache, shadow and depth-output permutations are not

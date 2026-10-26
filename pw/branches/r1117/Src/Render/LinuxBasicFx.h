@@ -17,6 +17,8 @@ struct Statistics {
 	uint64_t bakedSelections = 0, bakedUnsupported = 0, bakedDraws = 0, bakedRejected = 0;
 	uint64_t terrainDraws = 0, terrainRejected = 0;
 	uint64_t skyDraws = 0, skyRejected = 0;
+	/** Current native backend's submitted geometry bytes, not allocated GPU memory. */
+	uint64_t vertexUploadBytes = 0, indexUploadBytes = 0, colorUploadBytes = 0;
 };
 
 /** Host lifecycle: call once after GLX creation, and shut down before destroying it. */

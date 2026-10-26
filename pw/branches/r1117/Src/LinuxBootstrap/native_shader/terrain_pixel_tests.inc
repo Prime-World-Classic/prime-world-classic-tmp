@@ -103,7 +103,14 @@ void TerrainTests(Checks& check, Host& host, const Bytes& fx, const Bytes& baked
 	for (size_t slot=0; slot<8; ++slot) for (float fraction : {0.f,.4f,1.f}) {
 		const Float4 selection{.2f,.5f,.3f,0};
 		TerrainRegisters(*backend,fraction,.1f,selection,.7f); target.Clear();
+		const auto before = backend->GetDiagnostics();
 		check.Good(backend->Draw(programs.terrain[slot],draw),"original terrain layer/day-night draw");
+		const auto after = backend->GetDiagnostics();
+		check.Test(after.colorUploadBytes - before.colorUploadBytes == 4 * 12 &&
+			after.vertexUploadBytes - before.vertexUploadBytes == 3 * sizeof(Mesh::Vertex) +
+			(slot % 2 ? offsetof(Mesh::Vertex, uv) + sizeof(Mesh::Vertex::uv) :
+				offsetof(Mesh::Vertex, position) + sizeof(Mesh::Vertex::position)),
+			"terrain uploads only referenced color/weight/position/optional-UV spans");
 		PixelIs(check,32,32,TerrainPixel(slot/2+1,texels,weights,day,night,fraction,nature,selection,.7f),
 			"layer order, BGRA weights, HDR decode, nature and multiplicative overburn");
 		DepthIs(check,.25f,"terrain world-space D3D depth mapping");

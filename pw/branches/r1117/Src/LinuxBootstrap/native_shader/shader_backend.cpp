@@ -453,6 +453,7 @@ struct ShaderBackend::Impl {
 	ContextKey key;
 	std::thread::id thread = std::this_thread::get_id();
 	uint64_t generation = NextGeneration.fetch_add(1), serial = 0, draws = 0;
+	uint64_t vertexUploadBytes = 0, indexUploadBytes = 0, colorUploadBytes = 0;
 	Budget budget;
 	IndexedBlendFunctions blend;
 	MOJOSHADER_glContext* context = nullptr;
@@ -777,6 +778,17 @@ Result ShaderBackend::Draw(const ProgramRef& reference, const IndexedDraw& d) {
 				StageBakedColors(d.dayColors,d.nightColors,indices,p.budget.limits.geometryBytes,colors);
 			if(!status) return status;
 		}
+		// Admission above checks the original layout and colour streams. Upload only
+		// their referenced contiguous spans, keeping index/attribute origins aligned.
+		const auto bounds = std::minmax_element(indices.begin(), indices.end());
+		const size_t firstVertex = *bounds.first;
+		const size_t vertexCount = size_t(*bounds.second) - firstVertex + 1;
+		const size_t vertexOffset = d.streamOffset + firstVertex * d.stride;
+		const size_t vertexBytes = (vertexCount - 1) * d.stride + extent;
+		const size_t colorStride = terrain ? 12 : 8;
+		const size_t colorOffset = firstVertex * colorStride;
+		const size_t colorBytes = colors.empty() ? 0 : vertexCount * colorStride;
+		for (auto& index : indices) index -= static_cast<uint32_t>(firstVertex);
 		const auto textureAt=[&](size_t unit) { return terrain ? (unit==4?d.natureTexture:d.terrainTextures[unit]) : d.texture; };
 		for (size_t unit=0; unit<(terrain?5:1); ++unit) {
 			if (terrain && unit>=layers && unit!=4) continue;
@@ -834,19 +846,22 @@ Result ShaderBackend::Draw(const ProgramRef& reference, const IndexedDraw& d) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, GLint(imageLevels-1));
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, p.vertexBuffer);
-		glBufferData(GL_ARRAY_BUFFER, GLsizeiptr(d.vertices.size), d.vertices.data, GL_STREAM_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, GLsizeiptr(vertexBytes), vertices + vertexOffset, GL_STREAM_DRAW);
+		p.vertexUploadBytes += vertexBytes;
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, p.indexBuffer);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, GLsizeiptr(indices.size() * sizeof(uint32_t)), indices.data(), GL_STREAM_DRAW);
+		p.indexUploadBytes += indices.size() * sizeof(uint32_t);
 		MOJOSHADER_glBindProgram(p.pairs[slot].linked);
 		for (size_t i=0;i<vsCount;++i) MOJOSHADER_glSetVertexShaderUniformF(requiredVS[i], p.vs[requiredVS[i]].data(), 1);
 		for (size_t i = 0; i < psCount; ++i) MOJOSHADER_glSetPixelShaderUniformF(requiredPS[i], p.ps[requiredPS[i]].data(), 1);
 		MOJOSHADER_glSetVertexAttribute(MOJOSHADER_USAGE_POSITION, 0, 3, MOJOSHADER_ATTRIBUTE_FLOAT, 0,
-			unsigned(d.stride), reinterpret_cast<const void*>(d.streamOffset + d.positionOffset));
+			unsigned(d.stride), reinterpret_cast<const void*>(d.positionOffset));
 		if (hasUV) MOJOSHADER_glSetVertexAttribute(MOJOSHADER_USAGE_TEXCOORD, 0, 2, MOJOSHADER_ATTRIBUTE_FLOAT, 0,
-			unsigned(d.stride), reinterpret_cast<const void*>(d.streamOffset + d.uvOffset));
+			unsigned(d.stride), reinterpret_cast<const void*>(d.uvOffset));
 		if (baked || terrain) {
 			glBindBuffer(GL_ARRAY_BUFFER,p.colorBuffer);
-			glBufferData(GL_ARRAY_BUFFER,GLsizeiptr(colors.size()),colors.data(),GL_STREAM_DRAW);
+			glBufferData(GL_ARRAY_BUFFER,GLsizeiptr(colorBytes),colors.data() + colorOffset,GL_STREAM_DRAW);
+			p.colorUploadBytes += colorBytes;
 			for(int channel=0;channel<(terrain?3:2);++channel)
 				MOJOSHADER_glSetVertexAttribute(MOJOSHADER_USAGE_COLOR,channel,4,MOJOSHADER_ATTRIBUTE_UBYTE,1,
 					terrain?12:8,reinterpret_cast<const void*>(uintptr_t(channel*4)));
@@ -924,7 +939,8 @@ Result ShaderBackend::Shutdown() {
 
 Diagnostics ShaderBackend::GetDiagnostics() const {
 	const auto& p = *impl_;
-	return {p.budget.live, p.budget.peak, p.budget.calls, p.budget.refused, p.draws};
+	return {p.budget.live, p.budget.peak, p.budget.calls, p.budget.refused, p.draws,
+		p.vertexUploadBytes, p.indexUploadBytes, p.colorUploadBytes};
 }
 
 bool ShaderBackend::SupportsIndexedBlending() const {

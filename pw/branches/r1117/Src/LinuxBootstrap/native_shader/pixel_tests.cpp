@@ -639,7 +639,14 @@ void Run(Checks& check, Host& host, const Bytes& archive, ProgramRef& late) {
 		glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT1,GL_TEXTURE_2D,0,0);
 	}
 	target.Clear();
+	const auto uploadBefore = backend->GetDiagnostics();
 	check.Good(backend->Draw(program,draw),"draw original padded layout/base vertex/index prefix");
+	const auto uploadAfter = backend->GetDiagnostics();
+	check.Test(uploadAfter.vertexUploadBytes - uploadBefore.vertexUploadBytes ==
+		3 * sizeof(Mesh::Vertex) + offsetof(Mesh::Vertex, uv) + sizeof(Mesh::Vertex::uv) &&
+		uploadAfter.indexUploadBytes - uploadBefore.indexUploadBytes == 6 * sizeof(uint32_t) &&
+		uploadAfter.colorUploadBytes == uploadBefore.colorUploadBytes,
+		"upload only the referenced vertex span and index slice, without unused prefix/tail");
 	PixelIs(check,32,32,{255,0,0,255},"identity red texel");
 	PixelIs(check,2,2,ClearPixel,"outside geometry untouched");
 	float depth = 0; glReadPixels(32,32,1,1,GL_DEPTH_COMPONENT,GL_FLOAT,&depth);
@@ -687,16 +694,27 @@ void Run(Checks& check, Host& host, const Bytes& archive, ProgramRef& late) {
 
 	std::vector<uint32_t> wide{99,99,0,1,2,0,2,3}; auto wideDraw = draw;
 	wideDraw.indexType = IndexType::UInt32; wideDraw.indexData = {wide.data(),wide.size()*4}; target.Clear();
+	auto beforeWide = backend->GetDiagnostics();
 	check.Good(backend->Draw(program,wideDraw),"32-bit indices with prefix and base vertex");
+	check.Test(backend->GetDiagnostics().vertexUploadBytes - beforeWide.vertexUploadBytes ==
+		3 * sizeof(Mesh::Vertex) + offsetof(Mesh::Vertex, uv) + sizeof(Mesh::Vertex::uv),
+		"wide indices retain the same compact vertex span");
 	PixelIs(check,32,32,{255,0,0,255},"32-bit indexed pixel");
 	wide = {99,99,2,3,4,2,4,5}; wideDraw.baseVertex = -1; target.Clear();
+	beforeWide = backend->GetDiagnostics();
 	check.Good(backend->Draw(program,wideDraw),"valid negative base vertex");
+	check.Test(backend->GetDiagnostics().vertexUploadBytes - beforeWide.vertexUploadBytes ==
+		3 * sizeof(Mesh::Vertex) + offsetof(Mesh::Vertex, uv) + sizeof(Mesh::Vertex::uv),
+		"negative base is resolved before compact upload origins");
 	PixelIs(check,32,32,{255,0,0,255},"negative-base indexed pixel");
 
 	auto reject = [&](IndexedDraw invalid, const char* name) {
-		target.Clear(); const auto before = backend->GetDiagnostics().draws;
+		target.Clear(); const auto before = backend->GetDiagnostics();
 		check.Test(!backend->Draw(program,invalid),name);
-		check.Test(before == backend->GetDiagnostics().draws && Near(ReadPixel(32,32),ClearPixel),"rejected draw changes no pixels/count");
+		const auto after = backend->GetDiagnostics();
+		check.Test(before.draws == after.draws && before.vertexUploadBytes == after.vertexUploadBytes &&
+			before.indexUploadBytes == after.indexUploadBytes && before.colorUploadBytes == after.colorUploadBytes &&
+			Near(ReadPixel(32,32),ClearPixel),"rejected draw changes no pixels/count/uploads");
 	};
 	auto invalid = draw; invalid.stride = 0; reject(invalid,"zero stride rejected");
 	invalid = draw; invalid.uvOffset = invalid.stride-4; reject(invalid,"attribute past stride rejected");

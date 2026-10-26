@@ -290,6 +290,13 @@ Add `--bootstrap-vertex-reuse-benchmark` to `--bootstrap-flash-renderer-probe` f
 an opt-in alternating indexed-grid benchmark. Its timing is not an overall game
 FPS result or a desktop-GPU benchmark.
 
+The authored shader backend uploads only each draw's validated contiguous vertex
+span and matching baked/terrain colours, rebasing its private index copy. Original
+source-layout and allocation limits still apply; no caller data or GL ownership
+changes. `finalNativeShaderUploads` records submitted vertex/index/colour bytes.
+See [native shader contracts and tests](native_shader/README.md) for the retained
+validation, pixel/depth and host-state coverage.
+
 Eligible single-skeleton live hero/creep previews now use the original
 `DiAnimGraph`, `AnimGraphBlender` and `AnimGraphApplicator`, including authored
 default nodes, dispatchers and transition blending. Idle/move aliases come from

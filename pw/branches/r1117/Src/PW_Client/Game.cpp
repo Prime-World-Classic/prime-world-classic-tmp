@@ -69401,6 +69401,9 @@ void AppendRuntimeInputLog(
 	const auto vertexWork = Render::SmartRenderer::GetOpenGLVertexWorkStats();
 	logFile << "  finalNativeVertexWork=draws:" << vertexWork.draws << " corners:" << vertexWork.corners
 		<< " transformed:" << vertexWork.transformed << " reused:" << vertexWork.reused << "\n";
+	const auto shaderWork = Render::LinuxBasicFx::GetStatistics();
+	logFile << "  finalNativeShaderUploads=vertexBytes:" << shaderWork.vertexUploadBytes
+		<< " indexBytes:" << shaderWork.indexUploadBytes << " colorBytes:" << shaderWork.colorUploadBytes << "\n";
 #endif
 	logFile << "  finalProductionLoadingPresentationFrames=" << screenRuntime.productionLoadingPresentationFrames << "\n";
 	logFile << "  finalSceneWindow=revision:" << selectedMapPreview.sceneWindow.Revision()

@@ -52,6 +52,8 @@ struct Limits {
 struct Diagnostics {
 	size_t liveBytes = 0, peakBytes = 0, allocationCalls = 0, refusedAllocations = 0;
 	uint64_t draws = 0;
+	/** Bytes submitted to buffer uploads, including preparations rejected by the driver. */
+	uint64_t vertexUploadBytes = 0, indexUploadBytes = 0, colorUploadBytes = 0;
 };
 
 /** Copyable CPU ticket only. Its last release never calls GL or touches a backend. */
@@ -100,6 +102,8 @@ struct Bgra8ColorStream {
 };
 
 /** Borrowed buffers remain valid through Draw. Offsets/stride are in bytes; indices in elements.
+ * Uploads contain only the validated referenced contiguous spans; no source or GL buffer
+ * is cached across draws. Original layout/budget admission applies before index rebasing.
  * Texture is a live level-0 2D name in the owning context. Sampling is explicitly Repeat/Linear.
  * Draw targets the caller's framebuffer, without clearing it. All modified GL state is restored.
  * Alpha testing uses final shader alpha; discarded pixels write neither color nor depth.

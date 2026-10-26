@@ -185,7 +185,16 @@ void ClearSelection() {
 	selectedSky = false; selectedSkyValid = false; selectedMipLevels = 1;
 }
 bool IsSelected() { return selected; }
-Statistics GetStatistics() { return statistics; }
+Statistics GetStatistics() {
+	auto result = statistics;
+	if (backend) {
+		const auto uploads = backend->GetDiagnostics();
+		result.vertexUploadBytes = uploads.vertexUploadBytes;
+		result.indexUploadBytes = uploads.indexUploadBytes;
+		result.colorUploadBytes = uploads.colorUploadBytes;
+	}
+	return result;
+}
 bool IsTransparentMaterial(const NDb::Material* material) {
 	const auto* m = AdmittedMaterial(material);
 	return m && m->renderState.blendMode != NDb::BLENDMODE_OFF;

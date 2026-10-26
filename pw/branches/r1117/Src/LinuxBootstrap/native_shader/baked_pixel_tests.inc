@@ -79,7 +79,10 @@ void BakedTests(Checks& check, Host& host, const Bytes& fx, const Bytes& baked, 
 	check.Test(backend->Draw(tickets[0],draw).code == Code::UninitializedRegisters,"baked uploads do not falsely initialize BasicFX registers");
 	for (float fraction : {0.f,.25f,.5f,1.f,-.25f,1.25f}) {
 		BakedRegisters(*backend,fraction,mul,add); target.Clear();
+		const auto before = backend->GetDiagnostics();
 		check.Good(backend->Draw(tickets[3],draw),"baked HDR day/night draw with finite extrapolation");
+		check.Test(backend->GetDiagnostics().colorUploadBytes - before.colorUploadBytes == 4 * 8,
+			"baked upload excludes unused leading color vertices");
 		PixelIs(check,32,32,BakedPixel(BakedLight(day,night,fraction),mul,add),"BGRA decode, alpha-as-HDR-scale, original night lerp and RGB constants");
 		DepthIs(check,.25f,"baked D3D depth mapping");
 	}

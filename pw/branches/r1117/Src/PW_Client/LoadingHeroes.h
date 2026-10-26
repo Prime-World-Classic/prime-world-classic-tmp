@@ -35,7 +35,8 @@ public:
 
   void SetOurUserId(int userId, NCore::ETeam::Enum team, NCore::ETeam::Enum manoeuvreTeam);
   void AddUser(int userId, const wstring & playerName, 
-    bool isMale, NCore::ETeam::Enum team, NCore::ETeam::Enum manoeuvresTeam, const HeroInfo& heroInfo, string & flagIcon, wstring & flagTooltip, const string& skinId, int leagueIdx);
+    bool isMale, NCore::ETeam::Enum team, NCore::ETeam::Enum manoeuvresTeam, const HeroInfo& heroInfo, string & flagIcon, wstring & flagTooltip, const string& skinId, int leagueIdx,
+    bool otherSide = false); // otherSide: ally in the enemy column (TeamSidesLayout)
   void SetPlayerProgress( int userId, float pro );
 
   void AddBot(int userId);

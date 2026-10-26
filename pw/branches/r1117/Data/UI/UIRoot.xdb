@@ -1334,6 +1334,8 @@
 				<ttfFileName>/UI/Fonts/DejaVu_book/DejaVuLGCSans-Bold.ttf</ttfFileName>
 			</UIFontStyle>
 		</Item>
+		<Item href="/UI/FontStyles/OT_status.IFNT" />
+		<Item href="/UI/FontStyles/OT_status_back.IFNT" />
 	</fontStyles>
 	<healthStripes>
 		<allyColor100>
@@ -2302,6 +2304,50 @@
 		<Item>
 			<captionText textref="/UI/UIRoot_substitutes_113_captionText.txt" />
 			<id>TTRedSetCastRange</id>
+		</Item>
+		<Item>
+			<captionText textref="/UI/UIRoot_substitutes_114_captionText.txt" />
+			<id>OTStatusStun</id>
+		</Item>
+		<Item>
+			<captionText textref="/UI/UIRoot_substitutes_115_captionText.txt" />
+			<id>OTStatusHex</id>
+		</Item>
+		<Item>
+			<captionText textref="/UI/UIRoot_substitutes_116_captionText.txt" />
+			<id>OTStatusSleep</id>
+		</Item>
+		<Item>
+			<captionText textref="/UI/UIRoot_substitutes_117_captionText.txt" />
+			<id>OTStatusTerror</id>
+		</Item>
+		<Item>
+			<captionText textref="/UI/UIRoot_substitutes_118_captionText.txt" />
+			<id>OTStatusFear</id>
+		</Item>
+		<Item>
+			<captionText textref="/UI/UIRoot_substitutes_119_captionText.txt" />
+			<id>OTStatusPanic</id>
+		</Item>
+		<Item>
+			<captionText textref="/UI/UIRoot_substitutes_120_captionText.txt" />
+			<id>OTStatusTaunt</id>
+		</Item>
+		<Item>
+			<captionText textref="/UI/UIRoot_substitutes_121_captionText.txt" />
+			<id>OTStatusSilence</id>
+		</Item>
+		<Item>
+			<captionText textref="/UI/UIRoot_substitutes_122_captionText.txt" />
+			<id>OTStatusRoot</id>
+		</Item>
+		<Item>
+			<captionText textref="/UI/UIRoot_substitutes_123_captionText.txt" />
+			<id>OTStatusDisarm</id>
+		</Item>
+		<Item>
+			<captionText textref="/UI/UIRoot_substitutes_124_captionText.txt" />
+			<id>OTStatusBlind</id>
 		</Item>
 	</substitutes>
 	<votingForSurrender href="/UI/Content/VotingForSurrender" />

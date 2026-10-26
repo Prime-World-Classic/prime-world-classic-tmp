@@ -55,6 +55,25 @@ namespace Render
     void InitSpringBones();
     void ApplySpringBone( SpringBone& s, Matrix43& boneWorld, const Matrix43& parentWorld, int steps, float stepTime, bool reset );
 
+    // Turn lean: the body leans into a turn and the torso/head turn ahead of the model, client-side visual only
+    struct TurnLean
+    {
+      int params;               // index in the turn lean table, -1 - this skeleton is not in the table
+      int twistBones[4];        // BackA_M, Chest_M, Neck_M, Head_M (-1 if absent)
+      bool initialized;
+      float prevYaw;
+      CVec3 prevPos;
+      float yawRate;            // smoothed, rad/s, positive - counterclockwise seen from above
+      CVec3 velocity;           // smoothed horizontal velocity, world units/s
+      float lean;               // current angles, rad
+      float twist;
+    };
+    TurnLean turnLean;
+
+    void InitTurnLean( const char* skeletonName );
+    void UpdateTurnLean( const Matrix43& worldMatrix, float dt );
+    void ApplyTurnLean( Matrix43& rootWorld, const Matrix43& worldMatrix ) const;
+    void ApplyTurnTwist( unsigned int bone, Matrix43& boneWorld ) const;
 
 	public:
 		SkeletonWrapper(const SkeletonDataWrapper* _pSkeletonData);
@@ -81,6 +100,8 @@ namespace Render
     void ClearExtraYaw() { extraYaw.clear(); }
     // Time passed since the previous Update, drives spring bones (0 = keep them as they are)
     void SetTimeDelta( float dt ) { timeDelta = dt; }
+    // Skeleton file name selects per-hero procedural settings (turn lean)
+    void SetSkeletonName( const char* name ) { InitTurnLean( name ); }
     bool GetBindPosition( unsigned int index, CVec3& pos ) const;   // model-space bone position in the bind pose
 
     //void SetSkeletonData( const SkeletonDataWrapper* pNewSkeletonData );

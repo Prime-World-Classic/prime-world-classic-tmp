@@ -472,9 +472,9 @@
 		<percent>0</percent>
 	</consumptionBonus>
 	<cooldownTime>
-		<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
+		<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAAC0Qg==</compiledString>
 		<returnType>float</returnType>
-		<sString>1.0f</sString>
+		<sString>90</sString>
 	</cooldownTime>
 	<cooldownTimeSecondState>
 		<compiledString></compiledString>
@@ -502,7 +502,7 @@
 			<instantApply>false</instantApply>
 		</DispatchImmediate>
 	</dispatch>
-	<flags>67</flags>
+	<flags>3</flags>
 	<forceBonus>0</forceBonus>
 	<image href="/UI/Styles/Icons/Heroes/Laguna/A4_2.ITEX" />
 	<imageSecondState href="" />
@@ -530,7 +530,7 @@
 	<shortDescription textref="/Items/Talents/Class/Laguna/Ability_A4_2.TALENT_shortDescription.txt" />
 	<talentRollGroups>63</talentRollGroups>
 	<talentStats />
-	<targetType>2021654531</targetType>
+	<targetType>679477251</targetType>
 	<type>Active</type>
 	<upgradeLevel>0</upgradeLevel>
 	<useRange>

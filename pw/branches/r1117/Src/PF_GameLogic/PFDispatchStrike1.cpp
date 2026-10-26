@@ -3,6 +3,7 @@
 #include "PFDispatchStrike1.h"
 #include "PFBaseUnit.h"
 #include "PFAbilityInstance.h"
+#include "PFAbilityData.h"
 #include "PFBaseMovingUnit.h"
 #include "TileMap.h"
 #include "../Core/Scheduler.h"
@@ -154,6 +155,9 @@ PFDispatchUniformLinearMove::PFDispatchUniformLinearMove(CreateParams const &cp)
 
   suspendTime = GetDB().suspendTime;
 	speed = GetDB().speed;
+  baseSpeed = speed;
+  speedUpPercent = 0.0f;
+  pathLength = 0.0f;
 	maxDistance = GetDB().maxDistance > 0.0f ? GetDB().maxDistance : 1.0e6f;
 
   m_startTime = GetWorld()->GetTimeElapsed();
@@ -320,6 +324,9 @@ bool PFDispatchUniformLinearMove::Step(float dtInSeconds)
 
       CVec2 const delta = receiverPos - curPos;
       float const deltaLength = fabs(delta);
+      if ( speedUpPercent != 0.0f && pathLength > EPS_VALUE )
+        speed = baseSpeed * ( 1.0f + speedUpPercent * 0.01f * Clamp( travelledDistance / pathLength, 0.0f, 1.0f ) );
+
       float const maxMove = dtInSeconds * speed;
       CVec2 const oldCurPos = curPos;
 
@@ -398,9 +405,19 @@ void PFDispatchUniformLinearMove::OnStart()
 
   originalSenderPos = curPos;
   originalDir = lastTargetPos - curPos;
+  pathLength = fabs(originalDir);
   if (!Normalize(&originalDir))
   {
     originalDir = CVec2(0.f, -1.f);
+  }
+
+  // the talent constant DispatchSpeedUp (percent) speeds the dispatch up along its way: the DB speed at the start,
+  // +DispatchSpeedUp % at the target (Laguna A4_1 whale)
+  if ( IsValid(pAbility) )
+  {
+    PFAbilityData const* pData = pAbility->GetData();
+    if ( pData && pData->GetDBDesc() && pData->GetDBDesc()->constants && pData->GetConstant( "DispatchSpeedUp" ) )
+      speedUpPercent = pData->CalcParam( "DispatchSpeedUp", pSender.GetPtr(), pSender.GetPtr(), pData );
   }
 
   if ( IsValid(pParentApplicator) )

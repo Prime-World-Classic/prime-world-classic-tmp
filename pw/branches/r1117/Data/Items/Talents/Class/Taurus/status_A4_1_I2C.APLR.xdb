@@ -25,9 +25,9 @@
 		<Item href="" />
 	</effect>
 	<enabled>
-		<compiledString>FR4AAAAEAAAAIwAAADkAAABFAAAAWwAAAFRhdXJ1c1JhbUkyQwAAAABUYXVydXNSYW1EYXNoAFWL7FFoAAAAAItFDIsQi00Mi4KIAQAA/9DcHX0AAADf4PbEQXQraBAAAACLTQyLEYtNDIuCiAEAAP/Q3B19AAAA3+D2xEF0CcdF/AAAAADrB8dF/AEAAACKRfyL5V3DAAAAAAAAAAA=</compiledString>
+		<compiledString>FR4AAAADAAAAKQAAAEMAAABZAAAAVGF1cnVzUmFtQ2hhcmdlAFRhdXJ1c1JhbURhc2gAVYvsUWoBi0UQUGgAAAAAi00IixGLTQiLgpwBAAD/0DtFEHUraBAAAACLTQyLEYtNDIuCiAEAAP/Q3B17AAAA3+D2xEF0CcdF/AAAAADrB8dF/AEAAACKRfyL5V3DAAAAAAAAAAA=</compiledString>
 		<returnType>bool</returnType>
-		<sString>receiver.vTaurusRamI2C &gt; 0 || receiver.vTaurusRamDash &gt; 0</sString>
+		<sString>sender.applTaurusRamCharge(UNIT) != pMisc || receiver.vTaurusRamDash &gt; 0</sString>
 	</enabled>
 	<flags>64</flags>
 	<formulaName></formulaName>

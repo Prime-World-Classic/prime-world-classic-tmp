@@ -46,6 +46,7 @@ namespace
   };
 
   BotOverride botOverride[2];
+  const BotOverride noBotOverride = BotOverride(); // for heroes past the override slots
 }
 static bool g_useTestTalentSet = false;
 REGISTER_DEV_VAR( "use_test_talentset", g_useTestTalentSet, STORAGE_NONE );
@@ -359,14 +360,19 @@ namespace NWorld
 
         //@iA@: BSV is Adeptus Obfuscaturus
         const int overrideIndex = overrideCnt[player_it->teamID]++;
-        const string overrideId = botOverride[player_it->teamID].heroIds[overrideIndex];
+        // Overrides cover the first ARRAY_SIZE(heroIds) heroes of a team; a team can
+        // be bigger (10 players in the trial map Maps/Multiplayer/Myth).
+        const bool hasOverrideSlot = overrideIndex < ARRAY_SIZE( noBotOverride.heroIds );
+        const BotOverride & teamOverride = hasOverrideSlot ? botOverride[player_it->teamID] : noBotOverride;
+        const int overrideSlot = hasOverrideSlot ? overrideIndex : 0;
+        const string overrideId = teamOverride.heroIds[overrideSlot];
 
         vector<string> pets;
         NStr::SplitString( g_validPets, &pets, ' ' );
         int powVal = 1;
         for ( int i = 0; i < pets.size(); i++ )
         {
-          if ( (botOverride[player_it->teamID].pet[overrideIndex] & powVal) == powVal )
+          if ( (teamOverride.pet[overrideSlot] & powVal) == powVal )
             AddPet( pets[i].c_str(), pWorld, player_it, spawner );
           powVal *= 2;
         }
@@ -393,7 +399,7 @@ namespace NWorld
 
         MAP_LOADING_IP;
 
-        string customTS = botOverride[player_it->teamID].customTS[overrideIndex];
+        string customTS = teamOverride.customTS[overrideSlot];
         if ( !customTS.empty() )
         {
           NDb::Ptr<NDb::TalentsSet> talentSet = NDb::Get<NDb::TalentsSet>( NDb::DBID(customTS) );

@@ -52,6 +52,8 @@
 	<BackLink DBID="/Items/Talents/Class/Invisible/A1Upg_Push.APLR" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/IronKnight/Ability_A4_2.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Katana/Ability_A2.TALENT" Count="1" />
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A4_1.TALENT" Count="2" />
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A4_2.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Mage/A4_SummonDemon.APLR" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Mage/Ability3.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/MagicGirl/Ability_A2.TALENT" Count="1" />

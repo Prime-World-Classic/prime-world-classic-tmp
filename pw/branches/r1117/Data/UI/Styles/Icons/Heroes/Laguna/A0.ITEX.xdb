@@ -1,5 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <UITexture>
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A0.TALENT" Count="1" />
+	<BackLink DBID="/Items/Talents/Class/Laguna/status_A0_SeaChild.APLR" Count="1" />
 	<generatedFileName></generatedFileName>
 	<importOnlyShape>false</importOnlyShape>
 	<mipLevels>0</mipLevels>

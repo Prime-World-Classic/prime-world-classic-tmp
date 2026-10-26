@@ -247,6 +247,4 @@ def tree(d, k):
 badge((100, 170, 60), 'ping_icon14', tree)
 
 # ---------------------------------------------------------------- wheels for 4..8 sectors
-from wheel_gen import wheel, as_offsets
-offs = wheel(OUT, 'ping_wheel', 256, 124, 42, 26)
-print(as_offsets('PING_HL_OFFSETS', offs))
+# the wheels are 2x textures now: wheel_hd.py (the 1x ones of wheel_gen.py do not match MainInterface.as any more)

@@ -61,6 +61,10 @@ void DataExecutor::initClass(unsigned char expectedVersion, unsigned char const 
   // NULL -> IsValid()==false -> ExecutableString::operator() сообщит
   // «String executor is not compiled». Нужен x64-бэкенд FormulaBuilder
   // (или интерпретатор формул) — см. PLAN_client_modern.md, этап 3.
+  // FormulaExecutor on x64 runs sString on FormulaVM and passes no blob here: nothing to load, no assert
+  // (the assert stopped ReleaseSingleExe x64 at the first formula; ShippingSingleExe compiles asserts out)
+  if ( dataBuffer == NULL || nBufferSize == 0 )
+    return;
   NI_VERIFY( false, "x64 build: precompiled x86 formula binaries cannot be executed (need an x64 formula backend)", return; );
 #endif
 

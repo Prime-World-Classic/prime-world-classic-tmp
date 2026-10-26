@@ -4,6 +4,7 @@
 	import flash.geom.Rectangle;
 	import flash.display.BitmapData;
 	import flash.utils.getDefinitionByName;
+	import flash.utils.getQualifiedClassName;
 	import src.ScaleBitmap;
 	import flash.display.Bitmap;
 	import flash.events.MouseEvent;
@@ -33,7 +34,18 @@
 		{			
 			var depth:int = getChildIndex(image);
 			var image_bd:BitmapData = image.bitmapData;
-			
+
+			// halloween skin: dark plate with an orange border for the value fields (same size and grid as textFrame.png)
+			try
+			{
+				if (getQualifiedClassName(this) == "sliderFrame_cmp" && Skin.Has("HW_ValueFrame"))
+					image_bd = Skin.Bmd("HW_ValueFrame");
+			}
+			catch (e:Error)
+			{
+				Skin.Fail("PWFrame", e);
+			}
+
 			var scaleBitmap:ScaleBitmap = new ScaleBitmap(image_bd);
 			scaleBitmap.scale9Grid = rectangle;
 				

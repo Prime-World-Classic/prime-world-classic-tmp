@@ -133,6 +133,7 @@ namespace Render
 		skeletonSourceFileName = skeletonFileName;
 #endif
 		pSkeletonWrapper = new SkeletonWrapper( RenderResourceManager::LoadSkeletonData( skeletonFileName ) );
+    pSkeletonWrapper->SetSkeletonName( skeletonFileName.c_str() );
 	}
 
 	void SkeletalMesh::AddSkinPart( const NDb::SkinPartBase* pDBSkinPartResource, unsigned int* pPartIndexes, unsigned int* pPartsCount )

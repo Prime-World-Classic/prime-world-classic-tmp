@@ -257,7 +257,7 @@
 			var mateInfo:StatisticsBarPlayers =  GetMateInfoById(playerData.HeroId);  
 			
 			if (mateInfo == null)
-				mateInfo = GetNewMateInfoStat(playerData.HeroId, playerData.Fraction,playerData.PartyID);
+				mateInfo = GetNewMateInfoStat(playerData.HeroId, playerData.ColumnFraction,playerData.PartyID);
 				
 			if (mateInfo == null) return;
 			

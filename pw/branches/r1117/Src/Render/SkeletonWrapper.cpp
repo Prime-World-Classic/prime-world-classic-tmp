@@ -17,6 +17,24 @@ REGISTER_VAR( "anim_spring_damping",   s_springDamping,   STORAGE_NONE );
 REGISTER_VAR( "anim_spring_gravity",   s_springGravity,   STORAGE_NONE );
 REGISTER_VAR( "anim_spring_max_angle", s_springMaxAngle,  STORAGE_NONE );
 
+// Turn lean tuning from the console: a value >= 0 overrides the skeleton table below
+static bool  s_turnEnable    = false;  // off by default: anim_turn_enable 1 from the console
+static bool  s_turnAll       = false;  // every skeleton with the standard spine bones, not only the table ones
+static bool  s_turnLeanFlip  = false;  // lean the other way
+static float s_turnLean      = -1.0f;
+static float s_turnLeanMax   = -1.0f;
+static float s_turnTwist     = -1.0f;
+static float s_turnTwistMax  = -1.0f;
+static float s_turnSmooth    = -1.0f;
+REGISTER_VAR( "anim_turn_enable",    s_turnEnable,   STORAGE_NONE );
+REGISTER_VAR( "anim_turn_all",       s_turnAll,      STORAGE_NONE );
+REGISTER_VAR( "anim_turn_lean_flip", s_turnLeanFlip, STORAGE_NONE );
+REGISTER_VAR( "anim_turn_lean",      s_turnLean,     STORAGE_NONE );
+REGISTER_VAR( "anim_turn_lean_max",  s_turnLeanMax,  STORAGE_NONE );
+REGISTER_VAR( "anim_turn_twist",     s_turnTwist,    STORAGE_NONE );
+REGISTER_VAR( "anim_turn_twist_max", s_turnTwistMax, STORAGE_NONE );
+REGISTER_VAR( "anim_turn_smooth",    s_turnSmooth,   STORAGE_NONE );
+
 namespace
 {
   // Spring chains by bone name prefix: every bone of a chain matches, the chain root is the first matching bone.
@@ -79,6 +97,38 @@ namespace
     m._21 = out[1][0]; m._22 = out[1][1]; m._23 = out[1][2]; m._24 = out[1][3] + pivot.y;
     m._31 = out[2][0]; m._32 = out[2][1]; m._33 = out[2][2]; m._34 = out[2][3] + pivot.z;
   }
+
+  // Turn lean: per skeleton (file name substring, lower case), the first row is the default for anim_turn_all.
+  // lean - scale of the lean into a turn (1 - physical, from turn rate * speed), angles in degrees,
+  // twist - torso/head turn ahead of the model in seconds of the current turn rate, smooth - seconds to reach the target angles.
+  struct TurnLeanParams
+  {
+    const char* skeleton;
+    float lean;
+    float leanMax;
+    float twist;
+    float twistMax;
+    float smooth;
+  };
+  const TurnLeanParams s_turnLeanTable[] =
+  {
+    { 0,                   1.0f, 12.0f, 0.12f, 30.0f, 0.12f },   // default
+    { "heroes/archeress/", 1.0f, 12.0f, 0.12f, 30.0f, 0.12f },
+  };
+  const int turnLeanTableCount = sizeof( s_turnLeanTable ) / sizeof( s_turnLeanTable[0] );
+
+  // Spine bones that turn ahead of the model and their share of the twist
+  const char* const s_turnTwistBones[4] = { "BackA_M", "Chest_M", "Neck_M", "Head_M" };
+  const float s_turnTwistShare[4] = { 0.3f, 0.3f, 0.15f, 0.25f };
+
+  const float turnLeanGravity = 20.0f;     // world units / s^2: lean angle = atan( turn rate * speed / g )
+  const float turnRateSmoothTime = 0.08f;
+  const float turnVelocitySmoothTime = 0.1f;
+
+  inline float SmoothTo( float value, float target, float dt, float time )
+  {
+    return time > 0.0f ? value + ( target - value ) * ( 1.0f - expf( -dt / time ) ) : target;
+  }
 }
 
 namespace Render
@@ -101,7 +151,125 @@ namespace Render
 
     InitUpdateOrder();
     InitSpringBones();
+    InitTurnLean( 0 );
 	}
+
+  void SkeletonWrapper::InitTurnLean( const char* skeletonName )
+  {
+    turnLean.params = -1;
+    turnLean.initialized = false;
+    turnLean.prevYaw = 0.0f;
+    turnLean.prevPos = VNULL3;
+    turnLean.yawRate = 0.0f;
+    turnLean.velocity = VNULL3;
+    turnLean.lean = 0.0f;
+    turnLean.twist = 0.0f;
+    for ( int k = 0; k < 4; ++k )
+    {
+      unsigned int index = 0;
+      turnLean.twistBones[k] = GetJointIndexByName( s_turnTwistBones[k], index ) ? (int)index : -1;
+    }
+
+    if ( !skeletonName )
+      return;
+    char name[256];
+    strncpy( name, skeletonName, sizeof( name ) - 1 );
+    name[sizeof( name ) - 1] = 0;
+    for ( char* c = name; *c; ++c )
+      *c = ( *c == '\\' ) ? '/' : (char)tolower( (unsigned char)*c );
+    for ( int i = 1; i < turnLeanTableCount; ++i )
+      if ( strstr( name, s_turnLeanTable[i].skeleton ) )
+      {
+        turnLean.params = i;
+        break;
+      }
+  }
+
+  void SkeletonWrapper::UpdateTurnLean( const Matrix43& worldMatrix, float dt )
+  {
+    TurnLean& t = turnLean;
+    const int params = ( t.params >= 0 ) ? t.params : ( s_turnAll ? 0 : -1 );
+    const bool hasSpine = t.twistBones[0] >= 0 || t.twistBones[1] >= 0;
+    if ( !s_turnEnable || params < 0 || !hasSpine )
+    {
+      t.initialized = false;
+      t.lean = t.twist = 0.0f;
+      return;
+    }
+    if ( dt <= 0.0f )
+      return;   // paused: keep the pose
+
+    const CVec3 pos = GetTranslation( worldMatrix );
+    const float yaw = atan2f( worldMatrix._21, worldMatrix._11 );
+    if ( !t.initialized || dt > 0.25f || SpringLength( pos - t.prevPos ) > springTeleportDistance )
+    {
+      t.initialized = true;
+      t.prevYaw = yaw;
+      t.prevPos = pos;
+      t.yawRate = 0.0f;
+      t.velocity = VNULL3;
+      t.lean = t.twist = 0.0f;
+      return;
+    }
+
+    float dYaw = yaw - t.prevYaw;
+    while ( dYaw > FP_PI ) dYaw -= 2.0f * FP_PI;
+    while ( dYaw < -FP_PI ) dYaw += 2.0f * FP_PI;
+    CVec3 velocity = ( pos - t.prevPos ) * ( 1.0f / dt );
+    velocity.z = 0.0f;
+    t.prevYaw = yaw;
+    t.prevPos = pos;
+
+    t.yawRate = SmoothTo( t.yawRate, dYaw / dt, dt, turnRateSmoothTime );
+    t.velocity.x = SmoothTo( t.velocity.x, velocity.x, dt, turnVelocitySmoothTime );
+    t.velocity.y = SmoothTo( t.velocity.y, velocity.y, dt, turnVelocitySmoothTime );
+    t.velocity.z = 0.0f;
+
+    const TurnLeanParams& p = s_turnLeanTable[params];
+    const float degToRad = FP_PI / 180.0f;
+    const float leanScale = SpringParam( s_turnLean, p.lean );
+    const float leanMax = SpringParam( s_turnLeanMax, p.leanMax ) * degToRad;
+    const float twistTime = SpringParam( s_turnTwist, p.twist );
+    const float twistMax = SpringParam( s_turnTwistMax, p.twistMax ) * degToRad;
+    const float smooth = SpringParam( s_turnSmooth, p.smooth );
+
+    // Lean into the turn: centripetal acceleration = turn rate * speed
+    const float speed = SpringLength( t.velocity );
+    const float leanTarget = Clamp( atanf( t.yawRate * speed / turnLeanGravity ) * leanScale, -leanMax, leanMax );
+    // Torso and head turn ahead of the model by the turn rate
+    const float twistTarget = Clamp( t.yawRate * twistTime, -twistMax, twistMax );
+
+    t.lean = SmoothTo( t.lean, leanTarget, dt, smooth );
+    t.twist = SmoothTo( t.twist, twistTarget, dt, smooth );
+  }
+
+  void SkeletonWrapper::ApplyTurnLean( Matrix43& rootWorld, const Matrix43& worldMatrix ) const
+  {
+    const TurnLean& t = turnLean;
+    if ( !t.initialized || fabs( t.lean ) < 1e-4f )
+      return;
+    const float speed = SpringLength( t.velocity );
+    if ( speed < 1e-3f )
+      return;
+    // Roll about the movement direction around the model position on the ground: rotating up by -angle about
+    // the direction moves it toward Z x direction, the turn centre for a counterclockwise turn
+    const CVec3 axis = t.velocity * ( 1.0f / speed );
+    const float angle = s_turnLeanFlip ? t.lean : -t.lean;
+    RotateAround( rootWorld, axis, angle, GetTranslation( worldMatrix ) );
+  }
+
+  void SkeletonWrapper::ApplyTurnTwist( unsigned int bone, Matrix43& boneWorld ) const
+  {
+    const TurnLean& t = turnLean;
+    if ( !t.initialized || fabs( t.twist ) < 1e-4f )
+      return;
+    for ( int k = 0; k < 4; ++k )
+      if ( t.twistBones[k] == (int)bone )
+      {
+        RotateAround( boneWorld, CVec3( 0.0f, 0.0f, 1.0f ), t.twist * s_turnTwistShare[k], GetTranslation( boneWorld ) );
+        return;
+      }
+  }
 
   void SkeletonWrapper::InitUpdateOrder()
   {
@@ -381,6 +549,10 @@ namespace Render
     }
     springsInitialized = springsActive;
 
+    // Turn lean: the root leans into the turn, the spine twists ahead (children inherit both)
+    UpdateTurnLean( worldMatrix, dt );
+    ApplyTurnLean( pBoneWorldMatrix[0], worldMatrix );
+
     // Hierarchical bone placements, parents first
 		for	( unsigned int n = 1; n < (unsigned int)updateOrder.size(); ++n )
     {
@@ -396,6 +568,7 @@ namespace Render
           __declspec(align(16)) Matrix43 tmp( pBoneWorldMatrix[i] );
           SEEMatrixMultiply( &pBoneWorldMatrix[i], &extraYawMatrices[k], &tmp );
         }
+      ApplyTurnTwist( i, pBoneWorldMatrix[i] );
       if ( springsActive && springByBone[i] >= 0 )
         ApplySpringBone( springBones[ springByBone[i] ], pBoneWorldMatrix[i],
           parent < bonesCount ? pBoneWorldMatrix[ parent ] : worldMatrix, springSteps, springStep, springReset );

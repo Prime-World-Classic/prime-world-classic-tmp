@@ -1,5 +1,7 @@
 ﻿package Datas
 {
+	import Enums.EFraction;
+	
 	public class PlayerStatisticData
 	{
 		
@@ -64,6 +66,20 @@
 		public var IsOurHero:Boolean;
 		public var LeaveType:int;
 		public var IsEnemyTeam:Boolean;
+		public var OtherSide:Boolean = false; // союзник в колонке врагов (Испытание на 10, C++ TeamSidesLayout)
+		
+		// Колонка панелей команд: фракция, а у союзника в колонке врагов — противоположная.
+		public static function ColumnOf(fraction:int, otherSide:Boolean):int
+		{
+			if (!otherSide)
+				return fraction;
+			return (fraction == EFraction.HUMAN_FACTION) ? EFraction.ELF_FACTION : EFraction.HUMAN_FACTION;
+		}
+		
+		public function get ColumnFraction():int
+		{
+			return ColumnOf(Fraction, OtherSide);
+		}
 		public var PartyID:int = 0;
 		public var GuildName:String;
 		public var PlayerShortName:String;

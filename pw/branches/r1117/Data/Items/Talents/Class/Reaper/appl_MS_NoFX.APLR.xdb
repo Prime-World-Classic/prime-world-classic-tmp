@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <StatModApplicator>
+	<BackLink DBID="/Items/Talents/Class/Laguna/status_A0_SeaChild.APLR" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Reaper/status_A2Tech_Haste.APLR" Count="1" />
 	<applyTarget>ApplicatorTarget</applyTarget>
 	<behaviorFlags>144</behaviorFlags>

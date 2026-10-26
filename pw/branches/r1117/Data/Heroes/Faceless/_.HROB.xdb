@@ -813,9 +813,9 @@
 							<Item href="" />
 						</effect>
 						<enabled>
-							<compiledString>FQAAAAABAAAAKgAAAFWL7IPsCGr/i0UIixCLTQiLgqQBAAD/0IlF/ItN/IsRi038i0Ic/9DcHUwAAADf4PbEBXoJx0X4AQAAAOsHx0X4AAAAAIpF+IvlXcMAAAAAAADwPw==</compiledString>
+							<compiledString>FQAAAAABAAAAKgAAAFWL7IPsCGr/i0UIixCLTQiLgqQBAAD/0IlF/ItN/IsRi038i0Ic/9DcHWAAAADf4PbEBXodi00IixGLTQiLQlT/0A+2yIXJdAnHRfgBAAAA6wfHRfgAAAAAikX4i+VdwwAAAAAAAPA/</compiledString>
 							<returnType>bool</returnType>
-							<sString>pFirst-&gt;GetAblt(BASE_ATTACK)-&gt;GetPreparedness() &lt; 1</sString>
+							<sString>pFirst-&gt;GetAblt(BASE_ATTACK)-&gt;GetPreparedness() &lt; 1 &amp;&amp; pFirst-&gt;IsHero()</sString>
 						</enabled>
 						<formulaName></formulaName>
 						<lifeTime>

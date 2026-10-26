@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <RandomEffect>
+	<BackLink DBID="/Heroes/Laguna/_.HROB" Count="1" />
 	<deathType>Manual</deathType>
 	<effects>
 		<Item href="/Heroes/Laguna/Effects/Hit_A.EFFT" />

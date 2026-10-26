@@ -76,6 +76,7 @@
 	<BackLink DBID="/Items/Talents/Class/Highlander/Ability0.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Highlander/status_A3_LifeConsume.APLR" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Katana/status_A3_Immune_IncMS.APLR" Count="1" />
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A0.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Mage/status_A4_2_DemonForm.APLR" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/ManaWyrm/Ability3.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Marine/A3_HealSpell.SPLL" Count="1" />

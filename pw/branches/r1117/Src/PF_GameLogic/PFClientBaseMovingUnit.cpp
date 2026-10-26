@@ -100,6 +100,7 @@ PFClientBaseMovingUnit::PFClientBaseMovingUnit( const PF_Core::WorldObjectRef &p
   , isFlying( false )
   , isFlyingByTrajectory( false )
   , isFlyingHeightAbsolute( false )
+  , flightFollowsTerrain( false )
   , animLockedByJump( false )
   , speed( 0.0f )
   , heightSpeed( 0.0f )
@@ -437,6 +438,7 @@ void PFClientBaseMovingUnit::StopFlying()
 
   isFlying = false;
   isFlyingByTrajectory = false;
+  flightFollowsTerrain = false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -592,7 +594,7 @@ void PFClientBaseMovingUnit::UpdateMovement( const float timeDiff )
     {
       frac = 1.0f;
     }
-    dstHeight += Lerp( flightStartHeight, flightEndHeight, frac );
+    dstHeight += flightFollowsTerrain ? GetTerrainHeight( newposrot.pos.AsVec2D() ) : Lerp( flightStartHeight, flightEndHeight, frac );
     if ( fabs(curHeight - dstHeight) > EPS_VALUE )
     {
       curHeight = dstHeight;

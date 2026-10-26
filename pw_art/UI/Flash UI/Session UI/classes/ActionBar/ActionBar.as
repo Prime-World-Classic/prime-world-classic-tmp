@@ -196,6 +196,12 @@
 			showPanelBtn.addEventListener(ToggleButtonClickedEvent.EVENT_TYPE, OnShowPanelToggle);
 
 			FillButtonTooltips();
+
+			// halloween skin: purple lock and "expand panel" buttons and decor of the bar
+			Skin.Tint(lockBtn);
+			Skin.Tint(showPanelBtn);
+			Skin.Tint(grafic01);
+			Skin.Tint(grafic02);
 			
 			if (Localization.CompleteEventDispatcher != null)
 				Localization.CompleteEventDispatcher.addEventListener(Event.COMPLETE, FillLocalization);				

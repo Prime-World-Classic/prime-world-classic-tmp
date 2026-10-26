@@ -2,6 +2,7 @@
 {
 	import flash.display.DisplayObject;
 	import flash.filters.ColorMatrixFilter;
+	import Components.Skin;
 
 	public class Desaturate
 	{
@@ -29,7 +30,9 @@
 		public static function saturate(target:DisplayObject):void
 		{
 			//TODO по хорошему нужно обойти циклом массив фильтров объекта, найти в нем desaturate_arr и удалить его, а то т.о. можно случайно потереть другой фильтр.
-			target.filters=[saturateCMF];
+			// halloween skin: a recoloured element gets its colour filter back
+			var normal:Array = Components.Skin.NormalFilters(target);
+			target.filters = normal != null ? normal : [saturateCMF];
 		}
 	}
 }

@@ -5,6 +5,7 @@
 	import Interfaces.IPWComponents;
 	import Events.PWComponentValueEvent;
 	import flash.display.MovieClip;
+	import flash.display.Sprite;
 	import flash.display.Stage;
 	import flash.geom.Rectangle;
 	import flash.events.MouseEvent;
@@ -37,6 +38,47 @@
 			sectionWidth = sliderBack_mc.width / sectionsCount;
 			
 			this.addEventListener(MouseEvent.CLICK, onSliderLineClick);
+
+			// halloween skin: plank instead of the track (no filled part), candy corn instead of the knob
+			ApplySkin();
+		}
+
+		private var hwTrack:Sprite;
+
+		private function ApplySkin():void
+		{
+			try
+			{
+				if (!Skin.Active)
+					return;
+				slider_btn.SkinStates(["HW_KnobUp", "HW_KnobOver", "HW_KnobDown", null]);
+				sliderBody_mc.visible = false;
+				hwTrack = new Sprite();
+				addChildAt(hwTrack, getChildIndex(sliderBack_mc) + 1);
+				sliderBack_mc.visible = false;
+				DrawTrack();
+			}
+			catch (e:Error)
+			{
+				Skin.Fail("PWSlider", e);
+			}
+		}
+
+		private function DrawTrack():void
+		{
+			if (hwTrack == null) return;
+			try
+			{
+				var h:Number = 12;
+				Skin.BeginReuse(hwTrack);
+				Skin.HBar(hwTrack, "HW_Plank", sliderBack_mc.x - 6, sliderBack_mc.y + (sliderBack_mc.height - h) / 2, sliderBack_mc.width + 12, h);
+				Skin.EndReuse();
+			}
+			catch (e:Error)
+			{
+				Skin.EndReuse();
+				Skin.Fail("PWSlider.DrawTrack", e);
+			}
 		}
 		
 		private function AddedToStage(e:Event):void 
@@ -49,11 +91,13 @@
 		{
 			sliderBack_mc.width = _width;
 			dragRectangle.width = _width;
+			DrawTrack();
 		}
 		public function setSize(_width:Number, _height:Number):void
 		{
 			sliderBack_mc.setSize(_width, _height);
 			dragRectangle.width = _width;
+			DrawTrack();
 		}
 		private function OnMouseDown(e:MouseEvent):void
 		{

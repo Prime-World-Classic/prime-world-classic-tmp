@@ -25,9 +25,9 @@
 		<Item href="" />
 	</effect>
 	<enabled>
-		<compiledString>FScAAAAEAAAALgAAAEcAAAB9AAAAkwAAAFRhdXJ1c19BMXUyAFRhdXJ1c19BMXUyAFRhdXJ1c0NoYXJnaW5nAFWL7IPsDGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoDAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAD7ZN+4XJdCtoGAAAAItVDIsCi00Mi5CIAQAA/9LcHbUAAADf4PbEQXUJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcMAAAAAAAAAAA==</compiledString>
+		<compiledString>FSgAAAADAAAALwAAAEgAAACEAAAAVGF1cnVzX0ExdTIAVGF1cnVzX0ExdTIAVGF1cnVzU3RvbXBDaGFuAFWL7IPsDGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoDAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAD7ZN+4XJdClqAYtVEFJoGAAAAItFCIsQi00Ii4KcAQAA/9A7RRB0CcdF9AEAAADrB8dF9AAAAACKRfSL5V3D</compiledString>
 		<returnType>bool</returnType>
-		<sString>tal("Taurus_A1u2") &amp;&amp; receiver.vTaurusCharging &gt; 0</sString>
+		<sString>tal("Taurus_A1u2") &amp;&amp; sender.applTaurusStompChan(UNIT) != pMisc</sString>
 	</enabled>
 	<flags>64</flags>
 	<formulaName></formulaName>

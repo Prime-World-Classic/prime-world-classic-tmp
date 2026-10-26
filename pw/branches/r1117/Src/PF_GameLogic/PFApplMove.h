@@ -131,6 +131,10 @@ public:
   , ramOwnerStopped(false)
   , ramLastDest(0.0f, 0.0f)
   , ramHasDest(false)
+  , ramGhostIndex(-1)
+  , ramGhostFlags(0)
+  , ramHeroHit(false)
+  , ramHeroHitTime(-1.0f)
   {}
 
 protected:
@@ -146,13 +150,19 @@ protected:
   bool  ramOwnerStopped;
   CVec2 ramLastDest;    // the point given to the unit on the previous step
   bool  ramHasDest;
+  int   ramGhostIndex;  // Taurus A4_1: the extra ghost mode of the run (constant RamGhostMode) until an enemy hero is caught
+  int   ramGhostFlags;
+  bool  ramHeroHit;     // Taurus A4_1: an enemy hero is caught (owner variable RamHeroHit), the run ends RamHeroHitTime later
+  float ramHeroHitTime;
 
   void StartRam( CVec2 const & movePos, float baseSpeed, float speed );
   bool StepRam( float dtInSeconds ); // true = the run is over
   const char * TaurusDashVariable() const; // Taurus: "TaurusRamDash" / "TaurusJumpDash" for the owner's own run / jump
   void ReaimRam( CVec2 const & dest, float baseSpeed );
+  bool ReleaseRamGhost( bool checkPlace ); // true = released (false: still inside an obstacle, try on the next step)
   void ClampJumpToCursor(); // talent constant JumpToCursor: the jump of the owner lands at the cursor
   bool IsJumpToCursor() const;
+  void DropLandingTrees();
   void LockClientAnim( bool lock );
 
   virtual bool Start();

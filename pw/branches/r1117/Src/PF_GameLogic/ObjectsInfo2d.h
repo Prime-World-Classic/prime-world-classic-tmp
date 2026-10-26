@@ -73,6 +73,7 @@ private:
   bool  showHealthBars;
   Tooltips tooltips;
   float overtipScale; // camera zoom-out beyond the battle limit shrinks the overtips (replay)
+  float lastDeltaTime;
   WindowsPool windowsPool;
 
   ConstPtr<NWorld::PFBaseHero> localHero;
@@ -93,6 +94,8 @@ private:
   void SetupOvertip( SOvertip & overtip, const SOvertipCustomEnergy& customEnergy );
   void UpdateOvertip( const ObjectInfo& info, SOvertip & overtip );
   void UpdateTooltipUI( const ObjectInfo& info, SOvertip & overtip, const SHMatrix & projectionMatrix );
+  void UpdateOvertipStatus( SOvertip & overtip, const NWorld::PFBaseUnit * unit );
+  void UpdateStatusUI( SOvertip & overtip, const UI::Point & screenPoint, int top, float depth );
 
   void GetWindowFromPool( const WindowsPool::key_type &key, WindowsPool::mapped_type &window );
   void AddWindowToPool( const WindowsPool::mapped_type &window );

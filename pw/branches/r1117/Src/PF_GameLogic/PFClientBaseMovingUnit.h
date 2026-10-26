@@ -29,6 +29,7 @@ public:
           void SetFlightHeight( float height, bool absolute );
           void SetFlightAngle( float angle );
           void StopFlying();
+          void SetFlightFollowsTerrain( bool follow ) { flightFollowsTerrain = follow; } // Taurus A4_1: the height of the run follows the terrain
           void Stand();
 
   virtual void SetRotation( CQuat const &quat );
@@ -91,6 +92,7 @@ protected:
   bool  isFlying;
   bool  isFlyingByTrajectory;
   bool  isFlyingHeightAbsolute;
+  bool  flightFollowsTerrain;
   bool  animLockedByJump;
   float dstHeight;
   float curHeight;

@@ -16,7 +16,7 @@
 				</addValue>
 				<applyTarget>ApplicatorTarget</applyTarget>
 				<behaviorFlags>216</behaviorFlags>
-				<caption>способности восстанавливаются быстрее</caption>
+				<caption>перезарядка талантов короче на A0_WaterCdr %</caption>
 				<effect>
 					<Item href="" />
 					<Item href="" />
@@ -35,9 +35,9 @@
 				<LoggingEvent>-1</LoggingEvent>
 				<mode>cooldown</mode>
 				<multValue>
-					<compiledString>FQwAAAACAAAAGQAAACwAAABBMF9XYXRlckNkcgBVi+xRi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9LcDUoAAADZ6N7B2eje8dld/NlF/IvlXcMAAAAAAADwPwAAAEDheoQ/</compiledString>
+					<compiledString>FQwAAAACAAAAGQAAACwAAABBMF9XYXRlckNkcgBVi+xRi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9LcDUYAAADZ6N7h2V382UX8i+VdwwAAAAAAAPA/AAAAQOF6hD8=</compiledString>
 					<returnType>float</returnType>
-					<sString>1.0f / (1.0f + cA0_WaterCdr * 0.01f)</sString>
+					<sString>1.0f - cA0_WaterCdr * 0.01f</sString>
 				</multValue>
 				<providerName></providerName>
 				<specificAbility href="" />
@@ -50,6 +50,67 @@
 				<targetAbilities>128</targetAbilities>
 				<useListAs>ListAsException</useListAs>
 			</AbilityModApplicator>
+		</Item>
+		<Item href="/Items/Talents/Class/Laguna/status_A0_SeaChild.APLR" id="2BCB4E73-0471-4FFD-BFD2-D62EF66B2FE2">
+			<TriggerApplicator>
+				<actionsCount>
+					<compiledString>FQAAAAAAAAAAVYvsM8Bdww==</compiledString>
+					<returnType>int</returnType>
+					<sString>0</sString>
+				</actionsCount>
+				<applyTarget>ApplicatorTarget</applyTarget>
+				<behaviorFlags>0</behaviorFlags>
+				<caption>урон атак выше на A0_WaterAttack %</caption>
+				<effect>
+					<Item href="" />
+					<Item href="" />
+				</effect>
+				<enabled>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</enabled>
+				<formulaName></formulaName>
+				<lifeTime>
+					<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+					<returnType>float</returnType>
+					<sString>-1.0</sString>
+				</lifeTime>
+				<LoggingEvent>-1</LoggingEvent>
+				<playAck>false</playAck>
+				<processor href="/Items/Talents/Class/Laguna/status_A0_SeaChild.APLR" id="5C2FCB75-EA19-41C9-B572-3006959D19B5">
+					<EventProcessorOutgoingDamage>
+						<abilityFilter>
+							<abilitiesList />
+							<abilityCondition>
+								<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+								<returnType>bool</returnType>
+								<sString>true</sString>
+							</abilityCondition>
+							<abilityCostMode>Any</abilityCostMode>
+							<exceptThis>false</exceptThis>
+							<flags>1610612737</flags>
+							<onlySingleTarget>false</onlySingleTarget>
+						</abilityFilter>
+						<applyTarget>ApplicatorTarget</applyTarget>
+						<damageTypeFilter>31</damageTypeFilter>
+						<modifiedDamage>
+							<compiledString>FRcAAAADAAAAHgAAADgAAABOAAAARGFtYWdlAABBMF9XYXRlckF0dGFjawBVi+yD7AxoAAAAAItFEIsQi00Qi0JU/9CLTQxRi1UIUmgIAAAAi0UQixCLTRCLQlDdXfj/0NwNawAAANno3sHcTfjZXfTZRfSL5V3DAAAAAAAA8D8AAABA4XqEPw==</compiledString>
+							<returnType>float</returnType>
+							<sString>appl.vDamage * (1.0f + cA0_WaterAttack * 0.01f)</sString>
+						</modifiedDamage>
+						<spell href="" />
+					</EventProcessorOutgoingDamage>
+				</processor>
+				<providerName></providerName>
+				<startCondition>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</startCondition>
+				<useAbilityCooldown>false</useAbilityCooldown>
+				<useAbilityOwnerMana>false</useAbilityOwnerMana>
+			</TriggerApplicator>
 		</Item>
 	</applicators>
 	<applyTarget>ApplicatorTarget</applyTarget>

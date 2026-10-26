@@ -330,7 +330,7 @@ public:
 	CPtrBase( T *p ): pObject( p )
   {
 #if defined( NV_WIN_PLATFORM )
-    NI_ASSERT( (unsigned int)p == 0 || (unsigned int)p > 0x00001000, "Possibly bad pointer" );
+    NI_ASSERT( (size_t)p == 0 || (size_t)p > 0x00001000, "Possibly bad pointer" ); // size_t: on x64 an unsigned int cut the pointer
 #endif // defined( NV_WIN_PLATFORM )
     AddRef( pObject );
   }
@@ -361,7 +361,7 @@ public:
   void SetPtr( T *p ) 
 	{ 
 #if defined( NV_WIN_PLATFORM )
-		NI_ASSERT( (unsigned int)p == 0 || (unsigned int)p > 0x00001000, "Possibly bad pointer" ); 
+		NI_ASSERT( (size_t)p == 0 || (size_t)p > 0x00001000, "Possibly bad pointer" ); // size_t: on x64 an unsigned int cut the pointer 
 #endif // defined( NV_WIN_PLATFORM )
 		T *pOldObject = pObject; 
 		pObject = (p == GetInvalid<T>() ? 0 : p); 

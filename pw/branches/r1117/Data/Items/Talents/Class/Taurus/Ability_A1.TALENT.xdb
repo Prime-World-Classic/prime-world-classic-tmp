@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Talent>
+	<BackLink DBID="/Items/Talents/Class/Taurus/Ability_A1.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Taurus/Ability_A1u.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Taurus/Ability_A1u2.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Taurus.TALENTSET" Count="1" />
@@ -106,7 +107,7 @@
 					<returnType>bool</returnType>
 					<sString>true</sString>
 				</enabled>
-				<formulaName></formulaName>
+				<formulaName>TaurusStompChan</formulaName>
 				<interruptEvents>2626015</interruptEvents>
 				<lifeTime>
 					<compiledString>FQ4AAAABAAAAGgAAAEExX0NoYXJnZVRpbWUAVYvsi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9Jdww==</compiledString>
@@ -131,39 +132,6 @@
 				<startSpell href="/Items/Talents/Class/Taurus/Ability_A1.TALENT" id="BE2BDDFD-104E-4212-893C-EF161FA2AEBC">
 					<Spell>
 						<applicators>
-							<Item href="/Items/Talents/Class/Taurus/Ability_A1.TALENT" id="20F30185-9AC7-408C-8CD2-06DBDEB20680">
-								<FlagsApplicator>
-									<applyTarget>AbilityOwner</applyTarget>
-									<behaviorFlags>0</behaviorFlags>
-									<caption>нельзя двигаться первые HoldToCharge сек заряда</caption>
-									<consumables />
-									<effect>
-										<Item href="" />
-										<Item href="" />
-									</effect>
-									<enabled>
-										<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
-										<returnType>bool</returnType>
-										<sString>true</sString>
-									</enabled>
-									<flag>1</flag>
-									<formulaName></formulaName>
-									<lifeTime>
-										<compiledString>FQ0AAAABAAAAGQAAAEhvbGRUb0NoYXJnZQBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
-										<returnType>float</returnType>
-										<sString>cHoldToCharge</sString>
-									</lifeTime>
-									<LoggingEvent>-1</LoggingEvent>
-									<providerName></providerName>
-									<startCondition>
-										<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
-										<returnType>bool</returnType>
-										<sString>true</sString>
-									</startCondition>
-									<talents />
-									<useListAs>ListAsRule</useListAs>
-								</FlagsApplicator>
-							</Item>
 							<Item href="/Items/Talents/Class/Taurus/Ability_A1.TALENT" id="D8045DE8-E00B-4F23-B003-0451B76BFF7D">
 								<PermanentStatModApplicator>
 									<applyTarget>AbilityOwner</applyTarget>
@@ -193,6 +161,41 @@
 									</modifier>
 									<providerName></providerName>
 								</PermanentStatModApplicator>
+							</Item>
+							<Item href="/Items/Talents/Class/Taurus/Ability_A1.TALENT" id="20F30185-9AC7-408C-8CD2-06DBDEB20680">
+								<FlagsApplicator>
+									<applyTarget>AbilityOwner</applyTarget>
+									<behaviorFlags>1</behaviorFlags>
+									<caption>весь заряд нельзя двигаться, атаковать, применять таланты и предметы (пока TaurusCharging)</caption>
+									<consumables />
+									<effect>
+										<Item href="" />
+										<Item href="" />
+									</effect>
+									<enabled>
+										<compiledString>FQ8AAAACAAAAFAAAACoAAABUYXVydXNDaGFyZ2luZwBVi+xRaAAAAACLRQyLEItNDIuCiAEAAP/Q3B1MAAAA3+D2xEF1CcdF/AEAAADrB8dF/AAAAACKRfyL5V3DAAAAAAAAAAA=</compiledString>
+										<returnType>bool</returnType>
+										<sString>receiver.vTaurusCharging &gt; 0</sString>
+									</enabled>
+									<flag>1541</flag>
+									<formulaName></formulaName>
+									<lifeTime>
+										<compiledString>FQ4AAAACAAAAGwAAAC4AAABBMV9DaGFyZ2VUaW1lAFWL7FGLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0twFPAAAANld/NlF/IvlXcMAAAAAAADgPw==</compiledString>
+										<returnType>float</returnType>
+										<sString>cA1_ChargeTime + 0.5f</sString>
+									</lifeTime>
+									<LoggingEvent>-1</LoggingEvent>
+									<providerName></providerName>
+									<startCondition>
+										<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+										<returnType>bool</returnType>
+										<sString>true</sString>
+									</startCondition>
+									<talents>
+										<Item href="/Items/Talents/Class/Taurus/Ability_A1.TALENT" />
+									</talents>
+									<useListAs>ListAsException</useListAs>
+								</FlagsApplicator>
 							</Item>
 							<Item href="/Items/Talents/Class/Taurus/Ability_A1.TALENT" id="1884D5F0-492D-45BF-AB19-0990939E2596">
 								<StatModApplicator>
@@ -485,6 +488,113 @@
 														<sString>cA1_RadiusMin + (cA1_RadiusMax - cA1_RadiusMin) * sender.vTaurusStompCharge</sString>
 													</range>
 													<targetFilter>538771519</targetFilter>
+													<targetSelector href="" />
+												</AreaTargetSelector>
+											</targetSelector>
+										</ConditionTargetSelector>
+									</targetSelector>
+								</SpellPeriodicallyApplicator>
+							</Item>
+							<Item href="/Items/Talents/Class/Taurus/Ability_A1.TALENT" id="F00C4B81-AEFD-4B01-B809-A9A9401FEF07">
+								<SpellPeriodicallyApplicator>
+									<applyTarget>AbilityOwner</applyTarget>
+									<behaviorFlags>0</behaviorFlags>
+									<caption>удар копытом по земле (в кадр удара анимации): снос деревьев в радиусе удара</caption>
+									<effect>
+										<Item href="" />
+										<Item href="" />
+									</effect>
+									<enabled>
+										<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+										<returnType>bool</returnType>
+										<sString>true</sString>
+									</enabled>
+									<formulaName></formulaName>
+									<lifeTime>
+										<compiledString>FR4AAAADAAAALQAAAEcAAABgAAAAQTFfU3RhcnRUaW1lAAAAAEExX0ltcGFjdFRpbWUAVYvsg+wMi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9KLRQxQi00IUWgQAAAAi1UQiwKLTRCLUFDdXfj/0txF+NwFbgAAANld9NlF9IvlXcMAAACgmZm5Pw==</compiledString>
+										<returnType>float</returnType>
+										<sString>cA1_StartTime + cA1_ImpactTime + 0.1f</sString>
+									</lifeTime>
+									<LoggingEvent>-1</LoggingEvent>
+									<period>
+										<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAAB6RA==</compiledString>
+										<returnType>float</returnType>
+										<sString>1000.0f</sString>
+									</period>
+									<providerName></providerName>
+									<scaleMode>ScaleIsTime</scaleMode>
+									<spell href="/Items/Talents/Class/Taurus/Ability_A1.TALENT" id="CDBB5DEE-DF96-4E0B-A3FD-485EC37571CF">
+										<Spell>
+											<applicators>
+												<Item href="/Items/Talents/Class/Taurus/Ability_A1.TALENT" id="8B2CDA8E-FB6B-4C99-BBA2-DBDA59B3E74D">
+													<DropTreeApplicator>
+														<applyTarget>ApplicatorTarget</applyTarget>
+														<caption>Роняем деревья</caption>
+														<enabled>
+															<compiledString></compiledString>
+															<returnType>bool</returnType>
+															<sString>true</sString>
+														</enabled>
+														<formulaName></formulaName>
+														<LoggingEvent>-1</LoggingEvent>
+														<providerName></providerName>
+													</DropTreeApplicator>
+												</Item>
+											</applicators>
+											<dispatch href="/Items/Talents/Class/Taurus/Ability_A1.TALENT" id="ACE2B22C-6C1B-48A4-90C3-B67ADD7AFCBE">
+												<DispatchImmediate>
+													<alwaysApply>false</alwaysApply>
+													<applyEffect>
+														<Item href="" />
+														<Item href="" />
+													</applyEffect>
+													<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
+													<applyEffectOrientation>Default</applyEffectOrientation>
+													<applyEffectRandomAnglePoints>0</applyEffectRandomAnglePoints>
+													<dieAfterApply>true</dieAfterApply>
+													<dispatchEffect>
+														<Item href="" />
+														<Item href="" />
+													</dispatchEffect>
+													<flags>1</flags>
+													<instantApply>false</instantApply>
+												</DispatchImmediate>
+											</dispatch>
+										</Spell>
+									</spell>
+									<startCondition>
+										<compiledString>FQwAAAACAAAAIwAAADYAAABJbnRlcnJ1cHRlZABVi+yD7AiLRRCLEItNEItCSP/QiUX8aAAAAACLTfyLEYtN/ItCVP/Q3B1YAAAA3+D2xER6CcdF+AEAAADrB8dF+AAAAACKRfiL5V3DAAAAAAAAAAA=</compiledString>
+										<returnType>bool</returnType>
+										<sString>appl.parent.vInterrupted == 0</sString>
+									</startCondition>
+									<startOffset>
+										<compiledString>FUIAAAAEAAAAVwAAAGkAAACJAAAAvgAAAEExX1N0YXJ0VGltZQAAAABUYXVydXNTdG9tcENoYXJnZQAAAEExX0NoYXJnZVRpbWUAAABBMV9JbXBhY3RUaW1lAFWL7IPsIFHZ7tkcJItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SaBAAAACLRQyLEItNDIuCiAEAAN1d+P/Qi00MUYtVCFJoJAAAAItFEIsQi00Qi0JQ3V3w/9DcTfDcbfjZXezZRexR2Rwk6DEAAACDxAiLTQxRi1UIUmg0AAAAi0UQixCLTRCLQlDdXeT/0NxF5Nld4NlF4IvlXcMAAAAAVYvsUdlFCNlFDN7Z3+D2xAV6CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
+										<returnType>float</returnType>
+										<sString>max(cA1_StartTime - receiver.vTaurusStompCharge * cA1_ChargeTime, 0.0f) + cA1_ImpactTime</sString>
+									</startOffset>
+									<targetSelector href="/Items/Talents/Class/Taurus/Ability_A1.TALENT" id="19342AAB-BBBB-4204-897F-A809B0CC29F4">
+										<ConditionTargetSelector>
+											<condition>
+												<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+												<returnType>bool</returnType>
+												<sString>true</sString>
+											</condition>
+											<flags>0</flags>
+											<mode>Normal</mode>
+											<targetSelector href="/Items/Talents/Class/Taurus/Ability_A1.TALENT" id="9B698C46-5B8C-4A05-B03E-BD9958F23677">
+												<AreaTargetSelector>
+													<absolutePosition>
+														<x>0</x>
+														<y>0</y>
+													</absolutePosition>
+													<flags>0</flags>
+													<mode>Normal</mode>
+													<range>
+														<compiledString>FUIAAAAEAAAAUQAAAGsAAACIAAAAoAAAAEExX1JhZGl1c01pbgAAAABBMV9SYWRpdXNNYXgAAAAAQTFfUmFkaXVzTWluAAAAAFRhdXJ1c1N0b21wQ2hhcmdlAFWL7IPsHItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/Si0UMUItNCFFoEAAAAItVEIsCi00Qi1BQ3V34/9KLRQxQi00IUWggAAAAi1UQiwKLTRCLUFDdXfD/0txt8GgwAAAAi0UIixCLTQiLgogBAADdXej/0NxN6NxF+Nld5NlF5IvlXcM=</compiledString>
+														<returnType>float</returnType>
+														<sString>cA1_RadiusMin + (cA1_RadiusMax - cA1_RadiusMin) * sender.vTaurusStompCharge</sString>
+													</range>
+													<targetFilter>536871936</targetFilter>
 													<targetSelector href="" />
 												</AreaTargetSelector>
 											</targetSelector>
@@ -1005,9 +1115,9 @@
 		<percent>0</percent>
 	</consumptionBonus>
 	<cooldownTime>
-		<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
+		<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAAAgQQ==</compiledString>
 		<returnType>float</returnType>
-		<sString>1</sString>
+		<sString>10</sString>
 	</cooldownTime>
 	<cooldownTimeSecondState>
 		<compiledString></compiledString>

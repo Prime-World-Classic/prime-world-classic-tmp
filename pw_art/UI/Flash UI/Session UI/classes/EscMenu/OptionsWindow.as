@@ -5,6 +5,7 @@
 	import BaseClasses.TooltipSender;
 	import Interfaces.IPWComponents;
 	import Components.ButtonStandart;
+	import Components.Skin;
 	import Components.PWCheckBox;
 	import Components.PWCombobox;
 	import Components.PWSlider;
@@ -232,11 +233,12 @@
 
 			// column background
 			back = new Shape();
-			back.graphics.beginFill(667180, 0.45);
+			// halloween skin: dark column on the wood, orange line
+			back.graphics.beginFill(Skin.Active ? 0x12060F : 667180, 0.45);
 			back.graphics.drawRoundRect(10, SIDEBAR_TOP - 8, SIDEBAR_WIDTH - 14, frameHeight - SIDEBAR_TOP - 10, 10, 10);
 			back.graphics.endFill();
 			// the game's Graphics has no moveTo/lineTo: lines are thin rectangles
-			back.graphics.beginFill(14266474, 0.35);
+			back.graphics.beginFill(Skin.Active ? 0xFF8A2A : 14266474, 0.35);
 			back.graphics.drawRect(SIDEBAR_WIDTH + 2, SIDEBAR_TOP - 8, 1, frameHeight - SIDEBAR_TOP - 10);
 			back.graphics.endFill();
 			addChild(back);
@@ -390,7 +392,7 @@
 				color = LABEL_COLOR;
 				if (i == OptionsWindow.shownCategory)
 				{
-					color = LABEL_SELECTED_COLOR;
+					color = Skin.SelectedColor(LABEL_SELECTED_COLOR);
 				}
 				this.SetButtonText(ButtonStandart(OptionsWindow.categoryButtons[i]), String(names[i]), color);
 				i++;
@@ -556,6 +558,13 @@
 			button = OptionsWindow.categoryButtons[category];
 			OptionsWindow.categorySelection.graphics.clear();
 			// a gold plate under the selected button (the plate is below the buttons)
+			// halloween skin: the selected button shows the active plank instead of the gold plate
+			if (button.IsSkinned)
+			{
+				for (var b:int = 0; b < OptionsWindow.categoryButtons.length; b++)
+					ButtonStandart(OptionsWindow.categoryButtons[b]).Selected = (b == category);
+				return;
+			}
 			OptionsWindow.categorySelection.graphics.beginFill(SELECTION_COLOR, 0.9);
 			OptionsWindow.categorySelection.graphics.drawRoundRect(button.x - 3, button.y - 3, button.width + 6, button.height + 6, 12, 12);
 			OptionsWindow.categorySelection.graphics.endFill();
@@ -782,7 +791,7 @@
 			note.value.visible = false;
 			note.mouseEnabled = false;
 			note.mouseChildren = false;
-			note.text.textColor = 10473664;
+			note.text.textColor = Skin.Active ? 0xD9B98A : 10473664;
 			note.x = 26;
 			note.y = OptionsWindow.advancedNextY - 8;
 			OptionsWindow.advancedPanel.addChild(note);
@@ -1031,6 +1040,8 @@
 
 		private static const EDITOR_PAGES:Array = [2, 3];
 		private static const EDITOR_PREVIEW_SIZE:Number = 160;
+		// highlight offsets of chat_wheel[_hw]_s_* (pw_art/UI/PingWheel/wheel_hd.py)
+		private static const CHAT_HL_OFFSETS_SMALL:Array = [null,null,null,null,[-128,-128,0,-128,-128,0,-128,-128],[-128,-128,0,-128,-8,0,-121,0,-128,-128],[-64,-128,0,-115,0,-13,-64,0,-128,-13,-128,-115],[-64,-128,0,-121,0,-40,-18,0,-110,0,-128,-40,-128,-121],[-64,-128,-4,-125,0,-64,-4,-4,-64,0,-125,-4,-128,-64,-125,-125]];
 		private static const EDITOR_PREVIEW_X:Number = 90;     // center
 		private static const EDITOR_PREVIEW_Y:Number = 132;
 		private static const EDITOR_SLOTS_X:Number = 200;
@@ -1127,10 +1138,11 @@
 			var button:Sprite = new Sprite();
 			// drawing works on a Shape (the game's Flash player does not draw Sprite.graphics)
 			var back:Shape = new Shape();
-			back.graphics.beginFill(14266474, 1);
+			// halloween skin: dark plate with an orange border
+			back.graphics.beginFill(Skin.Active ? 0xFF8A2A : 14266474, 1);
 			back.graphics.drawRoundRect(0, 0, 30, 22, 6, 6);
 			back.graphics.endFill();
-			back.graphics.beginFill(2059124, 1);
+			back.graphics.beginFill(Skin.Active ? 0x1E0C18 : 2059124, 1);
 			back.graphics.drawRoundRect(1, 1, 28, 20, 5, 5);
 			back.graphics.endFill();
 			button.addChild(back);
@@ -1161,26 +1173,24 @@
 			var row:ShortcutItem = null;
 			var header:ShortcutsHeader = null;
 			var isPing:Boolean = ed.wheel == 1;
-			var texSize:Number = 512;
-			var texPath:String = "/UI/Styles/Icons/ChatWheel/chat_wheel_";
-			var allOffsets:Array = MainInterface.CHAT_HL_OFFSETS;
+			// the preview has its own 256 textures without the 2x of the game wheels (shrunk to 160 px they are jagged):
+			// chat_wheel[_hw]_s_* (half radii), ping_wheel[_hw]_s_* (pw_art/UI/PingWheel/wheel_hd.py)
+			var texSize:Number = 256;
+			var texPath:String = "/UI/Styles/Icons/ChatWheel/" + Skin.WheelPrefix("chat_wheel_") + "s_";
+			var allOffsets:Array = CHAT_HL_OFFSETS_SMALL;
+			// texture radii: wheel / center circle
+			ed.rOut = 122;
+			ed.rIn = 29;
+			ed.rLabel = 76;
 			if (isPing)
 			{
-				texSize = 256;
-				texPath = "/UI/Styles/Icons/PingWheel/ping_wheel_";
-				allOffsets = MainInterface.PING_HL_OFFSETS;
-			}
-			ed.texScale = EDITOR_PREVIEW_SIZE / texSize;
-			// texture radii: wheel / center circle (gen_chatwheel.py, gen_pingwheel.py)
-			ed.rOut = 244;
-			ed.rIn = 58;
-			ed.rLabel = 152;
-			if (isPing)
-			{
+				texPath = "/UI/Styles/Icons/PingWheel/" + Skin.WheelPrefix("ping_wheel_") + "s_";
+				allOffsets = MainInterface.PING_HL_OFFSETS_SMALL;
 				ed.rOut = 124;
 				ed.rIn = 42;
 				ed.rLabel = 85;
 			}
+			ed.texScale = EDITOR_PREVIEW_SIZE / texSize;
 
 			var sprite:Sprite = new Sprite();
 			panel.addChild(sprite);
@@ -1195,7 +1205,7 @@
 			}
 			sprite.addChild(header);
 
-			var hint:ShortcutItem = this.MakeEditorLabel(this.EditorText(ed, 1), 10473664);
+			var hint:ShortcutItem = this.MakeEditorLabel(this.EditorText(ed, 1), Skin.Active ? 0xD9B98A : 10473664);
 			hint.mouseEnabled = false;
 			hint.y = 30;
 			sprite.addChild(hint);
@@ -1468,13 +1478,13 @@
 		{
 			var button:Sprite = new Sprite();
 			var back:Shape = new Shape();
-			back.graphics.beginFill(14266474, 1);
+			back.graphics.beginFill(Skin.Active ? 0xFF8A2A : 14266474, 1);
 			back.graphics.drawRoundRect(0, 0, 30, 22, 6, 6);
 			back.graphics.endFill();
-			back.graphics.beginFill(2059124, 1);
+			back.graphics.beginFill(Skin.Active ? 0x1E0C18 : 2059124, 1);
 			back.graphics.drawRoundRect(1, 1, 28, 20, 5, 5);
 			back.graphics.endFill();
-			back.graphics.beginFill(16777215, 1);
+			back.graphics.beginFill(Skin.Active ? 0xFFB060 : 16777215, 1);
 			for (var k:int = 0; k < 6; k++)
 			{
 				var w:Number = 2 + k * 2;
@@ -1565,7 +1575,7 @@
 					row.text.textColor = 16765321;
 					if (i == ed.selected)
 					{
-						row.text.textColor = 16777215;
+						row.text.textColor = Skin.SelectedColor(16777215);
 					}
 				}
 				i++;
@@ -1603,6 +1613,16 @@
 					i++;
 				}
 				n++;
+			}
+			// number of the highlighted sector: orange in the halloween skin
+			if (ed.previewNumbers != null)
+			{
+				i = 0;
+				while (i < ed.previewNumbers.length)
+				{
+					ShortcutItem(ed.previewNumbers[i]).text.textColor = (i == target) ? Skin.SelectedColor(16777215) : 16777215;
+					i++;
+				}
 			}
 		}
 

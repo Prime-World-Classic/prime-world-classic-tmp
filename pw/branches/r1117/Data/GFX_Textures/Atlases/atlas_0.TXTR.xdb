@@ -1294,11 +1294,7 @@
 	<BackLink DBID="/Heroes/FallenAngel/FXHole.PRXY" Count="3" />
 	<BackLink DBID="/Heroes/FallenAngel/FXHoleEnd.PRXY" Count="3" />
 	<BackLink DBID="/Heroes/FallenAngel/FXIdle2.PRXY" Count="3" />
-	<BackLink DBID="/Heroes/FallenAngel/FXMask.PRXY" Count="1" />
 	<BackLink DBID="/Heroes/FallenAngel/FXWings.PRXY" Count="8" />
-	<BackLink DBID="/Heroes/FallenAngel/FXWings_1.PRXY" Count="1" />
-	<BackLink DBID="/Heroes/FallenAngel/FXWings_2.PRXY" Count="1" />
-	<BackLink DBID="/Heroes/FallenAngel/FXWings_3.PRXY" Count="1" />
 	<BackLink DBID="/Heroes/FallenAngel/S2/FXAbility1Ally_S2.PRXY" Count="4" />
 	<BackLink DBID="/Heroes/FallenAngel/S2/FXAbility1Enemy_S2.PRXY" Count="4" />
 	<BackLink DBID="/Heroes/FallenAngel/S2/FXChanneling_S2.PRXY" Count="4" />
@@ -1306,7 +1302,6 @@
 	<BackLink DBID="/Heroes/FallenAngel/S2/FXHole_S2.PRXY" Count="3" />
 	<BackLink DBID="/Heroes/FallenAngel/S2/FXHoleEnd_S2.PRXY" Count="3" />
 	<BackLink DBID="/Heroes/FallenAngel/S2/FXIdle2_S2.PRXY" Count="4" />
-	<BackLink DBID="/Heroes/FallenAngel/S2/FXMask_S2.PRXY" Count="1" />
 	<BackLink DBID="/Heroes/Firefox/FXability4.PRXY" Count="3" />
 	<BackLink DBID="/Heroes/Firefox/FXidle.PRXY" Count="3" />
 	<BackLink DBID="/Heroes/Firefox/FXidle2.PRXY" Count="1" />

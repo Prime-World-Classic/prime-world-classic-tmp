@@ -130,8 +130,12 @@ namespace NGameX
      }
    }
 
-    heroInfos.push_back(new HeroInfoNew(flashInterface, hero, hero->GetFaction() != ourHero->GetFaction(), heroRankCalculator, isPremium,flagIcon,flagTooltip));
+    const bool isEnemy = hero->GetFaction() != ourHero->GetFaction();
+    heroInfos.push_back(new HeroInfoNew(flashInterface, hero, isEnemy, heroRankCalculator, isPremium,flagIcon,flagTooltip));
     heroes[hero->GetPlayerId()] = hero;
+
+    if ( !isEnemy && sides.PlaceAlly( hero == ourHero ) )
+      flashInterface->SetHeroOtherSide( hero->GetPlayerId(), true );
   }
 
   void TeamInfoNew::ShowHeroPortrait( NWorld::PFBaseHero const *hero )

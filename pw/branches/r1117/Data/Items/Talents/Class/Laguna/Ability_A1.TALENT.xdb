@@ -41,8 +41,8 @@
 									<caption>полёт медузы от Лагуны к точке</caption>
 									<enabled>
 										<compiledString>FRgAAAACAAAAHwAAADgAAABMYWd1bmFfQTF1MgBMYWd1bmFfQTF1MgBVi+yD7AhoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaAwAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AA+2Rfv32BvAg8ABi+Vdww==</compiledString>
-<returnType>bool</returnType>
-<sString>tal("Laguna_A1u2") == false</sString>
+										<returnType>bool</returnType>
+										<sString>tal("Laguna_A1u2") == false</sString>
 									</enabled>
 									<formulaName></formulaName>
 									<LoggingEvent>-1</LoggingEvent>
@@ -1552,7 +1552,28 @@
 	<commonDescription textref="/Items/Talents/Class/Laguna/Ability_A1.TALENT_commonDescription.txt" />
 	<compiledDescriptionA textref="" />
 	<compiledDescriptionB textref="" />
-	<conditionFormulas />
+	<conditionFormulas>
+		<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="C43542C8-EF80-4264-85D3-BDF5C7C3D49A">
+			<ConditionFormula>
+				<condition>
+					<compiledString>FRcAAAACAAAAHgAAADcAAABMYWd1bmFfQTF1AABMYWd1bmFfQTF1AFWL7IPsCGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoDAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAD7ZF+/fYG8CDwAGL5V3D</compiledString>
+					<returnType>bool</returnType>
+					<sString>tal("Laguna_A1u") == false</sString>
+				</condition>
+				<name>Laguna_A1u</name>
+			</ConditionFormula>
+		</Item>
+		<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="39D98B68-F489-46C1-B5B3-E011B8157989">
+			<ConditionFormula>
+				<condition>
+					<compiledString>FRgAAAACAAAAHwAAADgAAABMYWd1bmFfQTF1MgBMYWd1bmFfQTF1MgBVi+yD7AhoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaAwAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AA+2Rfv32BvAg8ABi+Vdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>tal("Laguna_A1u2") == false</sString>
+				</condition>
+				<name>Laguna_A1u2</name>
+			</ConditionFormula>
+		</Item>
+	</conditionFormulas>
 	<conflictingTalents />
 	<constants href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="1313014A-F13D-48CE-90CA-12A13DACF5EE">
 		<UnitConstantsContainer>
@@ -1737,6 +1758,16 @@
 						</var>
 					</UnitConstant>
 				</Item>
+				<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="CBA62F8B-78B3-4186-80EA-811F3F826053">
+					<UnitConstant>
+						<name>A1u_HastePercent</name>
+						<var>
+							<compiledString>FQ4AAAABAAAAGgAAAEhhc3RlX1BlcmNlbnQAVYvsi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9Jdww==</compiledString>
+							<returnType>float</returnType>
+							<sString>cHaste_Percent</sString>
+						</var>
+					</UnitConstant>
+				</Item>
 			</vars>
 		</UnitConstantsContainer>
 	</constants>
@@ -1745,9 +1776,9 @@
 		<percent>0</percent>
 	</consumptionBonus>
 	<cooldownTime>
-		<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
+		<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAAAAQQ==</compiledString>
 		<returnType>float</returnType>
-		<sString>1.0f</sString>
+		<sString>8</sString>
 	</cooldownTime>
 	<cooldownTimeSecondState>
 		<compiledString></compiledString>

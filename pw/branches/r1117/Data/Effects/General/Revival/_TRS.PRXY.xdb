@@ -136,6 +136,7 @@
 	<BackLink DBID="/Heroes/IronKnight/S2/_.SOBJ" Count="1" />
 	<BackLink DBID="/Heroes/Katana/_.SOBJ" Count="1" />
 	<BackLink DBID="/Heroes/Katana/S1/_.SOBJ" Count="1" />
+	<BackLink DBID="/Heroes/Laguna/_.SOBJ" Count="1" />
 	<BackLink DBID="/Heroes/Mage/_A.SOBJ" Count="1" />
 	<BackLink DBID="/Heroes/Mage/_B.SOBJ" Count="1" />
 	<BackLink DBID="/Heroes/Mage/S1/_A.SOBJ" Count="1" />
@@ -236,6 +237,7 @@
 	<BackLink DBID="/Heroes/SnowQueen/S5/_.SOBJ" Count="1" />
 	<BackLink DBID="/Heroes/SnowQueen/S6/_.SOBJ" Count="1" />
 	<BackLink DBID="/Heroes/SnowQueen/S7/_.SOBJ" Count="1" />
+	<BackLink DBID="/Heroes/Taurus/_.SOBJ" Count="1" />
 	<BackLink DBID="/Heroes/ThunderGod/_A.SOBJ" Count="1" />
 	<BackLink DBID="/Heroes/ThunderGod/_B.SOBJ" Count="1" />
 	<BackLink DBID="/Heroes/ThunderGod/S1/_A.SOBJ" Count="1" />

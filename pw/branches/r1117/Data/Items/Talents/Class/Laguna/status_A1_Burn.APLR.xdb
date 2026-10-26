@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <StatusApplicator>
-	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A1.TALENT" Count="1" />
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A1.TALENT" Count="3" />
 	<applicators>
 		<Item href="/Items/Talents/Class/Laguna/status_A1_Burn.APLR" id="E1E91571-1DE0-4136-97B2-9395BCDE07BF">
 			<SpellPeriodicallyApplicator>

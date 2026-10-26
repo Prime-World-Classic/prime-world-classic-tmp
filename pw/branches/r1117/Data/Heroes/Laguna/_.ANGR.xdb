@@ -44,8 +44,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -224,8 +224,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -429,8 +429,8 @@
 			<simpleTransactions>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.166</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -609,8 +609,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -819,8 +819,8 @@
 			<simpleTransactions>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -850,7 +850,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -880,7 +880,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -1284,7 +1284,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -1313,8 +1313,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -1468,7 +1468,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -1497,8 +1497,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -1768,7 +1768,7 @@
 			</simpleTransactions>
 			<speed>
 				<coeffs />
-				<value>1</value>
+				<value>1.47</value>
 			</speed>
 			<startPar>
 				<coeffs />
@@ -1793,7 +1793,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -1847,8 +1847,8 @@
 			<simpleTransactions>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -1878,7 +1878,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -2293,7 +2293,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -2352,8 +2352,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -2672,8 +2672,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -2852,8 +2852,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -3177,8 +3177,8 @@
 			<simpleTransactions>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -3208,7 +3208,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -3238,7 +3238,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -3647,8 +3647,8 @@
 			<simpleTransactions>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.166</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -3827,8 +3827,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -4112,7 +4112,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -4141,8 +4141,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -4346,8 +4346,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -4527,7 +4527,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.3</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -4701,8 +4701,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -4881,8 +4881,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -5096,7 +5096,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -5125,8 +5125,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -5396,7 +5396,7 @@
 			</simpleTransactions>
 			<speed>
 				<coeffs />
-				<value>1</value>
+				<value>1.47</value>
 			</speed>
 			<startPar>
 				<coeffs />
@@ -5430,7 +5430,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -5459,8 +5459,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -5730,7 +5730,7 @@
 			</simpleTransactions>
 			<speed>
 				<coeffs />
-				<value>1</value>
+				<value>1.95</value>
 			</speed>
 			<startPar>
 				<coeffs />
@@ -5764,7 +5764,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -5793,8 +5793,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -6064,7 +6064,7 @@
 			</simpleTransactions>
 			<speed>
 				<coeffs />
-				<value>1</value>
+				<value>2.15</value>
 			</speed>
 			<startPar>
 				<coeffs />
@@ -6093,8 +6093,8 @@
 			<simpleTransactions>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.2</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -6124,7 +6124,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -6154,7 +6154,7 @@
 				<Item>
 					<parameters>
 						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -6658,8 +6658,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>
@@ -6778,8 +6778,8 @@
 				</Item>
 				<Item>
 					<parameters>
-						<blending>PoseToAnim</blending>
-						<duration>0.1</duration>
+						<blending>AnimToAnim</blending>
+						<duration>0.25</duration>
 						<fromMax>
 							<coeffs />
 							<value>1</value>

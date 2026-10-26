@@ -25,9 +25,9 @@
 		<Item href="" />
 	</effect>
 	<enabled>
-		<compiledString>FR8AAAAEAAAAJAAAADoAAABGAAAAXAAAAFRhdXJ1c0p1bXBJMkMAAABUYXVydXNKdW1wRGFzaABVi+xRaAAAAACLRQyLEItNDIuCiAEAAP/Q3B1+AAAA3+D2xEF0K2gQAAAAi00MixGLTQyLgogBAAD/0NwdfgAAAN/g9sRBdAnHRfwAAAAA6wfHRfwBAAAAikX8i+VdwwAAAAAAAAAA</compiledString>
+		<compiledString>FR8AAAADAAAAKgAAAEQAAABaAAAAVGF1cnVzSm1wQ2hhcmdlAFRhdXJ1c0p1bXBEYXNoAFWL7FFqAYtFEFBoAAAAAItNCIsRi00Ii4KcAQAA/9A7RRB1K2gQAAAAi00MixGLTQyLgogBAAD/0NwdfAAAAN/g9sRBdAnHRfwAAAAA6wfHRfwBAAAAikX8i+VdwwAAAAAAAAAA</compiledString>
 		<returnType>bool</returnType>
-		<sString>receiver.vTaurusJumpI2C &gt; 0 || receiver.vTaurusJumpDash &gt; 0</sString>
+		<sString>sender.applTaurusJmpCharge(UNIT) != pMisc || receiver.vTaurusJumpDash &gt; 0</sString>
 	</enabled>
 	<flags>64</flags>
 	<formulaName></formulaName>

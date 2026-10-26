@@ -35,6 +35,10 @@
 			<id>tooltip</id>
 			<layout href="/UI/Screens/Combat/ObjectsInfo2d/Tooltip" />
 		</Item>
+		<Item>
+			<id>statustext</id>
+			<layout href="/UI/Screens/Combat/ObjectsInfo2d/StatusText" />
+		</Item>
 	</relatedLayouts>
 	<relatedTexts />
 	<scriptFile></scriptFile>

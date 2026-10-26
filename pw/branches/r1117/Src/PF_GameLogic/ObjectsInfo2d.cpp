@@ -13,6 +13,9 @@
 #include "UI/ImageLabel.h"
 #include "UI/ProgressBar.h"
 #include "UI/HealthBar.h"
+#include "UI/Root.h"
+#include "PFApplMod.h"
+#include "PFApplUtils.h"
 
 #include "ui/DebugDraw.h"
 #include "Render/DebugRenderer.h"
@@ -29,8 +32,16 @@ namespace NGameX
 namespace
 {
   bool s_drawTooltipBoxes = false;
+  int s_overtipStatusTest = 0;
 
   REGISTER_DEV_VAR( "show_3d_tooltips_boxes", s_drawTooltipBoxes, STORAGE_NONE );
+  REGISTER_DEV_VAR( "overtip_status_test", s_overtipStatusTest, STORAGE_NONE );
+
+  // настройки "Интерфейс": текстовый индикатор состояний над персонажами / только над героями
+  bool s_overtipStatus = true;
+  bool s_overtipStatusHeroesOnly = false;
+  REGISTER_VAR( "overtip_status", s_overtipStatus, STORAGE_USER );
+  REGISTER_VAR( "overtip_status_heroes_only", s_overtipStatusHeroesOnly, STORAGE_USER );
 }
 
 namespace WindowCaps
@@ -115,6 +126,141 @@ namespace
 
     return ceil(unit->GetShield());
   }
+
+  // Статус контроля над головой (как в Dota 2): одно слово, заливка которого убывает со временем статуса
+  struct ControlStatusDesc
+  {
+    const char *    dbid;
+    const wchar_t * text;
+    int             priority;
+  };
+
+  static const ControlStatusDesc s_controlStatuses[] =
+  {
+    { "Heroes/DefaultStatus/_STUN_Status.APLR.xdb",                       L"$(OTStatusStun)",    100 },
+    { "Items/Talents/Class/Alchemist/status_A4BlueStun.APLR.xdb",         L"$(OTStatusStun)",    100 },
+    { "Items/Talents/Class/Mage/status_A2_Hexed.APLR.xdb",                L"$(OTStatusHex)",      95 },
+    { "Items/Talents/TalentKits/Redset7_4_NewYear/status_RedSet7_4_Sleep.APLR.xdb", L"$(OTStatusSleep)", 95 },
+    { "Heroes/DefaultStatus/_TERROR_status.APLR.xdb",                     L"$(OTStatusTerror)",   90 },
+    { "Heroes/DefaultStatus/_FEAR_status.APLR.xdb",                       L"$(OTStatusFear)",     90 },
+    { "Heroes/DefaultStatus/_PANIC_status.APLR.xdb",                      L"$(OTStatusPanic)",    90 },
+    { "Heroes/DefaultStatus/_TAUNT_status.APLR.xdb",                      L"$(OTStatusTaunt)",    90 },
+    { "Heroes/DefaultStatus/_SILENCE_Status.APLR.xdb",                    L"$(OTStatusSilence)",  80 },
+    { "Heroes/DefaultStatus/_ROOT_Status.APLR.xdb",                       L"$(OTStatusRoot)",     70 },
+    { "Heroes/DefaultStatus/_ROOT_Tech_Status.APLR.xdb",                  L"$(OTStatusRoot)",     70 },
+    { "Items/Talents/Class/Demonolog/status_A2_Root.APLR.xdb",            L"$(OTStatusRoot)",     70 },
+    { "Items/Talents/Class/Freeze/status_A2_Root.APLR.xdb",               L"$(OTStatusRoot)",     70 },
+    { "Items/Talents/Class/Gunner/status_A3_WebRoot.APLR.xdb",            L"$(OTStatusRoot)",     70 },
+    { "Heroes/DefaultStatus/_DISARM.APLR.xdb",                            L"$(OTStatusDisarm)",   60 },
+    { "Heroes/DefaultStatus/_BLIND_status.APLR.xdb",                      L"$(OTStatusBlind)",    50 },
+  };
+
+  // прочие статусы из этого списка показываются своим именем
+  static const int s_otherControlPriority = 85;
+
+  static const float s_logicStepSmoothing = 0.1f;
+
+  struct ControlStatusFinder : public NonCopyable
+  {
+    const NWorld::PFApplStatus * best;
+    const wchar_t *              bestText;
+    int                          bestPriority;
+    float                        bestDuration;
+
+    ControlStatusFinder() : best( 0 ), bestText( 0 ), bestPriority( -1 ), bestDuration( 0.f ) {}
+
+    static const NDb::ApplicatorsList * GetControlList()
+    {
+      static NDb::Ptr<NDb::ApplicatorsList> list;
+      static bool loaded = false;
+      if ( !loaded )
+      {
+        loaded = true;
+        list = NDb::Get<NDb::ApplicatorsList>( NDb::DBID( "Heroes/DefaultStatus/List_AllControlStatusesWithoutSlow.APLS.xdb" ) );
+      }
+      return list;
+    }
+
+    static const ControlStatusDesc * FindDesc( const NDb::DBID & dbid )
+    {
+      static vector<NDb::DBID> ids;
+      if ( ids.empty() )
+        for ( int i = 0; i < ARRAY_SIZE( s_controlStatuses ); ++i )
+          ids.push_back( NDb::DBID( s_controlStatuses[i].dbid ) );
+
+      for ( int i = 0; i < ids.size(); ++i )
+        if ( ids[i] == dbid )
+          return &s_controlStatuses[i];
+
+      return 0;
+    }
+
+    void operator()( const NWorld::PFBaseApplicator * applicator )
+    {
+      if ( !applicator || applicator->GetTypeId() != NWorld::PFApplStatus::typeId )
+        return;
+      if ( !applicator->IsEnabled() || !applicator->GetDBBase() )
+        return;
+
+      const NWorld::PFApplStatus * status = static_cast<const NWorld::PFApplStatus *>( applicator );
+
+      const float duration = status->GetDuration();
+      if ( duration >= 0.f && duration < EPS_VALUE )
+        return;
+
+      int priority = -1;
+      const wchar_t * text = 0;
+
+      // таланты часто вписывают статус копией с наследованием (parent="/Heroes/DefaultStatus/_STUN_Status.APLR"),
+      // поэтому сверяем всю цепочку родителей
+      const NDb::ApplicatorsList * list = GetControlList();
+      const NDb::DbResource * res = status->GetDBBase().GetPtr();
+      for ( int depth = 0; res && depth < 8 && priority < 0; ++depth, res = res->GetParentResource() )
+      {
+        if ( const ControlStatusDesc * desc = FindDesc( res->GetDBID() ) )
+        {
+          priority = desc->priority;
+          text = desc->text;
+        }
+        else if ( list )
+        {
+          const NDb::BaseApplicator * dbAppl = dynamic_cast<const NDb::BaseApplicator *>( res );
+          if ( dbAppl && NWorld::IsApplicatorInList( dbAppl, list ) && !status->GetDB().name.GetText().empty() )
+            priority = s_otherControlPriority;
+        }
+      }
+      if ( priority < 0 )
+        return;
+
+      const float effDuration = duration < 0.f ? 1e6f : duration;
+
+      if ( priority > bestPriority || ( priority == bestPriority && effDuration > bestDuration ) )
+      {
+        best = status;
+        bestText = text;
+        bestPriority = priority;
+        bestDuration = effDuration;
+      }
+    }
+  };
+
+  static void MakeStatusCaption( wstring & result, const wstring & source )
+  {
+    result.clear();
+    for ( int i = 0; i < source.size(); ++i )
+    {
+      wchar_t ch = source[i];
+      if ( ch >= L'a' && ch <= L'z' )
+        ch = ch - L'a' + L'A';
+      else if ( ch >= 0x0430 && ch <= 0x044F )
+        ch = ch - 0x20;
+      else if ( ch == 0x0451 )
+        ch = 0x0401;
+      result += ch;
+    }
+    while ( !result.empty() && ( result[result.size() - 1] == L' ' || result[result.size() - 1] == L'\r' || result[result.size() - 1] == L'\n' ) )
+      result.erase( result.size() - 1 );
+  }
 }
 
 struct ObjectsInfo2dLogic::SOvertipCustomEnergy
@@ -171,6 +317,12 @@ struct ObjectsInfo2dLogic::SOvertipWindow
   Weak<UI::ImageLabel>  wndLevelFrame;
   Weak<UI::ImageLabel>  wndGlow;;
 
+  Weak<UI::Window>      wndStatus;
+  Weak<UI::ImageLabel>  wndStatusBack;
+  Weak<UI::Window>      wndStatusClip;
+  Weak<UI::ImageLabel>  wndStatusFill;
+  wstring               statusCaption;
+
   wstring               levelTextMarkup;
 
   SOvertipCustomEnergy  customEnergy;
@@ -188,6 +340,11 @@ struct ObjectsInfo2dLogic::SOvertipWindow
     , wndLevel()
     , wndLevelFrame()
     , wndGlow()
+    , wndStatus()
+    , wndStatusBack()
+    , wndStatusClip()
+    , wndStatusFill()
+    , statusCaption()
     , levelTextMarkup()
     , customEnergy()
   {
@@ -233,6 +390,14 @@ struct ObjectsInfo2dLogic::SOvertip : SOvertipWindow
   bool          showStripes;
   bool          showShield;
 
+  bool          showStatus;
+  wstring       statusText;
+  float         statusProgress;
+  const void *  statusAppl;
+  float         statusMax;
+  float         statusLast;
+  float         statusSmooth;
+
   SOvertip()
     : valid( false )
     , selected( false )
@@ -250,6 +415,13 @@ struct ObjectsInfo2dLogic::SOvertip : SOvertipWindow
     , showMana(false)
     , showStripes(false)
     , showShield(false)
+    , showStatus(false)
+    , statusText()
+    , statusProgress(0.f)
+    , statusAppl(0)
+    , statusMax(0.f)
+    , statusLast(0.f)
+    , statusSmooth(0.f)
   {
   }
 
@@ -671,6 +843,8 @@ void ObjectsInfo2dLogic::UpdateOvertipTextImpl( SOvertip & overtip, const T * ob
 ObjectsInfo2dLogic::ObjectsInfo2dLogic(int)
   : idCounter( 0 )
   , showHealthBars( true )
+  , overtipScale( 1.f )
+  , lastDeltaTime( 0.f )
 {
   SetSpectatorMode(false);
 }
@@ -791,6 +965,21 @@ void ObjectsInfo2dLogic::GetWindowFromPool( const WindowsPool::key_type &key, Wi
   }
 */
 
+  // status (separate window on the screen root, follows the overtip)
+  {
+    char szStatusName[40] = "";
+    sprintf_s( szStatusName, "%s_status", szNamBuffer );
+    window.wndStatus = pBaseWindow->CreateChild( szStatusName, "statustext", 0, 0, 0, 0, NDb::UIELEMENTHALIGN_LEFT, NDb::UIELEMENTVALIGN_TOP );
+    if ( window.wndStatus )
+    {
+      window.wndStatusBack = UI::GetChildChecked<UI::ImageLabel>( window.wndStatus, "StatusBack", true );
+      window.wndStatusClip = window.wndStatus->GetChild( "StatusClip" );
+      window.wndStatusFill = UI::GetChildChecked<UI::ImageLabel>( window.wndStatus, "StatusFill", true );
+      window.wndStatus->Show( false );
+    }
+    window.statusCaption.clear();
+  }
+
   WindowCaps::UpdateCap(window.wndMain, window.caps, WindowCaps::Main);
   WindowCaps::UpdateCap(window.wndText, window.caps, WindowCaps::Text);
   WindowCaps::UpdateCap(window.wndHealth, window.caps, WindowCaps::Health);
@@ -816,6 +1005,9 @@ void ObjectsInfo2dLogic::AddWindowToPool( const WindowsPool::mapped_type &window
   windowsPool.insert( WindowsPool::value_type(effectiveKey, window) );
 
   window.wndMain->Show(false);
+
+  if (IsValid(window.wndStatus))
+    window.wndStatus->Show(false);
 }
 
 void ObjectsInfo2dLogic::SetupOvertip( SOvertip & overtip, const SOvertipCustomEnergy& customEnergy )
@@ -907,6 +1099,9 @@ void ObjectsInfo2dLogic::UpdateTooltipUI( const ObjectInfo& info, SOvertip & ove
 
   overtip.wndMain->Show( infront );
 
+  if ( !infront && IsValid( overtip.wndStatus ) )
+    overtip.wndStatus->Show( false );
+
   if ( s_drawTooltipBoxes )
     Render::DebugRenderer::DrawAABB( overtip.aabb, Render::Color( 255, 255, 0 ), false );
 
@@ -973,6 +1168,17 @@ void ObjectsInfo2dLogic::UpdateTooltipUI( const ObjectInfo& info, SOvertip & ove
   overtip.wndMain->SetLocation( x, y );
   overtip.wndMain->SetScreenScale( overtipScale, screenPoint );
 
+  {
+    // the topmost visible part of the overtip
+    UI::LinearCoord top = bottom;
+    UI::Window * const parts[] = { overtip.wndText, overtip.wndHealthBack, overtip.wndManaBack, overtip.wndLevelFrame };
+    for ( int i = 0; i < ARRAY_SIZE( parts ); ++i )
+      if ( parts[i] && parts[i]->IsVisible() )
+        top = Min( top, parts[i]->GetPos().y );
+
+    UpdateStatusUI( overtip, screenPoint, y + top, depth );
+  }
+
   if (overtip.showStripes)
   {
     const NDb::UIHealthStripes& stripes = UI::GetUIRoot()->healthStripes;
@@ -999,6 +1205,8 @@ void ObjectsInfo2dLogic::UpdateTooltipUI( const ObjectInfo& info, SOvertip & ove
 void ObjectsInfo2dLogic::Update( float deltaTime, const SHMatrix & projectionMatrix )
 {
   NI_PROFILE_FUNCTION;
+
+  lastDeltaTime = deltaTime;
 
   overtipScale = 1.f;
   if ( AdventureScreen* advScreen = AdventureScreen::Instance() )
@@ -1296,6 +1504,8 @@ void ObjectsInfo2dLogic::UpdateOvertip( const ObjectInfo& info, SOvertip & overt
   else
     overtip.channelingPercent = 0.0f;
 
+  UpdateOvertipStatus( overtip, baseUnit );
+
   //Debug draw
   if ( s_drawTooltipBoxes && clientObject && clientObject->GetCollisionHull() )
   {
@@ -1307,6 +1517,124 @@ void ObjectsInfo2dLogic::UpdateOvertip( const ObjectInfo& info, SOvertip & overt
       Render::DebugRenderer::DrawLine3D( overtip.worldPosition + from, overtip.worldPosition + to, Render::Color( 0, 255, 255 ), Render::Color( 0, 255, 255 ), false );
     }
   }
+}
+
+void ObjectsInfo2dLogic::UpdateOvertipStatus( SOvertip & overtip, const NWorld::PFBaseUnit * unit )
+{
+  overtip.showStatus = false;
+
+  if ( !unit || unit->IsDead() || !IsValid( overtip.wndStatus ) || !s_overtipStatus || ( s_overtipStatusHeroesOnly && !unit->IsHero() ) )
+  {
+    overtip.statusAppl = 0;
+    return;
+  }
+
+  // только чтение кольца: ForAllAppliedApplicators (ForallRingSafe) перекладывает элементы во временное кольцо,
+  // а мир в это время может сериализоваться для CRC в другом потоке
+  if ( s_overtipStatusTest )
+  {
+    overtip.statusText.clear();
+    UI::SubstituteText( overtip.statusText, L"$(OTStatusStun)" );
+    overtip.statusProgress = 1.f - fmod( (float)NHPTimer::GetScalarTime() * 0.25f, 1.f );
+    overtip.showStatus = true;
+    return;
+  }
+
+  ControlStatusFinder finder;
+  for ( ring::Range<NWorld::PFBaseApplicator::AppliedRing> it( unit->GetAppliedApplicatorsRing() ); it; ++it )
+    finder( &(*it) );
+
+
+  const NWorld::PFApplStatus * const status = finder.best;
+  if ( !status )
+  {
+    overtip.statusAppl = 0;
+    return;
+  }
+
+
+  const float duration = status->GetDuration();
+
+  if ( duration < 0.f )
+  {
+    overtip.statusAppl = status;
+    overtip.statusProgress = 1.f;
+  }
+  else
+  {
+    if ( overtip.statusAppl != status )
+    {
+      overtip.statusAppl = status;
+      overtip.statusMax = Max( status->GetModifiedDuration( status->GetLifetime() ), duration );
+      overtip.statusLast = duration;
+      overtip.statusSmooth = 0.f;
+    }
+    else if ( fabs( duration - overtip.statusLast ) > 1e-4f )
+    {
+      if ( duration > overtip.statusLast )
+        overtip.statusMax = Max( overtip.statusMax, duration );
+      overtip.statusLast = duration;
+      overtip.statusSmooth = 0.f;
+    }
+    else
+    {
+      overtip.statusSmooth += lastDeltaTime;
+    }
+
+    // логика уменьшает время шагами, между шагами плавно доводим сами
+    const float shown = Max( overtip.statusLast - Min( overtip.statusSmooth, s_logicStepSmoothing ), 0.f );
+    overtip.statusProgress = overtip.statusMax > EPS_VALUE ? Clamp( shown / overtip.statusMax, 0.f, 1.f ) : 1.f;
+  }
+
+  if ( finder.bestText )
+  {
+    overtip.statusText.clear();
+    UI::SubstituteText( overtip.statusText, finder.bestText );
+  }
+  else
+  {
+    MakeStatusCaption( overtip.statusText, status->GetDB().name.GetText() );
+  }
+
+  overtip.showStatus = !overtip.statusText.empty();
+}
+
+void ObjectsInfo2dLogic::UpdateStatusUI( SOvertip & overtip, const UI::Point & screenPoint, int top, float depth )
+{
+  if ( !IsValid( overtip.wndStatus ) )
+    return;
+
+  if ( !overtip.showStatus || !IsValid( overtip.wndStatusBack ) || !IsValid( overtip.wndStatusClip ) || !IsValid( overtip.wndStatusFill ) )
+  {
+    overtip.wndStatus->Show( false );
+    return;
+  }
+
+  if ( overtip.statusCaption != overtip.statusText )
+  {
+    overtip.statusCaption = overtip.statusText;
+
+    overtip.wndStatusBack->SetSize( 400, -1, false );
+    overtip.wndStatusBack->SetCaptionTextW( overtip.statusText );
+    overtip.wndStatusBack->FixWidthToFitCaption( 1, 6 );
+
+    const UI::LinearCoord w = overtip.wndStatusBack->GetSize().x;
+
+    overtip.wndStatusFill->SetSize( w, -1, false );
+    overtip.wndStatusFill->SetCaptionTextW( overtip.statusText );
+    overtip.wndStatus->SetSize( w, -1, false );
+  }
+
+  const UI::LinearCoord w = overtip.wndStatus->GetSize().x;
+  const UI::LinearCoord h = overtip.wndStatus->GetSize().y;
+
+  overtip.wndStatusClip->SetSize( (UI::LinearCoord)( w * overtip.statusProgress + 0.5f ), -1, false );
+
+  const UI::LinearCoord x = floor( screenPoint.x - w / 2.f ) + 0.5f;
+  overtip.wndStatus->SetLocation( x, top - h );
+  overtip.wndStatus->SetSortOrder( -depth + 1e-6f );
+  overtip.wndStatus->SetScreenScale( overtipScale, screenPoint );
+  overtip.wndStatus->Show( true );
 }
 
 void ObjectsInfo2dLogic::UpdateOvertipText( const ObjectInfo& info, SOvertip & overtip, const bool showText )

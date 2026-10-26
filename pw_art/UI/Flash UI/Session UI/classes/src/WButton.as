@@ -12,7 +12,9 @@
 	import fl.transitions.TweenEvent;
 	import fl.transitions.easing.Strong;
 	import flash.geom.Point;
-	
+	import flash.utils.getQualifiedClassName;
+	import Components.Skin;
+
 	import flash.events.EventDispatcher;
     import src.ButtonTooltipEvent;
 
@@ -103,6 +105,53 @@
 			this.doubleClickEnabled = true;
 			
 			this.addEventListener(Event.ADDED_TO_STAGE, AddedToStage);
+
+			// halloween skin of the window close button (the cross is in the bitmaps)
+			try
+			{
+				if (getQualifiedClassName(this) == "ButtonClose")
+					SkinStates(["HW_CloseUp", "HW_CloseOver", "HW_CloseDown", null]);
+			}
+			catch (e:Error)
+			{
+				Skin.Fail("ButtonClose", e);
+			}
+		}
+
+		// replaces the bitmaps of the states (up, over, down, disable) by the skin bitmaps:
+		// into 'rect' (in this button's coordinates) or of natural size at the centre of the old state
+		public function SkinStates(names:Array, rect:Rectangle = null):Boolean
+		{
+			if (!Skin.Has(names[0]))
+				return false;
+			var states:Array = [up, over, down, disable];
+			for (var i:int = 0; i < states.length; i++)
+			{
+				var old:DisplayObject = states[i] as DisplayObject;
+				if (old == null || names[i] == null || old.parent != this)
+					continue;
+				var b:Bitmap = Skin.Bmp(names[i]);
+				if (b == null)
+					continue;
+				// not getBounds: the game's player returns null for it on timeline bitmaps
+				var r:Rectangle = new Rectangle(old.x, old.y, old.width, old.height);
+				if (rect != null)
+				{
+					b.x = rect.x; b.y = rect.y; b.width = rect.width; b.height = rect.height;
+				}
+				else
+				{
+					b.x = r.x + (r.width - b.width) / 2;
+					b.y = r.y + (r.height - b.height) / 2;
+				}
+				b.visible = old.visible;
+				b.alpha = old.alpha;
+				addChildAt(b, getChildIndex(old));
+				removeChild(old);
+				states[i] = b;
+			}
+			up = states[0]; over = states[1]; down = states[2]; disable = states[3];
+			return true;
 		}
 		
 		private function AddedToStage(e:Event):void 

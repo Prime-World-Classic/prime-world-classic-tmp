@@ -198,6 +198,84 @@
 							</placement>
 							<timeController href="" />
 						</Item>
+						<Item>
+							<attachFlags>19</attachFlags>
+							<component href="/Effects/General/Revival/_TRS.PRXY" />
+							<events href="/Effects/General/Revival/_.EDEV" />
+							<id></id>
+							<locatorName></locatorName>
+							<placement>
+								<pos>
+									<x>0</x>
+									<y>0</y>
+									<z>0</z>
+								</pos>
+								<rot>
+									<w>1</w>
+									<x>0</x>
+									<y>0</y>
+									<z>0</z>
+								</rot>
+								<scale>
+									<x>1</x>
+									<y>1</y>
+									<z>1</z>
+								</scale>
+							</placement>
+							<timeController href="" />
+						</Item>
+						<Item>
+							<attachFlags>19</attachFlags>
+							<component href="/Effects/General/Summon/_BlueTRS.PRXY" />
+							<events href="/Effects/General/Summon/_.EDEV" />
+							<id></id>
+							<locatorName></locatorName>
+							<placement>
+								<pos>
+									<x>0</x>
+									<y>0</y>
+									<z>0</z>
+								</pos>
+								<rot>
+									<w>1</w>
+									<x>0</x>
+									<y>0</y>
+									<z>0</z>
+								</rot>
+								<scale>
+									<x>1</x>
+									<y>1</y>
+									<z>1</z>
+								</scale>
+							</placement>
+							<timeController href="" />
+						</Item>
+						<Item>
+							<attachFlags>19</attachFlags>
+							<component href="/Effects/General/Unsummon/_TRS.PRXY" />
+							<events href="/Effects/General/Unsummon/_.EDEV" />
+							<id></id>
+							<locatorName></locatorName>
+							<placement>
+								<pos>
+									<x>0</x>
+									<y>0</y>
+									<z>0</z>
+								</pos>
+								<rot>
+									<w>1</w>
+									<x>0</x>
+									<y>0</y>
+									<z>0</z>
+								</rot>
+								<scale>
+									<x>1</x>
+									<y>1</y>
+									<z>1</z>
+								</scale>
+							</placement>
+							<timeController href="" />
+						</Item>
 					</attached>
 					<caption></caption>
 					<faceFXAnims />

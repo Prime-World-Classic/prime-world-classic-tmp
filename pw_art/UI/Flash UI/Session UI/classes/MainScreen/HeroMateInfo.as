@@ -46,6 +46,9 @@
 			this.buttonMode = true;
 
 			flshFX_mc.mouseEnabled = false;
+			// halloween skin: purple back of the level and chat button
+			Components.Skin.Tint(heroLevelBack);
+			Components.Skin.Tint(chatBtn);
 			name_txt.autoSize = TextFieldAutoSize.LEFT;
 			name_txt.mouseEnabled = false;
 			

@@ -12,6 +12,7 @@
 	<BackLink DBID="/Items/Talents/Class/Ent/Ability_A4.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Fluffy/Ability_A3.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Inventor/A3_BombExpl.APLR" Count="1" />
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A2.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Marine/Ability_A1.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Monster/Ability_A1.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Reaper/A1_JumpAndDown.APLR" Count="1" />

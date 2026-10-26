@@ -31,8 +31,9 @@
 			
 		//	txt.mouseEnabled = false;
 		
-			overRect = new Bitmap(new rowOver_png());
-			selectRect = new Bitmap(new rowSelected_png());
+			// halloween skin: orange bands (same size as rowOver_png / rowSelected_png)
+			overRect = Skin.Has("HW_RowOver") ? new Bitmap(Skin.Bmd("HW_RowOver")) : new Bitmap(new rowOver_png());
+			selectRect = Skin.Has("HW_RowSelected") ? new Bitmap(Skin.Bmd("HW_RowSelected")) : new Bitmap(new rowSelected_png());
 			
 			this.addChildAt(overRect, 0);
 			this.addChildAt(selectRect, 0);

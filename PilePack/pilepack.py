@@ -58,16 +58,22 @@ COMPILER_MAX_PILE_SIZE = 0x7FFFFFFF           # WriteBytes() оригинала 
 
 MB = 1024 * 1024
 MMAP_THRESHOLD = 4 * MB                       # файлы крупнее читаются через mmap
+TEXT_PROBE = 8000                             # NUL в первых 8000 байт — точно двоичный
+# управляющие байты, которые git считает непечатаемыми (convert.c, gather_stats)
+NONPRINTABLE = bytes(c for c in range(32) if c not in (8, 9, 10, 12, 13, 27)) + b'\x7f'
 
-DEFAULT_TARGET = 50 * MB      # целевой размер собранного pile
-DEFAULT_SPLIT = 60 * MB       # выше этого размера список файлов pile делится пополам
+DEFAULT_TARGET = 20 * MB      # целевой размер собранного pile: правка файла переписывает
+                              # в канале обновлений весь его pile, мелкие pile дешевле
+SPLIT_MARGIN = 10 * MB        # порог деления по умолчанию = target + SPLIT_MARGIN
 DEFAULT_LEVEL = 6             # zlib level (оригинал — 9; см. README «Скорость»)
 DEFAULT_RATIO = 0.90          # max_comp_ratio: сжатие применяется, если ratio <= значения
 DEFAULT_MIN_CS = 1            # comp_size: файлы больше этого размера пробуют сжимать
 DEFAULT_EST_RATIO = 0.50      # оценка упакованного размера при первой раскладке
 DEFAULT_PREFIX = 'gamedata'
+NAME_DIGITS = 3               # минимум цифр в номере: ScanForPiles сравнивает имена как строки,
+                              # и gamedata100 при двух цифрах оказался бы «меньше» gamedata99
 
-# Оценка упакованного размера файла (для первой раскладки по 50 МБ). Замерена на Data
+# Оценка упакованного размера файла (для первой раскладки по target). Замерена на Data
 # (zlib level 6, выборка по расширениям): для мелких файлов сжатие почти не работает,
 # плюс на каждый файл приходится ~70 байт индекса и имени.
 EST_RATIO_BY_EXT = {
@@ -90,6 +96,12 @@ DEFAULT_POLICY = os.path.join(HERE, 'policy.txt')
 DEFAULT_MANIFEST = os.path.join(HERE, 'gamedata_manifest.json')
 
 MANIFEST_FORMAT = 2
+
+SCAN_CACHE_NAME = '.scan_cache.json'    # в выходной папке (Piles/ в .gitignore), не в манифесте
+SCAN_CACHE_FORMAT = 1
+RACY_NS = 2 * 10 ** 9         # файлам, тронутым за 2 с до прошлого скана, кэш не верит (как racy git)
+SCAN_CHUNK_BYTES = 16 * MB    # порция файлов на одну задачу воркера скана
+SCAN_CHUNK_FILES = 2000
 
 
 def log(msg):
@@ -127,6 +139,7 @@ class Policy(object):
         self.ignore_dirs = set()
         self.exts = set()
         self.excludes = []        # [(снять_исключение, маска)] — в порядке файла, последнее совпадение важнее
+        self.referenced = []      # файлы из ignore_dir, взятые по ссылкам (заполняет walk)
         self.raw = ''
         self.load()
 
@@ -164,50 +177,270 @@ class Policy(object):
         import hashlib
         return hashlib.sha256(self.raw.encode('utf-8')).hexdigest()[:12]
 
-    def walk(self, data_dir):
-        """Относительные (от Data) пути файлов, попадающих в pile; '/' как разделитель."""
-        keys = []
-        for dirpath, dirnames, filenames in os.walk(data_dir):
-            dirnames[:] = [d for d in dirnames if d.lower() not in self.ignore_dirs]
-            for name in filenames:
-                low = name.lower()
-                if '.' not in low:
+    def accepts(self, rel):
+        """ext + exclude для пути от Data ('/' как разделитель); ignore_dir здесь не проверяется."""
+        low = rel.rsplit('/', 1)[-1].lower()
+        if '.' not in low:
+            return False
+        if low.rsplit('.', 1)[1] not in self.exts:
+            return False
+        rel_low = rel.lower()
+        excluded = False
+        for negate, m in self.excludes:
+            # маска без '/' сравнивается с именем файла, с '/' — с полным относительным путём
+            if fnmatch.fnmatch(rel_low if '/' in m else low, m):
+                excluded = not negate
+        return not excluded
+
+    def walk(self, data_dir, cache=None):
+        """
+        Относительные (от Data) пути файлов, попадающих в pile; '/' как разделитель.
+        Файлы из ignore_dir тоже попадают, если на них ссылаются отобранные данные
+        (см. referenced_from_ignored): иначе ссылка в игре пустая и клиент падает.
+        Попутно self.stats = {rel: (размер на диске, mtime_ns)} — из scandir, без
+        отдельного stat на файл (ключ кэша скана).
+        """
+        keys, ignored, self.stats = [], {}, {}
+
+        def visit(rel_dir, in_ignored):
+            subdirs = []
+            with os.scandir(os.path.join(data_dir, rel_dir.replace('/', os.sep))) as it:
+                for e in it:
+                    rel = e.name if not rel_dir else rel_dir + '/' + e.name
+                    if e.is_dir() and not e.is_symlink():
+                        # служебные каталоги (.svn и т. п.) в игре никто не ссылается — их не обходим
+                        if not (e.name.startswith('.') and e.name.lower() in self.ignore_dirs):
+                            subdirs.append((rel, in_ignored or e.name.lower() in self.ignore_dirs))
+                        continue
+                    if not self.accepts(rel):
+                        continue
+                    try:
+                        st = e.stat()
+                        self.stats[rel] = (st.st_size, st.st_mtime_ns)
+                    except OSError:
+                        pass                      # скан повторит stat и сообщит ошибку
+                    if in_ignored:
+                        ignored[rel.lower()] = rel
+                    else:
+                        keys.append(rel)
+            for rel, ign in subdirs:
+                visit(rel, ign)
+
+        visit('', False)
+        self.referenced = referenced_from_ignored(data_dir, keys, ignored, self.ignore_dirs,
+                                                  self.stats, cache)
+        return keys + self.referenced
+
+    def marks_key(self):
+        return ' '.join(sorted(self.ignore_dirs))
+
+
+# Ссылки в .xdb: href="/Glyphs/_.GLDB" (без расширения — это .xdb), textref="/x.txt"
+# и пути в тексте тегов (<geometryFileName>/x.stat</geometryFileName>).
+REF_HREF = re.compile(rb'href="([^"#]+)')
+REF_PATH = re.compile(rb'[>"]([^<>"\r\n]+\.[A-Za-z0-9_]+)[<"]')
+
+
+def xdb_refs(data, base_dir):
+    """Пути (lower, от Data), на которые ссылается .xdb из каталога base_dir."""
+    out = set()
+    found = [(m, True) for m in REF_HREF.findall(data)] + [(m, False) for m in REF_PATH.findall(data)]
+    for raw, is_href in found:
+        p = raw.decode('utf-8', 'replace').strip().replace('\\', '/')
+        if not p:
+            continue
+        if is_href and os.path.splitext(p)[1].lower() != '.xdb':
+            p += '.xdb'
+        p = p.lstrip('/') if p.startswith('/') else (base_dir + '/' + p if base_dir else p)
+        p = os.path.normpath(p).replace(os.sep, '/').lower()
+        if not p.startswith('..'):
+            out.add(p)
+    return out
+
+
+def referenced_from_ignored(data_dir, keys, ignored, ignore_dirs, stats=None, cache=None):
+    """
+    Файлы из ignore_dir (ignored: {lower: rel}, уже прошедшие ext/exclude), на которые
+    ссылаются отобранные .xdb — прямо или через другие такие файлы. Каталоги Test и т. п.
+    исключены целиком, но живые данные на них ссылаются (тестовый глиф в Glyphs/_.GLDB,
+    порталы на MOBA, эффекты свитков, Tech/Default/_.MAPLST): без файла ссылка пустая,
+    и клиент падает. К .txt добавляется и перевод <имя>_en.txt.
+    С cache (ScanCache) неизменённые .xdb не читаются: берутся признак «есть имя
+    исключённого каталога» и список ссылок с прошлого прогона.
+    """
+    if not ignored:
+        return []
+    marks = [d.encode('utf-8') + b'/' for d in ignore_dirs]
+    queue = [k for k in keys if k.lower().endswith('.xdb')]
+    added = []
+    from_ignored = set()
+    stats = stats or {}
+    while queue:
+        rel = queue.pop()
+        st = stats.get(rel)
+        ent = cache.get_refs(rel, st) if cache is not None else None
+        need = rel in from_ignored
+        if ent is not None and (ent[0] or need) and ent[1] is None:
+            ent = None                           # признак есть, а ссылки не разбирали — читаем
+        if ent is None:
+            try:
+                with open(os.path.join(data_dir, rel.replace('/', os.sep)), 'rb') as f:
+                    data = f.read()
+            except OSError:
+                continue
+            # в обычных .xdb ссылка на исключённый каталог содержит его имя — остальные не разбираем
+            # (у взятых из исключённого каталога относительные ссылки имени не содержат)
+            has_marks = any(m in data.lower() for m in marks)
+            refs = None
+            if has_marks or need:
+                base = rel.rsplit('/', 1)[0] if '/' in rel else ''
+                refs = sorted(xdb_refs(data, base))
+            ent = (has_marks, refs)
+            del data
+        if cache is not None and st is not None:
+            cache.put_refs(rel, st, ent[0], ent[1])
+        if not ent[0] and not need:
+            continue
+        for ref in ent[1]:
+            cands = [ref]
+            if ref.endswith('.txt'):
+                cands.append(ref[:-4] + '_en.txt')
+            for c in cands:
+                hit = ignored.pop(c, None)
+                if hit is None:
                     continue
-                if low.rsplit('.', 1)[1] not in self.exts:
-                    continue
-                rel = os.path.relpath(os.path.join(dirpath, name), data_dir).replace(os.sep, '/')
-                rel_low = rel.lower()
-                excluded = False
-                for negate, m in self.excludes:
-                    # маска без '/' сравнивается с именем файла, с '/' — с полным относительным путём
-                    if fnmatch.fnmatch(rel_low if '/' in m else low, m):
-                        excluded = not negate
-                if excluded:
-                    continue
-                keys.append(rel)
-        return keys
+                added.append(hit)
+                if c.endswith('.xdb'):
+                    from_ignored.add(hit)
+                    queue.append(hit)
+    return sorted(added)
 
 
 # --------------------------------------------------------------------------------------
 # Скан файлов: {rel: (size, crc32)}
 # --------------------------------------------------------------------------------------
 
+def is_text(buf):
+    """Эвристика git (convert.c, convert_is_binary) по всему содержимому."""
+    if b'\x00' in buf:
+        return False
+    cr = buf.count(b'\r')
+    if cr != buf.count(b'\r\n'):                  # одиночный CR — двоичный (layer_mask и т. п.)
+        return False
+    nonprintable = len(buf) - len(buf.translate(None, NONPRINTABLE))
+    printable = len(buf) - nonprintable - cr - buf.count(b'\n')
+    return (printable >> 7) >= nonprintable
+
+
+def canon(data):
+    """
+    Текст — с LF, как его хранит git (i/lf): содержимое pile не зависит от core.autocrlf
+    клона, из которого собирали (иначе сборка из другого клона пересобирает почти все
+    pile из-за .xdb/.lua). Двоичные файлы по эвристике git не трогаем.
+    """
+    if data.find(b'\r\n') < 0:
+        return data
+    buf = bytes(data)
+    if not is_text(buf):
+        return data
+    return buf.replace(b'\r\n', b'\n')
+
+
 def file_crc(path, chunk=4 * 1024 * 1024):
-    crc = 0
+    """(size, crc32) содержимого после canon — того, что ляжет в pile."""
     with open(path, 'rb') as f:
+        head = f.read(TEXT_PROBE)
+        if b'\x00' not in head:
+            data = canon(head + f.read())
+            return len(data), zlib.crc32(data) & 0xFFFFFFFF
+        size, crc = len(head), zlib.crc32(head)
         while True:
             b = f.read(chunk)
             if not b:
                 break
+            size += len(b)
             crc = zlib.crc32(b, crc)
-    return crc & 0xFFFFFFFF
+    return size, crc & 0xFFFFFFFF
+
+
+class ScanCache(object):
+    """
+    Кэш скана Data: Piles/.scan_cache.json (рядом с pile, не коммитится). По файлу хранит
+    размер на диске и mtime_ns, а к ним — (size, crc) после canon и, для .xdb, признак
+    «есть имя исключённого каталога» со списком ссылок (referenced_from_ignored).
+    Совпали размер и mtime — файл не читается. Без кэша скан читает всю Data (4,4 ГБ):
+    на горячем кэше ОС это секунды, с холодного диска (OneDrive) — около 100 с.
+
+    Чего кэш не видит: правку, после которой у файла те же размер и mtime (копирование
+    с сохранением времени, откат mtime руками). Для этого --rescan: читать всё заново.
+    Файлам с mtime позже начала прошлого скана минус RACY_NS кэш не верит: их могли
+    изменить в тот же тик, когда скан их уже прочитал.
+    """
+
+    def __init__(self, path, data_dir, marks_key, use=True):
+        self.path = path
+        self.data_dir = os.path.normcase(os.path.abspath(data_dir))
+        self.marks_key = marks_key
+        self.started_ns = time.time_ns()
+        self.saved_ns = 0
+        self.crc, self.refs = {}, {}
+        self.new_crc, self.new_refs = {}, {}
+        self.hits = 0
+        if use:
+            self.load()
+
+    def load(self):
+        try:
+            with open(self.path, 'rb') as f:
+                data = json.loads(f.read().decode('utf-8'))
+        except (OSError, ValueError):
+            return
+        if data.get('format') != SCAN_CACHE_FORMAT or data.get('data') != self.data_dir:
+            return
+        self.saved_ns = int(data.get('saved_ns', 0))
+        self.crc = data.get('files', {})
+        if data.get('marks') == self.marks_key:
+            self.refs = data.get('refs', {})
+
+    def _fresh(self, ent, st):
+        return (ent is not None and st is not None and ent[0] == st[0] and ent[1] == st[1]
+                and st[1] < self.saved_ns - RACY_NS)
+
+    def get_crc(self, rel, st):
+        ent = self.crc.get(rel)
+        if not self._fresh(ent, st):
+            return None
+        self.hits += 1
+        return ent[2], ent[3]
+
+    def put_crc(self, rel, st, size, crc):
+        self.new_crc[rel] = [st[0], st[1], size, crc]
+
+    def get_refs(self, rel, st):
+        ent = self.refs.get(rel)
+        return (ent[2], ent[3]) if self._fresh(ent, st) else None
+
+    def put_refs(self, rel, st, has_marks, refs):
+        self.new_refs[rel] = [st[0], st[1], has_marks, refs]
+
+    def save(self):
+        """Только файлы этого прогона (удалённые из Data выпадают); атомарно через .tmp."""
+        body = {'format': SCAN_CACHE_FORMAT, 'data': self.data_dir, 'marks': self.marks_key,
+                'saved_ns': self.started_ns, 'files': self.new_crc, 'refs': self.new_refs}
+        tmp = self.path + '.tmp'
+        try:
+            os.makedirs(os.path.dirname(self.path), exist_ok=True)
+            with open(tmp, 'wb') as f:
+                f.write(json.dumps(body, separators=(',', ':'), sort_keys=True).encode('utf-8'))
+            os.replace(tmp, self.path)
+        except OSError as e:
+            log('кэш скана не записан (%s): следующий прогон прочитает Data целиком' % e)
 
 
 def _stat_chunk(args):
     """
-    crc считаем у всех файлов каждого прогона: на всю Data это 4,6 с (crc32 ~1,9 ГБ/с),
-    а время правки файлу доверять нельзя — правка «тот же размер, другие байты» по
-    размеру и mtime не видна, а её обязан ловить именно скан.
+    (rel, size, crc, ошибка, (размер на диске, mtime_ns)). stat — до чтения: если файл
+    поменяют во время чтения, в кэш попадёт старый mtime, и следующий скан его перечитает.
     """
     data_dir, chunk = args
     res = []
@@ -216,14 +449,14 @@ def _stat_chunk(args):
         try:
             st = os.stat(p)
         except OSError as e:
-            res.append((rel, -1, 0, 'stat: %s' % e))
+            res.append((rel, -1, 0, 'stat: %s' % e, None))
             continue
         try:
-            crc = file_crc(p)
+            size, crc = file_crc(p)
         except OSError as e:
-            res.append((rel, st.st_size, 0, 'read: %s' % e))
+            res.append((rel, st.st_size, 0, 'read: %s' % e, None))
             continue
-        res.append((rel, st.st_size, crc, None))
+        res.append((rel, size, crc, None, (st.st_size, st.st_mtime_ns)))
     return res
 
 
@@ -238,35 +471,47 @@ def _map(fn, arglist, jobs):
         pool.join()
 
 
-def scan(data_dir, keys, jobs):
-    """{rel: (size, crc32)}. Крупные файлы первыми: они задают длину хвоста параллельной части."""
-    sized = []
-    for k in keys:
-        try:
-            sized.append((os.path.getsize(os.path.join(data_dir, k.replace('/', os.sep))), k))
-        except OSError:
-            sized.append((0, k))
-    sized.sort(key=lambda t: (-t[0], t[1]))
-
+def scan(data_dir, keys, jobs, stats=None, cache=None):
+    """
+    {rel: (size, crc32)}. С cache файлы с прежними размером и mtime не читаются; остальные
+    читают воркеры порциями, крупные файлы первыми: они задают длину хвоста параллельной части.
+    """
+    stats = stats or {}
     out = {}
-    chunks, chunk_bytes = [], 0
-    for size, k in sized:
-        chunks.append(k)
+    todo = []
+    for k in keys:
+        st = stats.get(k)
+        if st is None:
+            try:
+                s = os.stat(os.path.join(data_dir, k.replace('/', os.sep)))
+                st = (s.st_size, s.st_mtime_ns)
+            except OSError:
+                st = (0, 0)                      # ошибку сообщит _stat_chunk
+        hit = cache.get_crc(k, st) if cache is not None else None
+        if hit is not None:
+            out[k] = hit
+            cache.put_crc(k, st, hit[0], hit[1])
+        else:
+            todo.append((st[0], k))
+    todo.sort(key=lambda t: (-t[0], t[1]))
+
+    chunks, chunk, chunk_bytes = [], [], 0
+    for size, k in todo:
+        chunk.append(k)
         chunk_bytes += size
-        if chunk_bytes >= 16 * MB:
-            _merge_scan(out, _map(_stat_chunk, [(data_dir, chunks)], jobs))
-            chunks, chunk_bytes = [], 0
-    if chunks:
-        _merge_scan(out, _map(_stat_chunk, [(data_dir, chunks)], jobs))
-    return out
-
-
-def _merge_scan(out, results):
-    for rows in results:
-        for rel, size, crc, err in rows:
+        if chunk_bytes >= SCAN_CHUNK_BYTES or len(chunk) >= SCAN_CHUNK_FILES:
+            chunks.append((data_dir, chunk))
+            chunk, chunk_bytes = [], 0
+    if chunk:
+        chunks.append((data_dir, chunk))
+    for rows in _map(_stat_chunk, chunks, jobs):
+        for rel, size, crc, err, st in rows:
             if err:
                 raise SystemExit('скан %s: %s' % (rel, err))
             out[rel] = (size, crc)
+            if cache is not None:
+                cache.put_crc(rel, st, size, crc)
+    return out
 
 
 # --------------------------------------------------------------------------------------
@@ -312,7 +557,7 @@ class Manifest(object):
         self.params = data.get('params', {})
         self.piles = []
         for p in data.get('piles', []):
-            # v1 хранил ещё mtime_ns 4-м полем — он больше не нужен, crc считается у всех
+            # v1 хранил ещё mtime_ns 4-м полем — теперь mtime только в локальном кэше скана
             files = [[e[0], e[1], e[2]] for e in p.get('files', [])]
             self.piles.append(Pile(p['id'], p.get('name'), files, p.get('packed_size', 0)))
         self.next_id = max([p.id for p in self.piles] + [0]) + 1
@@ -374,6 +619,7 @@ def build_pile(task):
                 if mm is not None:
                     mm.close()
                 return {'error': 'не удалось прочитать %s: %s' % (rel, e), 'name': out_path}
+            data = canon(data)
             src_size = len(data)
             crc = zlib.crc32(data) & 0xFFFFFFFF
             stored, flags = data, 0
@@ -427,7 +673,7 @@ def build_pile(task):
 
 def rebuild(piles, ids, data_dir, out_dir, args):
     """Пересобирает pile с id в `ids`; возвращает число собранных контейнеров."""
-    renumber(piles, args.prefix)
+    assign_names(piles, args.prefix)
     tasks = [(os.path.join(out_dir, p.name), data_dir, [f[0] for f in p.files],
               args.level, args.min_cs, args.ratio) for p in piles if p.id in ids]
     if not tasks:
@@ -453,14 +699,26 @@ def rebuild(piles, ids, data_dir, out_dir, args):
 # Раскладка: имена, деление переполненных списков
 # --------------------------------------------------------------------------------------
 
-def name_for(idx, prefix):
-    width = max(2, len(str(max(1, idx))))
-    return '%s%0*d.pile' % (prefix, width, idx)
-
-
-def renumber(piles, prefix):
-    for i, p in enumerate(piles, 1):
-        p.name = name_for(i, prefix)
+def assign_names(piles, prefix):
+    """
+    Имена стабильны: pile с именем его не меняет. Раньше имена пересчитывались по порядку,
+    и после деления одного pile «менялись» все следующие — в git и в канале обновлений это
+    десятки изменённых файлов без изменений данных. Новый pile получает номер после
+    максимального (дыры не переиспользуются); ширина номера — как у существующих имён,
+    при первой раскладке — по числу pile, не меньше NAME_DIGITS цифр.
+    """
+    rx = re.compile(r'%s(\d+)\.pile$' % re.escape(prefix), re.I)
+    nums = [rx.match(p.name) for p in piles if p.name]
+    nums = [m.group(1) for m in nums if m]
+    if nums:
+        width = max(NAME_DIGITS, max(len(n) for n in nums))
+    else:
+        width = max(NAME_DIGITS, len(str(len(piles))))
+    nxt = max([int(n) for n in nums] + [0]) + 1
+    for p in piles:
+        if not p.name:
+            p.name = '%s%0*d.pile' % (prefix, width, nxt)
+            nxt += 1
 
 
 def split_oversized(piles, man, split_bytes):
@@ -487,7 +745,7 @@ def split_oversized(piles, man, split_bytes):
                 cut = max(1, min(cut, len(p.files) - 1))
                 a_src = sum(f[1] for f in p.files[:cut])
                 a_pack = int(p.packed_size * a_src / src) if src else p.packed_size // 2
-                a = Pile(p.id, None, p.files[:cut], a_pack)
+                a = Pile(p.id, p.name, p.files[:cut], a_pack)        # первая часть — под старым именем
                 b = Pile(man.next_id, None, p.files[cut:], p.packed_size - a_pack)
                 man.next_id += 1
                 need.update([a.id, b.id])
@@ -501,13 +759,12 @@ def split_oversized(piles, man, split_bytes):
 
 def sync_names(piles, disk_names, out_dir, prefix):
     """
-    Пересчитывает имена gamedataNN.pile и перекладывает уже готовые файлы на новые имена.
-    Вызывается ДО пересборки: после деления pile сдвигаются вправо, и если сразу писать
-    новую часть в освободившееся имя, оно затрёт содержимое соседнего pile. Сначала —
-    перенос (через временное имя, чтобы цепочка a->b не перетирала b), потом сборка.
+    Даёт имена новым pile и перекладывает готовые файлы, если имя pile на диске другое
+    (имена стабильны, так что это бывает только с файлами старых сборок). Вызывается ДО
+    пересборки; перенос — через временное имя, чтобы цепочка a->b не перетирала b.
     disk_names: {id: имя файла на диске}, обновляется на месте.
     """
-    renumber(piles, prefix)
+    assign_names(piles, prefix)
     staged = []
     for p in piles:
         old = disk_names.get(p.id)
@@ -562,9 +819,14 @@ def cmd_build(args):
         raise SystemExit('Data не найдена: %s' % data_dir)
     os.makedirs(out_dir, exist_ok=True)
 
-    keys = policy.walk(data_dir)
+    cache = ScanCache(os.path.join(out_dir, SCAN_CACHE_NAME), data_dir, policy.marks_key(),
+                      use=not args.rescan)
+    t = time.time()
+    keys = policy.walk(data_dir, cache)
     log('policy: %d расширений, %d игнорируемых каталогов; отобрано файлов: %d'
-        % (len(policy.exts), len(policy.ignore_dirs), len(keys)))
+        ' (из них %d из игнорируемых каталогов — на них ссылаются данные), %.1f с'
+        % (len(policy.exts), len(policy.ignore_dirs), len(keys), len(policy.referenced),
+           time.time() - t))
 
     # индекс внутри pile — case-insensitive hash_map: разные имена, отличающиеся регистром,
     # сливаются в один ключ (проигрывает последний). Не должно быть и в разных pile.
@@ -582,6 +844,8 @@ def cmd_build(args):
     man.load()
     man_piles = list(man.piles)
 
+    if args.split is None:
+        args.split = args.target + SPLIT_MARGIN
     params = {
         'target_bytes': args.target, 'split_bytes': args.split, 'level': args.level,
         'max_ratio': args.ratio, 'min_compress_size': args.min_cs, 'prefix': args.prefix,
@@ -589,15 +853,26 @@ def cmd_build(args):
     }
     full = args.force or not man.exists
     if man.exists and man.params and man.params != params:
-        log('параметры сборки/policy изменились (%s -> %s): пересобираем всё'
-            % (man.params.get('policy_fingerprint'), params['policy_fingerprint']))
+        changed = sorted(k for k in set(man.params) | set(params) if man.params.get(k) != params.get(k))
+        log('параметры сборки/policy изменились (%s): пересобираем всё'
+            % ', '.join('%s %s -> %s' % (k, man.params.get(k), params.get(k)) for k in changed))
+        full = True
+    # Другая цель — раскладка с нуля: деление старых pile пополам дало бы не target, а
+    # половинки (50 МБ -> по 25), и мелкая цель не сработала бы.
+    old_target = man.params.get('target_bytes') if man.exists else None
+    if args.relayout or (old_target is not None and old_target != args.target):
+        log('раскладка заново по %s (было %s): все файлы — по новым pile'
+            % (human(args.target), human(old_target) if old_target else '—'))
+        man.piles = []
         full = True
 
-    # --- текущее состояние файлов: сначала только stat, crc — для изменённых ---
+    # --- текущее состояние файлов: crc из кэша скана по размеру и mtime, прочие — читаем ---
     t = time.time()
-    cur = scan(data_dir, keys, args.jobs)
-    log('скан Data: %d файлов, %s исходников, %.1f с (crc всех)'
-        % (len(cur), human(sum(v[0] for v in cur.values())), time.time() - t))
+    cur = scan(data_dir, keys, args.jobs, policy.stats, cache)
+    cache.save()
+    log('скан Data: %d файлов, %s исходников, %.1f с (прочитано %d, из кэша %d%s)'
+        % (len(cur), human(sum(v[0] for v in cur.values())), time.time() - t,
+           len(cur) - cache.hits, cache.hits, '; --rescan: кэш не использован' if args.rescan else ''))
 
     # --- применяем манифест: снимаем привязки удалённых, помечаем изменённые pile ---
     piles = man.piles
@@ -651,7 +926,7 @@ def cmd_build(args):
         log('новых файлов: %d' % len(new_keys))
 
     piles = [p for p in piles if p.files]
-    renumber(piles, args.prefix)
+    assign_names(piles, args.prefix)
 
     # --- проверки лимитов загрузчика и целостности привязок ---
     owner = {}
@@ -682,7 +957,7 @@ def cmd_build(args):
                human(p.source_size()), human(p.packed_size)))
     if args.dry_run:
         log('')
-        log('--dry-run: ничего не записано (манифест тоже не тронут)')
+        log('--dry-run: pile и манифест не тронуты (обновлён только кэш скана)')
         return 0
 
     # --- сборка помеченных pile, затем деление переполненных и пересборка частей ---
@@ -996,9 +1271,10 @@ def main(argv=None):
     def common(p):
         paths(p)
         p.add_argument('--target', type=parse_size, default=DEFAULT_TARGET,
-                       help='целевой размер pile (по умолчанию 50MB)')
-        p.add_argument('--split', type=parse_size, default=DEFAULT_SPLIT,
-                       help='порог деления pile (по умолчанию 60MB)')
+                       help='целевой размер pile (по умолчанию 20MB); смена цели раскладывает '
+                            'файлы по pile заново')
+        p.add_argument('--split', type=parse_size, default=None,
+                       help='порог деления pile (по умолчанию target + 10MB)')
         p.add_argument('--level', type=int, default=DEFAULT_LEVEL, help='zlib level (по умолчанию 6)')
         p.add_argument('--ratio', type=float, default=DEFAULT_RATIO,
                        help='макс. ratio для применения сжатия (по умолчанию 0.90)')
@@ -1011,8 +1287,13 @@ def main(argv=None):
                        default=max(1, min(4, (os.cpu_count() or 2) - 1)),
                        help='параллельные воркеры (по умолчанию %(default)s)')
         p.add_argument('--force', action='store_true', help='пересобрать все pile')
+        p.add_argument('--relayout', action='store_true',
+                       help='разложить все файлы по pile заново (имена — с 01)')
         p.add_argument('--keep-stale', action='store_true',
                        help='не удалять pile, которых нет в манифесте')
+        p.add_argument('--rescan', action='store_true',
+                       help='не верить кэшу скана (%s): прочитать всю Data и посчитать crc '
+                            'заново — ловит правки с прежними размером и mtime' % SCAN_CACHE_NAME)
 
     p_build = sub.add_parser('build', help='собрать/дообновить pile')
     common(p_build)

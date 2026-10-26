@@ -109,100 +109,100 @@
 	<name textref="/Items/Talents/Class/Laguna/Ability_A4_2u.TALENT_name.txt" />
 	<node></node>
 	<passiveApplicators>
-	<Item href="/Items/Talents/Class/Laguna/Ability_A4_2u.TALENT" id="5ABB8503-3D7B-41FD-B5EE-58B2A790AA74">
-		<StatModApplicator>
-			<applyTarget>ApplicatorTarget</applyTarget>
-			<behaviorFlags>0</behaviorFlags>
-			<caption>(A4_2u) Сила +3% за стак</caption>
-			<constraint>None</constraint>
-			<dontUpdate>false</dontUpdate>
-			<effect>
-				<Item href="" />
-				<Item href="" />
-			</effect>
-			<enabled>
-				<compiledString>FQAAAAAAAAAAVYvsg+wMi0UIixCLTQiLgrgAAAD/0ItNCIsRi00Ii4K8AAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
-				<returnType>bool</returnType>
-				<sString>sBaseStrength &gt;= sBaseIntellect</sString>
-			</enabled>
-			<formulaName></formulaName>
-			<lifeTime>
-				<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
-				<returnType>float</returnType>
-				<sString>-1.0</sString>
-			</lifeTime>
-			<LoggingEvent>-1</LoggingEvent>
-			<modifier>
-				<addValue>
-					<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+		<Item href="/Items/Talents/Class/Laguna/Ability_A4_2u.TALENT" id="5ABB8503-3D7B-41FD-B5EE-58B2A790AA74">
+			<StatModApplicator>
+				<applyTarget>ApplicatorTarget</applyTarget>
+				<behaviorFlags>0</behaviorFlags>
+				<caption>(A4_2u) Сила +3% за стак</caption>
+				<constraint>None</constraint>
+				<dontUpdate>false</dontUpdate>
+				<effect>
+					<Item href="" />
+					<Item href="" />
+				</effect>
+				<enabled>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoPi0UIixCLTQiLgiwBAAD/0A+28GoQi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqD4tVCIsCi00Ii5AsAQAA/9IPtvBqEItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkLgAAAD/0otFCIsQi00Ii4K8AAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IpF/F6L5V3D</compiledString>
+					<returnType>bool</returnType>
+					<sString>(pFirst-&gt;IsRecommended(15) &gt; pFirst-&gt;IsRecommended(16) ? 1 : pFirst-&gt;IsRecommended(15) &lt; pFirst-&gt;IsRecommended(16) ? 0 : sBaseStrength&gt;=sBaseIntellect)</sString>
+				</enabled>
+				<formulaName></formulaName>
+				<lifeTime>
+					<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
 					<returnType>float</returnType>
-					<sString>0.0f</sString>
-				</addValue>
-				<multValue>
-					<compiledString>FSYAAAADAAAANQAAAEgAAABNAAAAQTRfMnVfU3RhdFBlcmNlbnQAAABMYWd1bmFTaGFya1N0YWNrcwBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0tw1fQAAAGgUAAAAi0UMixCLTQyLgogBAADdXfj/0NxN+Nno3sHZXfTZRfSL5V3DAAAAAAAA8D8AAAAAAABZQA==</compiledString>
+					<sString>-1.0</sString>
+				</lifeTime>
+				<LoggingEvent>-1</LoggingEvent>
+				<modifier>
+					<addValue>
+						<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+						<returnType>float</returnType>
+						<sString>0.0f</sString>
+					</addValue>
+					<multValue>
+						<compiledString>FSYAAAADAAAANQAAAEgAAABNAAAAQTRfMnVfU3RhdFBlcmNlbnQAAABMYWd1bmFTaGFya1N0YWNrcwBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0tw1fQAAAGgUAAAAi0UMixCLTQyLgogBAADdXfj/0NxN+Nno3sHZXfTZRfSL5V3DAAAAAAAA8D8AAAAAAABZQA==</compiledString>
+						<returnType>float</returnType>
+						<sString>1.0f + cA4_2u_StatPercent / 100.0f * receiver.vLagunaSharkStacks</sString>
+					</multValue>
+					<stat>Strength</stat>
+					<topModifier>false</topModifier>
+					<variable></variable>
+				</modifier>
+				<providerName></providerName>
+				<startCondition>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</startCondition>
+				<statModName></statModName>
+			</StatModApplicator>
+		</Item>
+		<Item href="/Items/Talents/Class/Laguna/Ability_A4_2u.TALENT" id="08684E50-5151-47DF-A086-2C23F8FCD534">
+			<StatModApplicator>
+				<applyTarget>ApplicatorTarget</applyTarget>
+				<behaviorFlags>0</behaviorFlags>
+				<caption>(A4_2u) Разум +3% за стак</caption>
+				<constraint>None</constraint>
+				<dontUpdate>false</dontUpdate>
+				<effect>
+					<Item href="" />
+					<Item href="" />
+				</effect>
+				<enabled>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoPi0UIixCLTQiLgiwBAAD/0A+28GoQi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqD4tVCIsCi00Ii5AsAQAA/9IPtvBqEItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkLgAAAD/0otFCIsQi00Ii4K8AAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/DPAg338AA+UwF6L5V3D</compiledString>
+					<returnType>bool</returnType>
+					<sString>!(pFirst-&gt;IsRecommended(15) &gt; pFirst-&gt;IsRecommended(16) ? 1 : pFirst-&gt;IsRecommended(15) &lt; pFirst-&gt;IsRecommended(16) ? 0 : sBaseStrength&gt;=sBaseIntellect)</sString>
+				</enabled>
+				<formulaName></formulaName>
+				<lifeTime>
+					<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
 					<returnType>float</returnType>
-					<sString>1.0f + cA4_2u_StatPercent / 100.0f * receiver.vLagunaSharkStacks</sString>
-				</multValue>
-				<stat>Strength</stat>
-				<topModifier>false</topModifier>
-				<variable></variable>
-			</modifier>
-			<providerName></providerName>
-			<startCondition>
-				<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
-				<returnType>bool</returnType>
-				<sString>true</sString>
-			</startCondition>
-			<statModName></statModName>
-		</StatModApplicator>
-	</Item>
-	<Item href="/Items/Talents/Class/Laguna/Ability_A4_2u.TALENT" id="08684E50-5151-47DF-A086-2C23F8FCD534">
-		<StatModApplicator>
-			<applyTarget>ApplicatorTarget</applyTarget>
-			<behaviorFlags>0</behaviorFlags>
-			<caption>(A4_2u) Разум +3% за стак</caption>
-			<constraint>None</constraint>
-			<dontUpdate>false</dontUpdate>
-			<effect>
-				<Item href="" />
-				<Item href="" />
-			</effect>
-			<enabled>
-				<compiledString>FQAAAAAAAAAAVYvsg+wMi0UIixCLTQiLgrgAAAD/0ItNCIsRi00Ii4K8AAAA3V34/9DcXfjf4PbEQXUJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
-				<returnType>bool</returnType>
-				<sString>sBaseStrength &lt; sBaseIntellect</sString>
-			</enabled>
-			<formulaName></formulaName>
-			<lifeTime>
-				<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
-				<returnType>float</returnType>
-				<sString>-1.0</sString>
-			</lifeTime>
-			<LoggingEvent>-1</LoggingEvent>
-			<modifier>
-				<addValue>
-					<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
-					<returnType>float</returnType>
-					<sString>0.0f</sString>
-				</addValue>
-				<multValue>
-					<compiledString>FSYAAAADAAAANQAAAEgAAABNAAAAQTRfMnVfU3RhdFBlcmNlbnQAAABMYWd1bmFTaGFya1N0YWNrcwBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0tw1fQAAAGgUAAAAi0UMixCLTQyLgogBAADdXfj/0NxN+Nno3sHZXfTZRfSL5V3DAAAAAAAA8D8AAAAAAABZQA==</compiledString>
-					<returnType>float</returnType>
-					<sString>1.0f + cA4_2u_StatPercent / 100.0f * receiver.vLagunaSharkStacks</sString>
-				</multValue>
-				<stat>Intellect</stat>
-				<topModifier>false</topModifier>
-				<variable></variable>
-			</modifier>
-			<providerName></providerName>
-			<startCondition>
-				<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
-				<returnType>bool</returnType>
-				<sString>true</sString>
-			</startCondition>
-			<statModName></statModName>
-		</StatModApplicator>
-	</Item>
+					<sString>-1.0</sString>
+				</lifeTime>
+				<LoggingEvent>-1</LoggingEvent>
+				<modifier>
+					<addValue>
+						<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+						<returnType>float</returnType>
+						<sString>0.0f</sString>
+					</addValue>
+					<multValue>
+						<compiledString>FSYAAAADAAAANQAAAEgAAABNAAAAQTRfMnVfU3RhdFBlcmNlbnQAAABMYWd1bmFTaGFya1N0YWNrcwBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0tw1fQAAAGgUAAAAi0UMixCLTQyLgogBAADdXfj/0NxN+Nno3sHZXfTZRfSL5V3DAAAAAAAA8D8AAAAAAABZQA==</compiledString>
+						<returnType>float</returnType>
+						<sString>1.0f + cA4_2u_StatPercent / 100.0f * receiver.vLagunaSharkStacks</sString>
+					</multValue>
+					<stat>Intellect</stat>
+					<topModifier>false</topModifier>
+					<variable></variable>
+				</modifier>
+				<providerName></providerName>
+				<startCondition>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</startCondition>
+				<statModName></statModName>
+			</StatModApplicator>
+		</Item>
 	</passiveApplicators>
 	<persistentId>Laguna_A4_2u</persistentId>
 	<prerequisiteTalents>

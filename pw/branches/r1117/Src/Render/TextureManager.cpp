@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "renderflagsconverter.h"
 #include "renderer.h"
+#include "renderbackend.h"   // seam —ç—Ç–∞–ø–∞ 2: GetBackend()/HTexture/EBackend*
 #include "TextureManager.h"
 #include "DxResourcesControl.h"
 #include "ReadDDS.h"
@@ -166,22 +167,51 @@ HRESULT ProcessMipMaps(IDirect3DTexture9 **ppD3DTexture, UINT skipMipLevels, Str
   if(RENDER_DISABLED)
     return S_FALSE;
 
+  // show_mipmap ‚Äî –æ—Ç–ª–∞–¥–æ—á–Ω–∞—è –ø–æ–¥—Å–≤–µ—Ç–∫–∞ —É—Ä–æ–≤–Ω–µ–π. –í–µ—Å—å –∫–æ–Ω—Ç–µ–Ω—Ç ‚Äî DDS
+  // (–∑–∞–º–µ—Ä tools/dds_inventory: 8031 .dds –≤ Data/, –ø–æ—Å—Ç–æ—Ä–æ–Ω–Ω–∏—Ö —Ñ–æ—Ä–º–∞—Ç–æ–≤ –Ω–µ—Ç),
+  // –ø–æ—ç—Ç–æ–º—É —Å–≤–æ–π –∑–∞–≥—Ä—É–∑—á–∏–∫, –∞ –Ω–µ D3DX. –§–æ—Ä–º–∞—Ç –±–µ—Ä—ë—Ç—Å—è –∏–∑ —Ñ–∞–π–ª–∞: –ø–æ–¥—Å–≤–µ—Ç–∫–∞ –∏ —Ç–∞–∫
+  // —Ä–∞–±–æ—Ç–∞–µ—Ç —Ç–æ–ª—å–∫–æ –¥–ª—è A8R8G8B8 (–Ω–∏–∂–µ –ø—Ä–æ–≤–µ—Ä–∫–∞ levelDesc.Format).
+  IDirect3DBaseTexture9* pBaseTexture = 0;
+  HRESULT hResult = CreateTextureFromDDSFileInMemory( pStream->GetBuffer(), pStream->GetSize(), skipMipLevels, &pBaseTexture );
   IDirect3DTexture9* pD3DTexture = 0;
-  HRESULT hResult = D3DXCreateTextureFromFileInMemoryEx(GetDevice(), pStream->GetBuffer(), pStream->GetSize(),
-    D3DX_DEFAULT_NONPOW2, D3DX_DEFAULT_NONPOW2, 0, 0, 
-    D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, D3DX_FILTER_TRIANGLE, D3DX_SKIP_DDS_MIP_LEVELS( skipMipLevels, D3DX_DEFAULT ), 
-    0, 0, 0, &pD3DTexture );
+  // “ËÔ Ë ÓÔËÒ‡ÌËÂ ·Â∏Ï ËÁ ·˝ÍÂÌ‰‡: ÔÓ‰ NvrhiBackend ‚ pBaseTexture ÎÂÊËÚ
+  // Û˜Í‡ ·˝ÍÂÌ‰‡, ‡ ÌÂ COM-Ó·˙ÂÍÚ, ÔÓ˝ÚÓÏÛ GetType()/GetLevelCount()/LockRect()
+  // Ì‡ÔˇÏÛ˛ ÔÓ ÌÂÈ = ‚˚ÁÓ‚ ÔÓ ˜ÛÊÓÈ vtable (Á‡ÏÂ 2026-10-16 ó Á‡‚ËÒ‡ÌËÂ ÔÓÚÓÍ‡
+  // ÂÌ‰Â‡ Ò‡ÁÛ ÔÓÒÎÂ DDS). Release() ÓÒÚ‡∏ÚÒˇ: Ó·∏ÚÍ‡ ·˝ÍÂÌ‰‡ ‰ÂÎ‡ÂÚ ÚÂ ÊÂ
+  // AddRef/Release, ˜ÚÓ Ë COM-ÔÓÎËÚËÍ‡ ÛÏÌ˚ı ÛÍ‡Á‡ÚÂÎÂÈ ÍÎËÂÌÚ‡.
+  IRenderBackend* const pBackend = GetBackend();
+  IRenderBackend::BackendTextureInfo texInfo;
+  const bool texIs2D = pBackend &&
+                       SUCCEEDED(pBackend->GetTextureInfo(MakeBackendHandle<HTexture>(pBaseTexture), &texInfo)) &&
+                       !texInfo.cube;
+  if( SUCCEEDED( hResult ) && pBaseTexture && texIs2D )
+    pD3DTexture = static_cast<IDirect3DTexture9*>( pBaseTexture );
+  else if( pBaseTexture )
+  {
+    pBaseTexture->Release();
+    hResult = E_INVALIDARG;
+  }
 
   if (hResult == D3D_OK)
   {
     D3DLOCKED_RECT rect;
-    for (DWORD level = 0, maxlevel = pD3DTexture->GetLevelCount(); level < maxlevel; level++)
+    for (DWORD level = 0, maxlevel = texInfo.levels; level < maxlevel; level++)
     {
       int const* pColors = mipMapColors[Min(level, (DWORD)(ARRAY_SIZE(mipMapColors) - 1))];
-      if (pD3DTexture->LockRect(level, &rect, 0, 0) == D3D_OK)
+      void* lockBits = 0;
+      unsigned lockPitch = 0;
+      if (GetBackend()->LockTexture2D(MakeBackendHandle<HTexture>(pD3DTexture), level, 0u, 0,
+                                      LOCK_DEFAULT, &lockBits, &lockPitch) == D3D_OK)
       {
+        rect.pBits = lockBits;
+        rect.Pitch = (LONG)lockPitch;
+        // ŒÔËÒ‡ÌËÂ ÛÓ‚Ìˇ ÒÚÓËÏ ËÁ texInfo: COM-ÓÔËÒ‡ÌËˇ Û Û˜ÍË ·˝ÍÂÌ‰‡ ÌÂÚ.
+        // –‡ÁÏÂ˚ ÛÓ‚Ìˇ ó ÔÓÎÓ‚ËÌÍË ÔÂ‰˚‰Û˘Â„Ó (DDS-ˆÂÔÓ˜Í‡), ÙÓÏ‡Ú Ó·˘ËÈ.
         D3DSURFACE_DESC levelDesc;
-        if (pD3DTexture->GetLevelDesc(level, &levelDesc) == D3D_OK)
+        ZeroMemory(&levelDesc, sizeof(levelDesc));
+        levelDesc.Width  = Max(texInfo.width  >> level, 1u);
+        levelDesc.Height = Max(texInfo.height >> level, 1u);
+        levelDesc.Format = (texInfo.format == bfA8R8G8B8) ? D3DFMT_A8R8G8B8 : D3DFMT_UNKNOWN;
         {
           if (levelDesc.Format == D3DFMT_A8R8G8B8)
           {
@@ -197,7 +227,7 @@ HRESULT ProcessMipMaps(IDirect3DTexture9 **ppD3DTexture, UINT skipMipLevels, Str
             }
           }
         }
-        pD3DTexture->UnlockRect(level);
+        GetBackend()->UnlockTexture2D(MakeBackendHandle<HTexture>(pD3DTexture), level, 0u);
       }
     }
   }
@@ -214,18 +244,27 @@ static HRESULT CreateTextureFromFileInMemoryImpl(IDirect3DTexture9** _pResult, c
   const HRESULT hr = CreateTextureFromDDSFileInMemory(_pBuffer, _dataSize, _skipMipLevels, &pBaseTex);
 
   if( SUCCEEDED(hr) ) {
-    NI_VERIFY(pBaseTex->GetType() == D3DRTYPE_TEXTURE,
+    // “ËÔ ó ˜ÂÂÁ seam: ÔÓ‰ NvrhiBackend ‚ pBaseTex Û˜Í‡ ·˝ÍÂÌ‰‡, GetType() ÔÓ
+    // ÌÂÈ = ‚˚ÁÓ‚ ÔÓ ˜ÛÊÓÈ vtable (Á‡‚ËÒ‡ÌËÂ, Á‡ÏÂ 2026-10-16).
+    IRenderBackend::BackendTextureInfo info2D;
+    const bool ok2D = GetBackend() &&
+                      SUCCEEDED(GetBackend()->GetTextureInfo(MakeBackendHandle<HTexture>(pBaseTex), &info2D)) &&
+                      !info2D.cube;
+    NI_VERIFY(ok2D,
               NStr::StrFmt("Inconsistent texture %s: 2D texture requested, yet it isn't", _fileName),
               pBaseTex->Release(); return E_INVALIDARG);
     *_pResult = static_cast<IDirect3DTexture9*>(pBaseTex);
     return hr;
   }
-  else
-    return D3DXCreateTextureFromFileInMemoryEx(GetDevice(), _pBuffer, _dataSize,
-                                               D3DX_DEFAULT_NONPOW2, D3DX_DEFAULT_NONPOW2, 0, 0, 
-                                               D3DFMT_FROM_FILE, D3DPOOL_MANAGED, D3DX_FILTER_TRIANGLE, 
-                                               D3DX_SKIP_DDS_MIP_LEVELS(_skipMipLevels, D3DX_DEFAULT), 
-                                               0, 0, 0, _pResult);
+  // –§–æ–ª–±—ç–∫–∞ –Ω–∞ D3DX –±–æ–ª—å—à–µ –Ω–µ—Ç. –ó–∞–º–µ—Ä –∫–æ–Ω—Ç–µ–Ω—Ç–∞ (tools/dds_inventory):
+  // 8031 .dds –≤ Data/ ‚Äî 3715 A8R8G8B8, 3001 DXT5, 1294 DXT1, 5 L8, 16 –∫—É–±–æ–≤;
+  // –≤ –º–∞–Ω–∏—Ñ–µ—Å—Ç–µ –æ–±–Ω–æ–≤–ª–µ–Ω–∏–π (files.list) —Ç–æ–∂–µ —Ç–æ–ª—å–∫–æ .dds, 4318 —à—Ç—É–∫. –°–≤–æ–π
+  // –∑–∞–≥—Ä—É–∑—á–∏–∫ (Render/ReadDDS.cpp) –ø–æ–∫—Ä—ã–≤–∞–µ—Ç –≤—Å—ë —ç—Ç–æ, –≤–∫–ª—é—á–∞—è –∫—É–±—ã –∏ –ø—Ä–æ–ø—É—Å–∫
+  // mipmap-—É—Ä–æ–≤–Ω–µ–π. –ü–æ–ø–∞–ª—Å—è –Ω–µ-DDS ‚Äî –∑–Ω–∞—á–∏—Ç –æ—à–∏–±–∫–∞ –∫–æ–Ω—Ç–µ–Ω—Ç–∞, –∞ –Ω–µ –ø–æ–≤–æ–¥
+  // –≤–æ–∑–≤—Ä–∞—â–∞—Ç—å d3dx9_43.dll.
+  NI_VERIFY( false, NStr::StrFmt( "Texture %s is not a loadable DDS (hr=0x%08X)",
+                               _fileName ? _fileName : "<memory>", hr ), return hr );
+  return hr;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -286,11 +325,9 @@ static bool LoadTextureFromFileImpl(const char* fileName, UINT skipMipLevels, Te
     d3dtexture = static_cast<IDirect3DCubeTexture9*>(pBaseTex);
   }
   else
-	hResult = D3DXCreateCubeTextureFromFileInMemoryEx(GetDevice(), pStream->GetBuffer(), pStream->GetSize(), 
-		                                                D3DX_DEFAULT, D3DX_DEFAULT, 0, D3DFMT_FROM_FILE, D3DPOOL_MANAGED,
-		                                                D3DX_FILTER_TRIANGLE | D3DX_FILTER_MIRROR | D3DX_FILTER_DITHER,
-		                                                D3DX_SKIP_DDS_MIP_LEVELS(skipMipLevels, D3DX_DEFAULT),
-		                                                0, 0, 0, &d3dtexture);
+    // –∫—É–±–æ–≤-–Ω–µ-DDS –≤ –∫–æ–Ω—Ç–µ–Ω—Ç–µ –Ω–µ—Ç (–∑–∞–º–µ—Ä: 16 –∫—É–±–∏—á–µ—Å–∫–∏—Ö .dds ‚Äî 13 DXT1 +
+    // 3 A8R8G8B8), –∞ –∫—É–±—ã —É–º–µ–µ—Ç –∏ —Å–≤–æ–π –∑–∞–≥—Ä—É–∑—á–∏–∫ (CubeTextureHolder –≤ ReadDDS.cpp)
+    NI_ASSERT( false, NStr::StrFmt( "Cube texture %s is not a loadable DDS (hr=0x%08X)", fileName, hResult ) );
 	pStream = 0;
 
 	NI_VERIFY(SUCCEEDED(hResult), NStr::StrFmt("Cube texture %s loading failed", fileName), return false);
@@ -458,6 +495,11 @@ const Texture2DRef& GetEmptyTexture2D() { return defTextures.pEmptyTexture; }
 const Texture2DRef& GetWhiteTexture2D() { return defTextures.pWhiteTexture; }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// –ï–¥–∏–Ω—Å—Ç–≤–µ–Ω–Ω–æ–µ –º–µ—Å—Ç–æ, –≥–¥–µ –¥–ª—è –∑–∞–≥—Ä—É–∑–∫–∏ —Ç–µ–∫—Å—Ç—É—Ä –µ—â—ë –Ω—É–∂–µ–Ω D3DX: —ç–º–±–ª–µ–º—ã –≥–∏–ª—å–¥–∏–π
+// –ø—Ä–∏—Ö–æ–¥—è—Ç –±–∞–π—Ç–∞–º–∏ –ø–æ URL (GuildEmblem.cpp) ‚Äî —ç—Ç–æ –Ω–µ DDS, –∞ –≥–æ—Ç–æ–≤–∞—è –∫–∞—Ä—Ç–∏–Ω–∫–∞
+// –≤–µ–±-—Ñ–æ—Ä–º–∞—Ç–∞. –ß—Ç–æ–±—ã —Å–Ω—è—Ç—å d3dx9_43.dll –ø–æ–ª–Ω–æ—Å—Ç—å—é, —Å—é–¥–∞ –Ω—É–∂–µ–Ω —Å–≤–æ–π PNG-–¥–µ–∫–æ–¥–µ—Ä
+// (zlib —É–∂–µ –ø–æ–¥–∫–ª—é—á—ë–Ω) –ª–∏–±–æ –ø–µ—Ä–µ–≤–æ–¥ —ç–º–±–ª–µ–º –≤ DDS –Ω–∞ —Å—Ç–æ—Ä–æ–Ω–µ –æ—Ç–¥–∞—á–∏. –î–ª—è —ç—Ç–∞–ø–∞ 2
+// –≤–∞–∂–Ω–æ –¥—Ä—É–≥–æ–µ: —ç—Ç–æ –µ–¥–∏–Ω—Å—Ç–≤–µ–Ω–Ω—ã–π –æ—Å—Ç–∞–≤—à–∏–π—Å—è –∑–∞–≥—Ä—É–∑—á–∏–∫, –∑–∞–≤–∏—Å—è—â–∏–π –æ—Ç —É—Å—Ç—Ä–æ–π—Å—Ç–≤–∞.
 Texture2DRef CreateARGBTextureFromFileInMemory(const char* pData, int sizeInFile, UINT skipMipLevels)
 {
   if( g_disableTextureLoads )
@@ -494,16 +536,17 @@ Texture2DRef CreateTextureFromFileInMemory(const char* pData, int sizeInFile, UI
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Texture2DRef CreateTexture2D(unsigned int width, unsigned int height, unsigned int level, PoolType poolType, ERenderFormat formatType)
 {
-	DWORD usage;
-	D3DPOOL pool;
-	GetD3DPoolAndUsagesParamaters( usage, pool, poolType );
-	IDirect3DTexture9* pDirect3DTexture9 = 0;
-
+  // –ü—É–ª –∏ usage –≤—ã–±–∏—Ä–∞–µ—Ç –±—ç–∫–µ–Ω–¥ (EBackendPool -> D3DPOOL + D3DUSAGE_*,
+  // GetD3DPoolAndUsagesParamaters –≤—ã–∑—ã–≤–∞–µ—Ç—Å—è –≤–Ω—É—Ç—Ä–∏ –Ω–µ–≥–æ). PoolType –∏ EBackendPool ‚Äî
+  // —Å–ª–æ–≤–∞—Ä–∏ –æ–¥–∏–Ω–∞–∫–æ–≤–æ–≥–æ —Å–æ—Å—Ç–∞–≤–∞, –ø–∞—Ä–∏—Ç–µ—Ç –ø—Ä–æ–≤–µ—Ä–µ–Ω static_assert'–æ–º –≤ –±—ç–∫–µ–Ω–¥–µ.
+  HTexture hTex;
   if(!RENDER_DISABLED) {
-    HRESULT hr = GetDevice()->CreateTexture(width, height, level, usage, ConvertRenderFormat(formatType), pool, &pDirect3DTexture9, 0);
+    HRESULT hr = GetBackend()->CreateTexture2D(width, height, level, usageNone,
+                                               RenderFormatToBackend(formatType),
+                                               static_cast<EBackendPool>(poolType), &hTex);
     NI_DX_THROW_CRITICAL( hr, "Couldn't create texture" );
   }
-	return Create<Texture2D>( pDirect3DTexture9 );
+	return Create<Texture2D>( static_cast<IDirect3DTexture9*>(hTex.p) );
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -519,13 +562,13 @@ Texture2DRef CreateRenderTexture2D(unsigned int width, unsigned int height, ERen
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TextureCubeRef CreateRenderCubeTexture(unsigned int edgeLen, ERenderFormat formatType)
 {
-  IDirect3DCubeTexture9* d3dCubetexture = 0;
-
-  HRESULT res = GetDevice()->CreateCubeTexture(edgeLen, 1, D3DUSAGE_RENDERTARGET, ConvertRenderFormat(formatType), 
-    D3DPOOL_DEFAULT, &d3dCubetexture, NULL);
+  HTexture hTex;
+  HRESULT res = GetBackend()->CreateTextureCube(edgeLen, 1, usageRenderTarget,
+                                                RenderFormatToBackend(formatType),
+                                                BACKEND_POOL_DEFAULT, &hTex);
   NI_VERIFY( res == D3D_OK, "cant create rendertexture!", return TextureCubeRef(); )
 
-  return new TextureCube( d3dCubetexture ); // no safety in case of lost device [11/23/2009 smirnov]
+  return new TextureCube( static_cast<IDirect3DCubeTexture9*>(hTex.p) ); // no safety in case of lost device [11/23/2009 smirnov]
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -547,20 +590,28 @@ Texture2DRef Create2DTextureFromArray2D( const CArray2D<Render::Color> & src )
 	NI_VERIFY(w > 0 && h > 0, "Invalid CArray2D given for texture creation", return GetDefaultTexture2D(); );
 
 	IDirect3DTexture9* pD3DTexture = 0;
-  HRESULT hResult = GetDevice()->CreateTexture(w, h, 0, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &pD3DTexture, NULL);
+  HTexture hTex;
+  HRESULT hResult = GetBackend()->CreateTexture2D(w, h, 0, usageNone, bfA8R8G8B8, BACKEND_POOL_MANAGED, &hTex);
+  pD3DTexture = static_cast<IDirect3DTexture9*>(hTex.p);
 
 	NI_VERIFY( SUCCEEDED( hResult ), NStr::StrFmt( "D3DXCreateTexture failed with result 0x%08X", hResult ), return GetDefaultTexture2D(); );
 
 	D3DLOCKED_RECT rect;
-	if ( SUCCEEDED( pD3DTexture->LockRect( 0, &rect, NULL, 0 ) ) )
+	// ¡ÎÓÍËÓ‚Í‡ ˜ÂÂÁ seam: pD3DTexture Á‰ÂÒ¸ = Û˜Í‡, ‚ÓÁ‚‡˘∏ÌÌ‡ˇ ·˝ÍÂÌ‰ÓÏ.
+	// COM-‚˚ÁÓ‚ ÔÓ ÌÂÈ ÔÓ‰ ‰Û„ËÏ ·˝ÍÂÌ‰ÓÏ = ‚˚ÁÓ‚ ÔÓ ˜ÛÊÓÈ vtable (¯‡„ 13.4c).
+	void* lockBits = 0;
+	unsigned lockPitch = 0;
+	if ( SUCCEEDED( GetBackend()->LockTexture2D( hTex, 0, 0, NULL, LOCK_DEFAULT, &lockBits, &lockPitch ) ) )
 	{
+		rect.pBits = lockBits;
+		rect.Pitch = ( LONG ) lockPitch;
 		char *p = (char *)rect.pBits;
 		for ( int y = 0; y < h; ++y )
 		{
 			memcpy( p, &src[y][0], 4*w );
 			p += rect.Pitch;
 		}
-		pD3DTexture->UnlockRect( 0 );
+		GetBackend()->UnlockTexture2D( hTex, 0, 0 );
 	}
 	return Create<Texture2D>( pD3DTexture );
 }

@@ -13,6 +13,7 @@
 #include "renderresourcemanager.h"
 #include "SkeletalMesh.h"
 #include "smartrenderer.h"
+#include "renderbackend.h"   // kInstanceStream
 #include "sceneconstants.h"
 #include "SkeletonWrapper.h"
 #include "GlobalMasks.h"
@@ -289,14 +290,14 @@ namespace {
       _result = CreateVB(4*sizeof(DWORD), RENDER_POOL_MANAGED);
       NI_VERIFY( _result, "Couldn't create Quad VB", return );
 
-      if( PDWORD const pData = LockVB<DWORD>(::Get(_result), 0) )
+      if( PDWORD const pData = LockVB<DWORD>(::Get(_result), LOCK_DEFAULT) )
       {
         pData[0] = 0x00010100;
         pData[1] = 0x00000101;
         pData[2] = 0x01000001;
         pData[3] = 0x01010000;
 
-        _result->Unlock();
+        BackendUnlockBuffer(Get(_result));
       }
       else
         _result.Attach(0);
@@ -360,7 +361,7 @@ namespace {
 static void InitializeDescriptors(DXVertexDeclarationRef &_pVertexDecl, DipDescriptor &_dipDescr)
 {
   VertexFormatDescriptor fd;
-  const UINT stream = useHWInstancing ? 1 : 0;
+  const UINT stream = useHWInstancing ? kInstanceStream : 0;
   fd.AddVertexElement( VertexElementDescriptor(stream,  0, VERTEXELEMENTTYPE_FLOAT3, VERETEXELEMENTUSAGE_POSITION, 0) ); // CVec3 Position;         //12
   fd.AddVertexElement( VertexElementDescriptor(stream, 12, VERTEXELEMENTTYPE_FLOAT3, VERETEXELEMENTUSAGE_NORMAL,   0) ); // CVec3 Direction;        //12
   fd.AddVertexElement( VertexElementDescriptor(stream, 24, VERTEXELEMENTTYPE_FLOAT4, VERETEXELEMENTUSAGE_TEXCOORD, 0) ); // CVec4 UV;               //16
@@ -382,11 +383,13 @@ static void InitializeDescriptors(DXVertexDeclarationRef &_pVertexDecl, DipDescr
 static void InitializeDescriptorsB(DXVertexDeclarationRef &_pVertexDecl, DipDescriptor &_dipDescr)
 {
   VertexFormatDescriptor fd;
-  fd.AddVertexElement( VertexElementDescriptor(1,  0, VERTEXELEMENTTYPE_FLOAT4, VERETEXELEMENTUSAGE_POSITION, 0) ); // CVec3 Position;         //12
-  fd.AddVertexElement( VertexElementDescriptor(1, 16, VERTEXELEMENTTYPE_FLOAT4, VERETEXELEMENTUSAGE_NORMAL,   0) ); // CVec3 Direction;        //12
-  fd.AddVertexElement( VertexElementDescriptor(1, 32, VERTEXELEMENTTYPE_FLOAT4, VERETEXELEMENTUSAGE_TEXCOORD, 0) ); // CVec4 UV;               //16
-  fd.AddVertexElement( VertexElementDescriptor(1, 48, VERTEXELEMENTTYPE_FLOAT3, VERETEXELEMENTUSAGE_TEXCOORD, 1) ); // CVec3 RotationAndSize;  //12
-  fd.AddVertexElement( VertexElementDescriptor(1, 60, VERTEXELEMENTTYPE_FLOAT4, VERETEXELEMENTUSAGE_COLOR,    0) ); // CVec4 Color;            //16
+  // Поток данных частиц: Партиклы здесь всегда рисуются инстансами (ParticlesManager::Draw).
+  const UINT stream = kInstanceStream;
+  fd.AddVertexElement( VertexElementDescriptor(stream,  0, VERTEXELEMENTTYPE_FLOAT4, VERETEXELEMENTUSAGE_POSITION, 0) ); // CVec3 Position;         //12
+  fd.AddVertexElement( VertexElementDescriptor(stream, 16, VERTEXELEMENTTYPE_FLOAT4, VERETEXELEMENTUSAGE_NORMAL,   0) ); // CVec3 Direction;        //12
+  fd.AddVertexElement( VertexElementDescriptor(stream, 32, VERTEXELEMENTTYPE_FLOAT4, VERETEXELEMENTUSAGE_TEXCOORD, 0) ); // CVec4 UV;               //16
+  fd.AddVertexElement( VertexElementDescriptor(stream, 48, VERTEXELEMENTTYPE_FLOAT3, VERETEXELEMENTUSAGE_TEXCOORD, 1) ); // CVec3 RotationAndSize;  //12
+  fd.AddVertexElement( VertexElementDescriptor(stream, 60, VERTEXELEMENTTYPE_FLOAT4, VERETEXELEMENTUSAGE_COLOR,    0) ); // CVec4 Color;            //16
   fd.AddVertexElement( VertexElementDescriptor(0,  0, VERTEXELEMENTTYPE_UBYTE4, VERETEXELEMENTUSAGE_TEXCOORD, 2) ); // DWORD CornerMasks;      //4
 
   _pVertexDecl = SmartRenderer::GetVertexFormatDeclaration( fd );
@@ -470,7 +473,6 @@ class ParticlesManager : public DeviceDeleteHandler, public IParticlesManager
       activeParticleCount = 0;
     }
 
-    virtual OcclusionQueries* GetQueries() const { return 0; }
     virtual void PrepareRendererAfterMaterial( unsigned int elementNumber ) const;
     virtual void Bind() const;
     virtual void Draw() const;
@@ -785,7 +787,7 @@ inline void ParticlesManager::Bind(UINT _position) const
   SmartRenderer::BindIndexBuffer( g_QuadIB.Get() );
 
   SmartRenderer::BindVertexBufferRaw( 0, g_QuadVB.Get(), sizeof(DWORD) );
-  SmartRenderer::BindVertexBufferRaw( 1, g_ParticlesVB.GetBuffer(), PART_SIZE, _position );
+  SmartRenderer::BindInstanceSource( g_ParticlesVB.GetBuffer(), PART_SIZE, _position );
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1366,7 +1368,7 @@ void ParticleFX::Bind() const
   if(useHWInstancing)
   {
     SmartRenderer::BindVertexBufferRaw( 0, g_QuadVB.Get(), sizeof(DWORD) );
-    SmartRenderer::BindVertexBufferRaw( 1, g_ParticlesVB.GetBuffer(), vertexSize, vertexDataHolder.GetPosition() );
+    SmartRenderer::BindInstanceSource( g_ParticlesVB.GetBuffer(), vertexSize, vertexDataHolder.GetPosition() );
   }
   else
     SmartRenderer::BindVertexBufferRaw( 0, g_ParticlesVB.GetBuffer(), vertexSize, vertexDataHolder.GetPosition() );

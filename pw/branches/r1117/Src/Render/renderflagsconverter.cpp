@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "renderflagsconverter.h"
-#include "VendorFOURCC.h"
+#include "dxutils.h"   // GetD3DPoolAndUsagesParamaters вЂ” СЃРїСЂР°РІРѕС‡РЅРёРє В«РїСѓР» -> D3DPOOL + usageВ»
 
 namespace Render
 {
@@ -20,12 +20,8 @@ D3DFORMAT ConvertRenderFormat(ERenderFormat format)
 		case FORMAT_A32B32G32R32F: return D3DFMT_A32B32G32R32F;
 		case FORMAT_L16: return D3DFMT_L16;
 		case FORMAT_R5G6B5 : return D3DFMT_R5G6B5;
-    case FORMAT_INTZ : return FOURCC_INTZ;
-    case FORMAT_DF24 : return FOURCC_DF24;
-    case FORMAT_RAWZ : return FOURCC_RAWZ;
-    case FORMAT_DF16 : return FOURCC_DF16;
     case FORMAT_D24S8 : return D3DFMT_D24S8;
-		default: NI_ALWAYS_ASSERT("Неправильный формат render target!"); return D3DFMT_UNKNOWN;
+		default: NI_ALWAYS_ASSERT("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ render target!"); return D3DFMT_UNKNOWN;
 	}
 }
 
@@ -46,12 +42,10 @@ const char* D3DFormat2Str(DWORD _format)
   case D3DFMT_R5G6B5: return "D3DFMT_R5G6B5";
 
   case D3DFMT_D24S8:  return "D3DFMT_D24S8";
+  // D16/D24X Р¶РёРІС‹: СЌС‚Рѕ РµРґРёРЅСЃС‚РІРµРЅРЅС‹Рµ РѕСЃС‚Р°РІС€РёРµСЃСЏ Р°РїРїР°СЂР°С‚РЅС‹Рµ С„РёС‡Рё РіР»СѓР±РёРЅС‹
+  // (hasD16T/hasD24X -> HasDSM(), С‡С‚РµРЅРёРµ РіР»СѓР±РёРЅС‹ РєР°Рє С‚РµРєСЃС‚СѓСЂС‹).
   case D3DFMT_D24X8:  return "D3DFMT_D24X8";
   case D3DFMT_D16:    return "D3DFMT_D16";
-  case FOURCC_DF24:   return "FOURCC_DF24";
-  case FOURCC_DF16:   return "FOURCC_DF16";
-  case FOURCC_RAWZ:   return "FOURCC_RAWZ";
-  case FOURCC_INTZ:   return "FOURCC_INTZ";
   default: return "UNKNOWN";
   }
 }
@@ -70,7 +64,7 @@ const char* D3DPool2Str(D3DPOOL _pool)
 }
 
 
-/// Конвертирование типа примитивов рендера в d3d9
+/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ d3d9
 D3DPRIMITIVETYPE ConvertPrimitiveType(ERenderPrimitiveType type)
 {
 	switch (type)
@@ -84,7 +78,7 @@ D3DPRIMITIVETYPE ConvertPrimitiveType(ERenderPrimitiveType type)
 		default: NI_ALWAYS_ASSERT("Invalid render primitive type!"); return D3DPT_TRIANGLELIST;
 	}
 }
-/// Конвертирование типа использования элемента вершины в d3d9
+/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ d3d9
 BYTE ConvertVertexElementUsage(EVertexElementUsage usage)
 {
 	switch (usage)
@@ -107,7 +101,7 @@ BYTE ConvertVertexElementUsage(EVertexElementUsage usage)
 	}
 }
 
-/// Конвертирование типа элемента вершины в его размер
+/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 UINT GetVertexElementSize(EVertexElementType type)
 {
 	switch (type)
@@ -134,7 +128,7 @@ UINT GetVertexElementSize(EVertexElementType type)
 	}
 }
 
-/// Конвертирование типа элемента вершины в d3d9
+/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ d3d9
 BYTE ConvertVertexElementType(EVertexElementType type)
 {
 	switch (type)
@@ -169,13 +163,14 @@ DWORD ConvertRenderLockType(ERenderLockType type)
 		case LOCK_DISCARD:		 return D3DLOCK_DISCARD;
 		case LOCK_NOOVERWRITE: return D3DLOCK_NOOVERWRITE;
 		case LOCK_READONLY: return D3DLOCK_READONLY;
+		case LOCK_NOSYSLOCK: return D3DLOCK_NOSYSLOCK;
 		case LOCK_DEFAULT:		 return 0;
 		default: NI_ALWAYS_ASSERT("Invalid ERenderLockType");
 		return 0;
 	}
 }
 
-/// Конвертирование типа использования элемента вершины из d3d9
+/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ d3d9
 EVertexElementUsage Convert2VertexElementUsage(BYTE usage)
 {
   switch (usage)
@@ -198,7 +193,7 @@ EVertexElementUsage Convert2VertexElementUsage(BYTE usage)
   }
 }
 
-/// Конвертирование типа элемента вершины из d3d9
+/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ d3d9
 EVertexElementType Convert2VertexElementType(BYTE type)
 {
   switch (type)
@@ -223,6 +218,145 @@ EVertexElementType Convert2VertexElementType(BYTE type)
     case D3DDECLTYPE_UNUSED:		return VERTEXELEMENTTYPE_UNUSED;
     default: NI_ALWAYS_ASSERT("Invalid vertex element type!"); return EVertexElementType(-1);
   }
+}
+
+EBackendFormat RenderFormatToBackend(ERenderFormat format)
+{
+  switch (format)
+  {
+    case FORMAT_A8:             return bfA8;
+    case FORMAT_L8:             return bfL8;
+    case FORMAT_R32F:           return bfR32F;
+    case FORMAT_G32R32F:        return bfG32R32F;
+    case FORMAT_A8R8G8B8:       return bfA8R8G8B8;
+    case FORMAT_X8R8G8B8:       return bfX8R8G8B8;
+    case FORMAT_A16B16G16R16F:  return bfA16B16G16R16F;
+    case FORMAT_A32B32G32R32F:  return bfA32B32G32R32F;
+    case FORMAT_L16:            return bfL16;
+    case FORMAT_R16F:           return bfR16F;
+    case FORMAT_R5G6B5:         return bfR5G6B5;
+    case FORMAT_D24S8:          return bfD24S8;
+    default: NI_ALWAYS_ASSERT("Unknown render format"); return bfUnknown;
+  }
+}
+
+EBackendFormat D3DFormatToBackend(D3DFORMAT fmt)
+{
+  switch (fmt)
+  {
+    case D3DFMT_A8R8G8B8:       return bfA8R8G8B8;
+    case D3DFMT_X8R8G8B8:       return bfX8R8G8B8;
+    case D3DFMT_A8:             return bfA8;
+    case D3DFMT_L8:             return bfL8;
+    case D3DFMT_L16:            return bfL16;
+    case D3DFMT_R5G6B5:         return bfR5G6B5;
+    case D3DFMT_R16F:           return bfR16F;
+    case D3DFMT_A16B16G16R16F:  return bfA16B16G16R16F;
+    case D3DFMT_R32F:           return bfR32F;
+    case D3DFMT_G32R32F:        return bfG32R32F;
+    case D3DFMT_A32B32G32R32F:  return bfA32B32G32R32F;
+    // DXT1..5 вЂ” СЂР°Р·РЅС‹Рµ С„РѕСЂРјР°С‚С‹ (Сѓ DXT2/3 СЏРІРЅС‹Р№ Р°Р»СЊС„Р°-РєР°РЅР°Р», Сѓ DXT4/5
+    // РёРЅС‚РµСЂРїРѕР»РёСЂСѓРµРјС‹Р№; DXT2/DXT4 вЂ” premultiplied). РЎР»РёРІР°С‚СЊ РёС… РІ РѕРґРёРЅ РЅРµР»СЊР·СЏ:
+    // РјРѕР»С‡Р° РїРѕРµС…Р°РІС€РёР№ Р°Р»СЊС„Р° вЂ” РёРјРµРЅРЅРѕ С‚РѕС‚ РєР»Р°СЃСЃ Р±Р°РіР°, РєРѕС‚РѕСЂС‹Р№ РЅРµ РІРёРґРµРЅ РІ Р»РѕРіР°С….
+    case D3DFMT_DXT1:           return bfDXT1;
+    case D3DFMT_DXT2:           return bfDXT2;
+    case D3DFMT_DXT3:           return bfDXT3;
+    case D3DFMT_DXT4:           return bfDXT4;
+    case D3DFMT_DXT5:           return bfDXT5;
+    case D3DFMT_D24S8:          return bfD24S8;
+    case D3DFMT_D16:            return bfD16;
+    default:                    return bfUnknown;
+  }
+}
+
+EBackendPool D3DPoolToBackend(D3DPOOL pool, DWORD usage)
+{
+  if (pool == D3DPOOL_MANAGED)
+    return BACKEND_POOL_MANAGED;
+  if (pool == D3DPOOL_SYSTEMMEM)
+    return (usage & D3DUSAGE_DYNAMIC) ? BACKEND_POOL_SYSMEM_DYNAMIC : BACKEND_POOL_SYSMEM;
+  if (pool == D3DPOOL_DEFAULT)
+  {
+    if (usage & D3DUSAGE_DYNAMIC)
+      // RENDER_POOL_DYNAMIC РґРѕР±Р°РІР»СЏРµС‚ WRITEONLY|DYNAMIC, RENDER_POOL_TEX_DYNAMIC вЂ”
+      // С‚РѕР»СЊРєРѕ DYNAMIC. Р Р°Р·Р»РёС‡Р°РµРј РїРѕ WRITEONLY, РёРЅР°С‡Рµ round-trip РјРµРЅСЏРµС‚ С„Р»Р°РіРё.
+      return (usage & D3DUSAGE_WRITEONLY) ? BACKEND_POOL_DYNAMIC : BACKEND_POOL_TEX_DYNAMIC;
+    return BACKEND_POOL_DEFAULT;
+  }
+  NI_ALWAYS_ASSERT("D3D pool outside of backend dictionary");
+  return BACKEND_POOL_COUNT;
+}
+
+EBackendUsage D3DUsageToBackend(DWORD usage)
+{
+  EBackendUsage u = usageNone;
+  if (usage & D3DUSAGE_RENDERTARGET)   u = EBackendUsage(u | usageRenderTarget);
+  if (usage & D3DUSAGE_DEPTHSTENCIL)   u = EBackendUsage(u | usageDepthStencil);
+  if (usage & D3DUSAGE_AUTOGENMIPMAP)  u = EBackendUsage(u | usageAutoGenMipmap);
+  return u;
+}
+
+// РћР±СЂР°С‚РЅС‹Рµ РїРµСЂРµРІРѕРґС‹ вЂ” СЃРј. РѕР±СЉСЏРІР»РµРЅРёРµ РІ renderflagsconverter.h. РўР°Р±Р»РёС†Р°
+// С„РѕСЂРјР°С‚РѕРІ Р·РµСЂРєР°Р»СЊРЅР° D3DFormatToBackend (СЃС‚СЂРѕРєРѕР№ РІС‹С€Рµ); D3DFMT_UNKNOWN
+// РІРѕР·РІСЂР°С‰Р°РµС‚СЃСЏ РґР»СЏ bfUnknown, РЅРѕ РІС‹Р·РѕРІ РІ СЌС‚РѕРј СЃР»СѓС‡Р°Рµ РІРѕР·РІСЂР°С‰Р°РµС‚ false.
+bool BackendFormatToD3D(EBackendFormat fmt, D3DFORMAT* pOut)
+{
+  D3DFORMAT f = D3DFMT_UNKNOWN;
+  switch (fmt)
+  {
+    case bfA8R8G8B8:          f = D3DFMT_A8R8G8B8;       break;
+    case bfX8R8G8B8:          f = D3DFMT_X8R8G8B8;       break;
+    case bfA8:                f = D3DFMT_A8;             break;
+    case bfL8:                f = D3DFMT_L8;             break;
+    case bfL16:               f = D3DFMT_L16;            break;
+    case bfR5G6B5:            f = D3DFMT_R5G6B5;         break;
+    case bfR16F:              f = D3DFMT_R16F;           break;
+    case bfA16B16G16R16F:     f = D3DFMT_A16B16G16R16F;  break;
+    case bfR32F:              f = D3DFMT_R32F;           break;
+    case bfG32R32F:           f = D3DFMT_G32R32F;        break;
+    case bfA32B32G32R32F:     f = D3DFMT_A32B32G32R32F;  break;
+    case bfDXT1:              f = D3DFMT_DXT1;           break;
+    case bfDXT2:              f = D3DFMT_DXT2;           break;
+    case bfDXT3:              f = D3DFMT_DXT3;           break;
+    case bfDXT4:              f = D3DFMT_DXT4;           break;
+    case bfDXT5:              f = D3DFMT_DXT5;           break;
+    case bfD24S8:             f = D3DFMT_D24S8;          break;
+    case bfD16:               f = D3DFMT_D16;            break;
+    default:                  if (pOut) *pOut = f;       return false;
+  }
+  if (pOut)
+    *pOut = f;
+  return true;
+}
+
+bool BackendPoolUsageToD3D(EBackendPool pool, EBackendUsage usage,
+                           D3DPOOL* pPool, DWORD* pUsage)
+{
+  // РЎРїСЂР°РІРѕС‡РЅРёРє РѕРґРёРЅ: GetD3DPoolAndUsagesParamaters (dxutils.cpp) вЂ” С‚РѕС‚ Р¶Рµ, С‡С‚Рѕ
+  // РёСЃРїРѕР»СЊР·СѓРµС‚ D3DPoolFromBackend РїСЂРё СЃРѕР·РґР°РЅРёРё. РџР°СЂРёС‚РµС‚ PoolType Рё EBackendPool
+  // Р·Р°С„РёРєСЃРёСЂРѕРІР°РЅ static_assert'Р°РјРё РІ d3d9backend.cpp (D3DPoolFromBackend).
+  if (pool < BACKEND_POOL_DEFAULT || pool >= BACKEND_POOL_COUNT)
+  {
+    if (pPool)  *pPool  = D3DPOOL_DEFAULT;
+    if (pUsage) *pUsage = 0;
+    return false;
+  }
+  DWORD u = 0;
+  D3DPOOL p = D3DPOOL_DEFAULT;
+  GetD3DPoolAndUsagesParamaters(u, p, static_cast<PoolType>(pool));
+  u |= D3DUsageFromBackendBits(usage);
+  if (pPool)  *pPool  = p;
+  if (pUsage) *pUsage = u;
+  return true;
+}
+
+DWORD D3DUsageFromBackendBits(EBackendUsage usage)
+{
+  DWORD d3dUsage = 0;
+  if (usage & usageRenderTarget)  d3dUsage |= D3DUSAGE_RENDERTARGET;
+  if (usage & usageDepthStencil)  d3dUsage |= D3DUSAGE_DEPTHSTENCIL;
+  if (usage & usageAutoGenMipmap) d3dUsage |= D3DUSAGE_AUTOGENMIPMAP;
+  return d3dUsage;
 }
 
 } // namespace Render

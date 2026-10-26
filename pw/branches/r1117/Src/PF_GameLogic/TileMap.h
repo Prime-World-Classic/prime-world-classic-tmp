@@ -28,6 +28,22 @@ enum
 };
 class MapModeChanger;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Tiles passable for one unit in spite of static obstacles (a ghost corridor, see GhostCorridorScope in
+// PFBaseMovingUnit.cpp). Set on the map only while that unit computes its movement.
+struct TilePassOverride
+{
+  int x0, y0, sizeX, sizeY;
+  vector<unsigned char> cells;
+  void const * pOwnerKey;
+
+  TilePassOverride() : x0( 0 ), y0( 0 ), sizeX( 0 ), sizeY( 0 ), pOwnerKey( 0 ) {}
+  bool Contains( const SVector& tile ) const
+  {
+    const int x = tile.x - x0, y = tile.y - y0;
+    return x >= 0 && y >= 0 && x < sizeX && y < sizeY && cells[y * sizeX + x] != 0;
+  }
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TileMap
   : public PFWorldObjectBase
   , public DI::SelfProvider<TileMap>
@@ -120,6 +136,12 @@ private:
   ZNOCRCEND
 public:
   ZEND int operator&( IBinSaver &f ) { f.Add(1,(PFWorldObjectBase*)this); f.Add(2,&width); f.Add(3,&height); f.Add(4,&tileSize);  if(!f.IsChecksum()){ f.Add(5,&mapData); f.Add(6,&checkMask); f.Add(7,&checkShift); f.Add(8,&mapMode); f.Add(9,&mapModeBase); f.Add(10,&mapModeBaseDynamic); f.Add(11,&mapModeCheck);  } return 0; }
+  // ghost corridor of the unit computing its movement now (not saved: set and reset within one call)
+  void SetPassOverride( TilePassOverride const * pOverride ) { pPassOverride = pOverride; }
+  TilePassOverride const * GetPassOverride() const { return pPassOverride; }
+private:
+  bool CanUnitGoIgnoringStatics( int tileSize, int tileSizeDynamic, const CellType& data ) const;
+  TilePassOverride const * pPassOverride;
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MapModeChanger

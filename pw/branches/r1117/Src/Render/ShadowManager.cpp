@@ -4,6 +4,7 @@
 #include "ImmediateRenderer.h"
 #include "renderresourcemanager.h"
 #include "smartrenderer.h"
+#include "renderbackend.h"   // seam этапа 2: GetBackend()/EvictManagedResources
 #include "../System/nalgobase.h"
 #include "../System/Transform.h"
 #include "../System/InlineProfiler.h"
@@ -265,7 +266,7 @@ namespace Render
     {
       material->GetDiffuseMap()->Enable(false);
       material->PrepareRenderer();
-      SmartRenderer::SetFVF(D3DFVF_XYZ);
+      SmartRenderer::SetVertexFormatXYZ();
 
       RenderStatesManager& statesManager = *GetStatesManager();
       RenderState oldState = statesManager.GetCurrentState();
@@ -275,12 +276,14 @@ namespace Render
       statesManager.SetState(state);
       statesManager.SetStateDirect(D3DRS_ZFUNC, D3DCMP_ALWAYS);
 
-      IDirect3DDevice9* const pDev = GetDevice();
+      // save/restore bias-состояний через менеджера: он единственная точка записи
+      // состояния, и только у него есть его тень (GetStateDirectValue) — на
+      // Vulkan-бэкенде читать состояние с устройства будет нечем.
       DWORD oldBias = 0, oldSlope = 0;
-      pDev->GetRenderState(D3DRS_DEPTHBIAS, &oldBias);
-      pDev->SetRenderState(D3DRS_DEPTHBIAS, 0);
-      pDev->GetRenderState(D3DRS_SLOPESCALEDEPTHBIAS, &oldSlope);
-      pDev->SetRenderState(D3DRS_SLOPESCALEDEPTHBIAS, 0);
+      statesManager.GetStateDirectValue(D3DRS_DEPTHBIAS, oldBias);
+      statesManager.SetStateDirect(D3DRS_DEPTHBIAS, 0);
+      statesManager.GetStateDirectValue(D3DRS_SLOPESCALEDEPTHBIAS, oldSlope);
+      statesManager.SetStateDirect(D3DRS_SLOPESCALEDEPTHBIAS, 0);
 
       static const Matrix43 unity( CVec3(0,0,0) );
       GetRenderer()->SetVertexShaderConstants(WORLD, 3, &unity);
@@ -302,8 +305,8 @@ namespace Render
       }
 #endif // _DEBUG
 
-      pDev->SetRenderState(D3DRS_DEPTHBIAS, oldBias);
-      pDev->SetRenderState(D3DRS_SLOPESCALEDEPTHBIAS, oldSlope);
+      statesManager.SetStateDirect(D3DRS_DEPTHBIAS, oldBias);
+      statesManager.SetStateDirect(D3DRS_SLOPESCALEDEPTHBIAS, oldSlope);
       statesManager.SetStateDirect(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
       statesManager.SetState(oldState);
     }
@@ -511,7 +514,7 @@ namespace Render
     sizeX *= s_SizeScale;
     sizeY *= s_SizeScale;
 
-    GetDevice()->EvictManagedResources();
+    GetBackend()->EvictManagedResources();
 
     pShadowMap = CreateShadowMap(shadowMode);
     if( pShadowMap && !pShadowMap->Init(sizeX, sizeY, depthBias, biasSlope) )
@@ -567,9 +570,8 @@ namespace Render
       m_shadowFarRange = 10.0f;
 		}
 
-    const IConfigManager* const pConfigManager = GetIConfigManager();
-    if( !pConfigManager->HasDSM() && pConfigManager->HasDF24() )
-      shadowMode = NDb::SHADOWMODE_SAESM;
+    // Аппаратные карты теней читаются как depth SRV (см. Features.h),
+    // vendor-DF24-фолбэк удалён.
 	}
 
 
@@ -598,9 +600,8 @@ namespace Render
     ConvertDirection(smDir, lightDirWS);
     m_lightDirWS = -lightDirWS;
 
-    const IConfigManager* const pConfigManager = GetIConfigManager();
-    if( !pConfigManager->HasDSM() && pConfigManager->HasDF24() )
-      shadowMode = NDb::SHADOWMODE_SAESM;
+    // Аппаратные карты теней читаются как depth SRV (см. Features.h),
+    // vendor-DF24-фолбэк удалён.
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////

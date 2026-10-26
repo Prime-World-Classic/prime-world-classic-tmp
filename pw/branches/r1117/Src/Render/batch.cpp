@@ -1,8 +1,9 @@
 #include "stdafx.h"
+#include "renderstats.h"
 #include <algorithm>
 #include "renderer.h"
+#include "renderbackend.h"   // seam этапа 2: GetBackend()/BackendRect
 #include "batch.h"
-#include "DXManager.h"
 
 #include "../System/InlineProfiler.h"
 #include "smartrenderer.h"
@@ -12,13 +13,10 @@
 //static bool g_checkSortId = false;
 //REGISTER_DEV_VAR("bvsbvs", g_checkSortId, STORAGE_NONE);
 
-static bool s_queryUP = false;
-REGISTER_VAR("waterQueryUP", s_queryUP, STORAGE_NONE);
 
 static bool s_sortNew = true;
 REGISTER_DEV_VAR("newTranspSort", s_sortNew, STORAGE_NONE);
 
-static NDebug::PerformanceDebugVar g_timeManage( "DXHint:Manage", "Render", 0, 1.0, false );
 #ifndef _SHIPPING
   static NDebug::DebugVar<int> g_NumSkinnedVertices("numSkinnedVertices", "Render", true);
   static NDebug::DebugVar<int> g_NumSkinnedTriangles("numSkinnedTriangles", "Render", true);
@@ -101,7 +99,7 @@ REGISTER_DEV_VAR("checkSubPriorities", s_checkSubPriorities, STORAGE_NONE);
 
 class ZeroScissor
 {
-  RECT  rect;
+  BackendRect  rect;
   DWORD oldVal;
   NDb::RenderModePin oldMode;
   bool  isSet;
@@ -112,19 +110,21 @@ public:
   void Enable(bool _enable)
   {
 #ifndef _SHIPPING
-    static const RECT  zeroRect = {0, 0, 1, 1};
-
-    IDirect3DDevice9* const pDevice = GetDevice();
+    // 1x1, а не пустой: пустой scissor D3D9 отвергает.
+    static const BackendRect zeroRect = { 0, 0, 1, 1 };
+    IRenderBackend* const pBackend = GetBackend();
 
     if(_enable)
     {
       if(!isSet)
       {
-        pDevice->GetRenderState(D3DRS_SCISSORTESTENABLE, &oldVal);
-        pDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
+        // Состояние — через менеджера (он же его тень, см. GetStateDirectValue):
+        // прямое чтение/запись мимо менеджера оставляли кэш врасплох.
+        GetStatesManager()->GetStateDirectValue(D3DRS_SCISSORTESTENABLE, oldVal);
+        GetStatesManager()->SetStateDirect(D3DRS_SCISSORTESTENABLE, TRUE);
 
-        pDevice->GetScissorRect(&rect);
-        pDevice->SetScissorRect(&zeroRect);
+        pBackend->GetScissorRect(&rect);
+        pBackend->SetScissorRect(&zeroRect);
 
         oldMode = GetRuntimePins().RenderModeValue;
         GetRuntimePins().RenderModeValue = NDb::RENDERMODEPIN_RENDERSHAPEONLY;
@@ -135,8 +135,8 @@ public:
       if(!isSet)
         return;
 
-      pDevice->SetScissorRect(&rect);
-      pDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+      pBackend->SetScissorRect(&rect);
+      GetStatesManager()->SetStateDirect(D3DRS_SCISSORTESTENABLE, FALSE);
       GetRuntimePins().RenderModeValue = oldMode;
     }
 
@@ -225,14 +225,7 @@ void insertSort(T a[], long size)
 }	
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-static bool s_enableWaterLevel = false;
-static float s_WaterLevel = 0.0f;
 
-void Batch::SetWaterLevel(bool _enable, float _level)
-{
-  s_enableWaterLevel = _enable;
-  s_WaterLevel = _level + 0.02f;
-}
 
 
 __forceinline void Batch::Prepare() const
@@ -247,6 +240,8 @@ __forceinline void Batch::Prepare() const
   else
     pMaterial->PrepareRenderer();
 
+  // учёт уникальных материальных состояний — второй член ключа пайплайна
+  NoteSortId( pMaterial->GetSortId() );
   COUNT_MAT_SWITCHES;
 }
 
@@ -277,68 +272,6 @@ __forceinline void Batch::Draw() const
   LOG_RENDER_SEQUENCE(*this);
 }
 
-__forceinline void Batch::IssueQueryUP()
-{
-  static CVec3 Vertices[8];
-
-  dontDraw = false;
-  if( OcclusionQueries* const queries = pOwner->GetQueries() )
-  {
-    OcclusionQueriesBank& bank = queries->Get();
-    if( SUCCEEDED(bank.BeginNextQuery()) )
-    {
-      if( pOwner->FillOBB(Vertices) )
-      {
-        // Close truncated OBB. I assume here that basis[2] is Z-aligned and the basis is orthogonal
-        if(s_enableWaterLevel && Vertices[0].z < s_WaterLevel && Vertices[6].z > s_WaterLevel)
-        {
-          Vertices[0].z = s_WaterLevel;
-          Vertices[1].z = s_WaterLevel;
-          Vertices[2].z = s_WaterLevel;
-          Vertices[3].z = s_WaterLevel;
-        }
-
-        CubeRenderer::DrawIndexedPrimitiveUP(Vertices);
-      }
-      bank.EndNextQuery();
-    }
-  }
-}
-
-__forceinline void Batch::IssueQuery()
-{
-  dontDraw = false;
-  if( OcclusionQueries* const queries = pOwner->GetQueries() )
-  {
-    OcclusionQueriesBank& bank = queries->Get();
-    if( SUCCEEDED(bank.BeginNextQuery()) )
-    {
-      static const float zEps = 0.02f;
-
-      const Matrix43& world = pOwner->GetWorldMatrix();
-      const AABB& localAABB = pOwner->GetLocalAABB();
-      CVec3 localPos = localAABB.center;
-      CVec3 halfSize = localAABB.halfSize;
-      const float diff = s_WaterLevel + zEps - (localPos.z - halfSize.z) - world._34;
-      if(diff > 0.0f)
-      {
-        const float shift = diff * 0.5f;
-        localPos.z += shift;
-        halfSize.z -= shift;
-      }
-      if(halfSize.z > 0.0f)
-      {
-        Matrix43 worldCorrected(localPos);
-        worldCorrected.SetScale(halfSize);
-        worldCorrected = world * worldCorrected;
-        GetRenderer()->SetVertexShaderConstants(WORLD, 3, &worldCorrected);
-        CubeRenderer::Draw();
-      }
-      bank.EndNextQuery();
-    }
-  }
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void BatchQueue::SetRenderLogger(IBatchQueueLogger *pL) { s_pLogger = pL; }
 bool BatchQueue::IsLoggingActive() { return s_pLogger != 0; }
@@ -359,41 +292,9 @@ BatchQueue::BatchQueue( Index ndx, BatchQueueSorter &_sorter, int maxSize )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-BatchQueue::~BatchQueue() {} // this destructor is defined here because exact meaning of <class DXManager> is defined only here
+BatchQueue::~BatchQueue() {}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void BatchQueue::EnableResourceManagment(bool _enable)
-{
-  if( _enable && resourceManager.get() )
-    return;
-
-  resourceManager = NV_AUTO_PTR(DXManager)(_enable ? new DeviceLostWrapper<DXManager> : 0);
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool BatchQueue::OnNextFrame()
-{
-  NDebug::PerformanceDebugVarGuard perfGuard(g_timeManage, true);
-
-  if(!resourceManager.get() )
-    return false;
-
-  resourceManager->OnNextFrame();
-  return true;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool BatchQueue::ManageResources()
-{
-  NDebug::PerformanceDebugVarGuard perfGuard(g_timeManage, false);
-
-  if(!resourceManager.get() )
-    return false;
-
-  resourceManager->Manage();
-  return true;
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void BatchQueue::SetSorting( int priority, bool bSorting )
 {
@@ -493,13 +394,6 @@ void BatchQueue::PushInternal(int priority,
   }
 #endif
 
-  NDebug::PerformanceDebugVarGuard perfGuard(g_timeManage, false);
-
-  if( DXManager* const pManager = resourceManager.get() )
-  {
-    pManager->AddGeometry( pPrimitive->GetBuffers() );
-    pManager->AddTextures( pMaterial );
-  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -556,7 +450,7 @@ protected:
       }
       pMaterial->RegisterInstancedBatch(*pBatch);
       SmartRenderer::EnableHardwareInstancing(numInstances + 1);
-      SmartRenderer::BindInstanceVB();
+      SmartRenderer::BindInstanceCounter();
       pBatch->Draw();
       numInstances = 0;
     }
@@ -679,52 +573,6 @@ public:
 
 
 static BatchChunk<> s_batchChunk;
-
-#pragma warning(push)
-#pragma warning(disable:4706)  // Disable C4706: assignment within conditional expression
-
-template<UINT mode> 
-static __forceinline void RenderBatch(Batch &batch, UINT &curSortId)
-{
-  const bool checkQueries = mode & OcclusionQueries::QUM_CHECK;
-  if( checkQueries )
-    if( OcclusionQueries* const queries = batch.pOwner->GetQueries() )
-       if( batch.dontDraw = (queries->Get().GetLatestResults() == 0) )
-         return;
-
-  const UINT sortId = batch.GetSortId();
-
-  if( (sortId != curSortId) || EqualIDs(sortId, 0) ) // animated materials have no CRC: each one is prepared
-  {
-	  batch.Prepare();
-	  curSortId = sortId;
-  }
-
-  if( mode & OcclusionQueries::QUM_ISSUE  )
-  {
-	  OcclusionQueriesBank *pQueriesBank = 0;
-
-    if( checkQueries || !batch.dontDraw ) // in checkQueries mode we don't need check batch.dontDraw here
-    {
-      if( OcclusionQueries* const queries = batch.pOwner->GetQueries() )
-      {
-        OcclusionQueriesBank& bank = queries->Get();
-        if( SUCCEEDED(bank.BeginNextQuery()) )
-          pQueriesBank = &bank;
-      }
-      batch.Draw();
-
-      if(pQueriesBank)
-        pQueriesBank->EndNextQuery();
-    }
-  }
-  else
-    batch.Draw();
-}
-
-
-#pragma warning(pop)
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void BatchQueue::RenderBatchesPtrArray(UINT numBatches, Batch **pBatches)
 {
@@ -751,48 +599,31 @@ void BatchQueue::RenderBatchesPtrArray(UINT numBatches, Batch **pBatches)
   //}
 
   Batch** const pBound = pBatches + numBatches;
-  switch( OcclusionQueries::GetUseMode() )
-  {
-  case OcclusionQueries::QUM_NONE:
-    s_batchChunk.Reset();
+  s_batchChunk.Reset();
 
-    do {
-      Batch* const pBatch = *pBatches;
+  do {
+    Batch* const pBatch = *pBatches;
 #ifdef COUNT_DRAWS
-      if(curPrimitive != pBatch->pPrimitive)
-        curPrimitive = pBatch->pPrimitive;
-      else
-        if( curSortId == pBatch->pMaterial->GetSortId() )
-          g_NumNewInstances.AddValue(1);
+    if(curPrimitive != pBatch->pPrimitive)
+      curPrimitive = pBatch->pPrimitive;
+    else
+      if( curSortId == pBatch->pMaterial->GetSortId() )
+        g_NumNewInstances.AddValue(1);
 #endif
-      const UINT sortId = pBatch->GetSortId();
+    const UINT sortId = pBatch->GetSortId();
 
-      if( (sortId != curSortId) || EqualIDs(sortId, 0) )
-      {
-        s_batchChunk.Finish(pBatches);
-        s_batchChunk.NewMaterial(pBatches);
-        curSortId = sortId;
-      }
-      else
-        s_batchChunk.AddBatch(pBatch);
-    } while(++pBatches != pBound);
+    if( (sortId != curSortId) || EqualIDs(sortId, 0) )
+    {
+      s_batchChunk.Finish(pBatches);
+      s_batchChunk.NewMaterial(pBatches);
+      curSortId = sortId;
+    }
+    else
+      s_batchChunk.AddBatch(pBatch);
+  } while(++pBatches != pBound);
 
-    s_batchChunk.Finish(pBatches);
-    SmartRenderer::DisableHardwareInstancing();
-    break;
-  case OcclusionQueries::QUM_CHECK:
-    do RenderBatch<OcclusionQueries::QUM_CHECK>(**pBatches, curSortId);
-    while(++pBatches != pBound);
-    break;
-  case OcclusionQueries::QUM_ISSUE:
-    do RenderBatch<OcclusionQueries::QUM_ISSUE>(**pBatches, curSortId);
-    while(++pBatches != pBound);
-    break;
-  case OcclusionQueries::QUM_CHECK_AND_ISSUE:
-    do RenderBatch<OcclusionQueries::QUM_CHECK_AND_ISSUE>(**pBatches, curSortId);
-    while(++pBatches != pBound);
-    break;
-  }
+  s_batchChunk.Finish(pBatches);
+  SmartRenderer::DisableHardwareInstancing();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -880,35 +711,6 @@ static void ProcessParticleBatches(Batch** _pSortedArray, UINT _numSortedBatches
     pManager->FinalizeBatch();
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Issue occlusion queries for objects that are marked invisible
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void IssueQueriesInvisible(Batch* _pBatchList)
-{
-  if( s_queryUP )
-  {
-    BBEffectUP effect;
-    effect.Begin();
-
-    for(Batch *pBatch = _pBatchList; pBatch; pBatch = pBatch->pNextBatch)
-      if(pBatch->dontDraw)
-        pBatch->IssueQueryUP();
-
-    effect.End();
-  }
-  else
-  {
-    BBEffect effect;
-    effect.Begin();
-    CubeRenderer::Bind();
-
-    for(Batch *pBatch = _pBatchList; pBatch; pBatch = pBatch->pNextBatch)
-      if(pBatch->dontDraw)
-        pBatch->IssueQuery();
-
-    effect.End();
-  }
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void BatchQueue::Render( int priority ) const
@@ -924,18 +726,13 @@ void BatchQueue::Render( int priority ) const
 
   Batch* const pBatchList = priorities[priority].pBatchList;
                            
-  if( OcclusionQueries::GetUseMode() == OcclusionQueries::QUM_ISSUE )
-    IssueQueriesInvisible(pBatchList);
-  else
-  {
-    int numSortedBatches;
-    Batch **pSortedArray = priorities[priority].bSort ? sorter.Sort<CompareFarToNear>(numBatches, pBatchList, numSortedBatches)
-                                                      : sorter.Sort<CompareSortId>(numBatches, pBatchList, numSortedBatches);
-    if(priority == NDb::MATERIALPRIORITY_TRANSPARENT && GetRuntimePins().NewParticlesValue == NDb::BOOLPIN_TRUE)
-      ProcessParticleBatches(pSortedArray, numSortedBatches);
+  int numSortedBatches;
+  Batch **pSortedArray = priorities[priority].bSort ? sorter.Sort<CompareFarToNear>(numBatches, pBatchList, numSortedBatches)
+                                                    : sorter.Sort<CompareSortId>(numBatches, pBatchList, numSortedBatches);
+  if(priority == NDb::MATERIALPRIORITY_TRANSPARENT && GetRuntimePins().NewParticlesValue == NDb::BOOLPIN_TRUE)
+    ProcessParticleBatches(pSortedArray, numSortedBatches);
 
-    RenderBatchesPtrArray( numSortedBatches, pSortedArray );
-  }
+  RenderBatchesPtrArray( numSortedBatches, pSortedArray );
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

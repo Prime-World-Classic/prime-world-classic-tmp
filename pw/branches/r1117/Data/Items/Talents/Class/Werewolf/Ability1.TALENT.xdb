@@ -315,9 +315,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FR4AAAACAAAAJQAAAD4AAABXZXJld29sZl9BMXUyAAAAV2VyZXdvbGZfQTF1MgBVi+yD7BRoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaBAAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AA+2TfuFyXQ2i1UIiwKLTQiLkMgAAAD/0otFCIsQi00Ii4LMAAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAIpF7IvlXcM=</compiledString>
+					<compiledString>FR4AAAACAAAAJgAAAD8AAABXZXJld29sZl9BMXUyAAAAV2VyZXdvbGZfQTF1MgBVi+yD7CBWaAAAAACLRQiLEItNCIuCqAEAAP/QhcB0KmgQAAAAi00IixGLTQiLgqgBAAD/0IlF/ItN/IsRi038i0IE/9CIRfvrBMZF+wAPtk37hckPhMkAAABqE4tVCIsCi00Ii5AsAQAA/9IPtvBqFItFCIsQi00Ii4IsAQAA/9APtsg78X4Mx0X0AQAAAOmAAAAAahOLVQiLAotNCIuQLAEAAP/SD7bwahSLRQiLEItNCIuCLAEAAP/QD7bIO/F9CcdF8AAAAADrQ4tVCIsCi00Ii5DIAAAA/9KLRQiLEItNCIuCzAAAAN1d6P/Q3F3o3+D2xEF6CcdF5AEAAADrB8dF5AAAAACLTeSJTfCLVfCJVfSDffQAdAnHReABAAAA6wfHReAAAAAAikXgXovlXcM=</compiledString>
 					<returnType>bool</returnType>
-					<sString>tal("Werewolf_A1u2") &amp;&amp; sBaseStamina &gt;= sBaseWill</sString>
+					<sString>tal("Werewolf_A1u2") &amp;&amp; (pFirst-&gt;IsRecommended(19) &gt; pFirst-&gt;IsRecommended(20) ? 1 : pFirst-&gt;IsRecommended(19) &lt; pFirst-&gt;IsRecommended(20) ? 0 : sBaseStamina&gt;=sBaseWill)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -362,9 +362,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FR4AAAACAAAAJQAAAD4AAABXZXJld29sZl9BMXUyAAAAV2VyZXdvbGZfQTF1MgBVi+yD7BRoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaBAAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AA+2TfuFyXQ2i1UIiwKLTQiLkMgAAAD/0otFCIsQi00Ii4LMAAAA3V3w/9DcXfDf4PbEQXUJx0XsAQAAAOsHx0XsAAAAAIpF7IvlXcM=</compiledString>
+					<compiledString>FR4AAAACAAAAJgAAAD8AAABXZXJld29sZl9BMXUyAAAAV2VyZXdvbGZfQTF1MgBVi+yD7CBWaAAAAACLRQiLEItNCIuCqAEAAP/QhcB0KmgQAAAAi00IixGLTQiLgqgBAAD/0IlF/ItN/IsRi038i0IE/9CIRfvrBMZF+wAPtk37hckPhMkAAABqE4tVCIsCi00Ii5AsAQAA/9IPtvBqFItFCIsQi00Ii4IsAQAA/9APtsg78X4Mx0X0AQAAAOmAAAAAahOLVQiLAotNCIuQLAEAAP/SD7bwahSLRQiLEItNCIuCLAEAAP/QD7bIO/F9CcdF8AAAAADrQ4tVCIsCi00Ii5DIAAAA/9KLRQiLEItNCIuCzAAAAN1d6P/Q3F3o3+D2xEF6CcdF5AEAAADrB8dF5AAAAACLTeSJTfCLVfCJVfSDffQAdQnHReABAAAA6wfHReAAAAAAikXgXovlXcM=</compiledString>
 					<returnType>bool</returnType>
-					<sString>tal("Werewolf_A1u2") &amp;&amp; sBaseStamina &lt; sBaseWill</sString>
+					<sString>tal("Werewolf_A1u2") &amp;&amp; !(pFirst-&gt;IsRecommended(19) &gt; pFirst-&gt;IsRecommended(20) ? 1 : pFirst-&gt;IsRecommended(19) &lt; pFirst-&gt;IsRecommended(20) ? 0 : sBaseStamina&gt;=sBaseWill)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>

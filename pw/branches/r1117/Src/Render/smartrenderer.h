@@ -56,28 +56,33 @@ const DXVertexDeclarationRef & GetVertexFormatDeclaration(const VertexFormatDesc
 ///
 void BindVertexBufferRaw(unsigned int streamNumber, IDirect3DVertexBuffer9* buffer, unsigned int stride, unsigned int offset = 0);
 
-///  This function can modify stream number depending on 'instancing' state
+///  Номер потока — ЛОГИЧЕСКИЙ: физический слот (и сдвиг, когда занят слот
+///  данных экземпляра) выбирает бэкенд, см. docs/PLAN_NVRHI.md §2.10.
 void BindVertexBuffer(unsigned int streamNumber, IDirect3DVertexBuffer9* buffer, unsigned int stride, unsigned int offset = 0);
 
-///  set instance Id VB to stream 1
-void BindInstanceVB(unsigned int offset = 0);
+///  Поток данных экземпляра: встроенный счётчик 0..N-1 (буфер и атрибут
+///  раскладки строит бэкенд) или per-instance данные клиента.
+void BindInstanceCounter();
+void BindInstanceSource(IDirect3DVertexBuffer9* pPerInstanceData, unsigned int stride, unsigned int offset = 0);
 
 ///
 void UnBindVertexBufferRaw(UINT streamNumber);
 
-///  This function can modify stream number depending on 'instancing' state
+///  Номер потока — ЛОГИЧЕСКИЙ (см. BindVertexBuffer)
 void UnBindVertexBuffer(UINT streamNumber);
 
-/// Enable hardware instancing for all streams from 0 to _lastGeomStream inclusive
-void EnableHardwareInstancing(UINT _numInstances, UINT _lastGeomStream = 0, UINT _instanceStream = UINT_MAX);
+/// Enable hardware instancing: рисовать _numInstances экземпляров текущей
+/// геометрии. Счётчик уходит бэкенду (механизм — за ним), а сдвиг потоков и
+/// инстансный вариант декларации остаются здесь (см. EnableHardwareInstancing в
+/// .cpp и docs/PLAN_NVRHI.md §2.10).
+void EnableHardwareInstancing(UINT _numInstances);
 
 ///
 void DisableHardwareInstancing();
 
-bool InstancingEnabled();
-
 ///
-void SetFVF(DWORD _fvf);
+// Ввод-вершин только с позицией (замена FVF D3DFVF_XYZ).
+void SetVertexFormatXYZ();
 
 ///
 void DrawIndexedPrimitive(const DipDescriptor& _descr);
@@ -169,7 +174,10 @@ int GetRenderTargetHeight();
 
 void DumpScreenshot( const nstl::string& filename, bool keepAlpha );
 int GetScreenshotCount();
-byte* DumpScreenshotToMemory( int width, int height );
+// DumpScreenshotToMemory(width,height) убрана: её читал только EditorNative
+// (вне CMake-графа клиента), а сама она была обёрткой над
+// D3DXSaveSurfaceToFileInMemory. DDS-снимок в память делает Render/screenshot.h
+// (BuildDdsImage) поверх readback'а бэкенда.
 
 } // namespace SmartRenderer
 } // namespace Render

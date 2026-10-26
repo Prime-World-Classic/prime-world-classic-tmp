@@ -643,6 +643,41 @@
 			_loc4_.SetSectionsCount(param3);
 			this.AddAdvancedRow(param1,param2,_loc4_,false);
 			this.binded[param1] = _loc4_;
+			OptionsWindow.sliderSteps[param1] = param3;
+			_loc4_.addEventListener(MouseEvent.MOUSE_WHEEL, this.OnAdvancedSliderWheel);
+		}
+
+		// last value and state of the controls from C++ (SetControlValue); positions of the advanced sliders
+		private static var controlValues:Dictionary = new Dictionary();
+		private static var controlEnabled:Dictionary = new Dictionary();
+		private static var sliderSteps:Dictionary = new Dictionary();
+
+		// mouse wheel over an advanced slider: one position (a long slider, e.g. the FPS limit, cannot be set exactly by drag)
+		private function OnAdvancedSliderWheel(e:MouseEvent) : void
+		{
+			try
+			{
+				var slider:PWSlider = e.currentTarget as PWSlider;
+				if (slider == null || controlEnabled[slider.name] === false || e.delta == 0)
+				{
+					return;
+				}
+				var steps:int = int(sliderSteps[slider.name]);
+				var value:int = int(controlValues[slider.name]) + (e.delta > 0 ? 1 : -1);
+				value = Math.max(0, Math.min(steps - 1, value));
+				e.stopPropagation();
+				if (value == int(controlValues[slider.name]))
+				{
+					return;
+				}
+				controlValues[slider.name] = value;
+				slider.Value = value;
+				FSCommands.Send(FSCommands.PREFERENCE_COMPONENT_SET_VALUE, slider.name + " " + value);
+			}
+			catch (err:Error)
+			{
+				// an exception here must not reach the native event dispatcher (it crashes the game)
+			}
 		}
 
 		// signal volume (C++ row "adv_ping_sound_volume"): in the sound section of the "Game" category, right of the effects volume
@@ -2127,6 +2162,8 @@
 			var _loc4_:IPWComponents = this.binded[param1];
 			_loc4_.Value = param2;
 			_loc4_.Disable = !param3;
+			OptionsWindow.controlValues[param1] = param2;
+			OptionsWindow.controlEnabled[param1] = param3;
 			if(param1 == "smartchat_cb")
 			{
 				(this.parent as Main).chatBar.chatInput_mc.chatOutput_cb.Value = param2;

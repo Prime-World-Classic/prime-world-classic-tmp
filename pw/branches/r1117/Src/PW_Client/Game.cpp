@@ -743,7 +743,7 @@ struct MainVars
   CObj<Input::Binds> input;
   CObj<Input::SystemEvents> inputSystemMesages;
 
-  Render::DeviceLostWrapper<PF_Render::Interface>* renderingInterface;
+  Render::ReallocateWrapper<PF_Render::Interface>* renderingInterface;
   StrongMT<NLogg::EditBoxDumper> logBox;
 
   MainVars()
@@ -1480,13 +1480,39 @@ int __stdcall PseudoWinMain( HINSTANCE hInstance, HWND hWnd, LPTSTR lpCmdLine, S
     // texts follow it (<name>_en.txt, see Texts.cpp): the "language" var keeps
     // selecting Data/Localization/<language> piles, voice and splashes, and is
     // not saved to the profile from here. A malformed token is ignored.
-    if (allTokens.size() >= 8) {
+    // A named option (see the scan below) may land in this slot when the
+    // launcher sends no language but does send an option, so '=' marks it as
+    // not a language and the scan picks it up.
+    if (allTokens.size() >= 8 && allTokens[7].find('=') == nstl::string::npos) {
       string textLanguage = ParseProtocolLanguage( allTokens[7].c_str() );
       if (!textLanguage.empty()) {
         SetCurrentLanguage( textLanguage );
         systemLog( NLogg::LEVEL_MESSAGE ) << "Protocol text language: " << textLanguage.c_str() << endl;
       } else {
         systemLog( NLogg::LEVEL_MESSAGE ) << "Ignored protocol language token: \"" << allTokens[7].c_str() << "\"" << endl;
+      }
+    }
+
+    // Named launch options are written as "key=value" and are scanned over the
+    // whole tail instead of a fixed slot: the launcher appends them after the
+    // language token, but that token is optional. No positional token can hold
+    // '=' (the IP block is hex, the base port is decimal, the language is 2-5
+    // letters), so this scan cannot misread one. Unknown keys are logged and
+    // ignored. An old client is unaffected: the launcher sends such a token only
+    // when the user turned the option on, and an old client ignores trailing
+    // tokens it cannot parse.
+    for (size_t optionIndex = 5; optionIndex < allTokens.size(); ++optionIndex) {
+      const nstl::string& optionToken = allTokens[optionIndex];
+      const size_t separator = optionToken.find('=');
+      if (separator == nstl::string::npos)
+        continue;
+      const nstl::string optionKey = optionToken.substr(0, separator);
+      const nstl::string optionValue = optionToken.substr(separator + 1);
+      if (_stricmp(optionKey.c_str(), "render") == 0) {
+        Render::SetBackendRequest(optionValue.c_str());
+        systemLog( NLogg::LEVEL_MESSAGE ) << "Protocol render backend: \"" << optionValue.c_str() << "\"" << endl;
+      } else {
+        systemLog( NLogg::LEVEL_MESSAGE ) << "Ignored protocol option: \"" << optionToken.c_str() << "\"" << endl;
       }
     }
 
@@ -1584,7 +1610,7 @@ int __stdcall PseudoWinMain( HINSTANCE hInstance, HWND hWnd, LPTSTR lpCmdLine, S
 
   Render::RenderMode renderMode;
   
-  mainVars.renderingInterface = new Render::DeviceLostWrapper<PF_Render::Interface>;
+  mainVars.renderingInterface = new Render::ReallocateWrapper<PF_Render::Interface>;
   Render::GetRenderModeFromConfig(renderMode);
   Render::GetRenderer()->CorrectRenderMode(renderMode);
   PF_Render::Interface::CorrectRendermode( renderMode );
@@ -1814,6 +1840,11 @@ int __stdcall PseudoWinMain( HINSTANCE hInstance, HWND hWnd, LPTSTR lpCmdLine, S
     if ( !s_NullRender )
     {
       Render::SharedVB::UnlockAll(); // Don't hold VB's locked for too long
+
+      {
+        NI_PROFILE_BLOCK( "FrameLimit" );
+        NMainLoop::VSyncController::LimitFrameRate(); // gfx_max_fps
+      }
 
       NI_PROFILE_BLOCK( "RenderPresent" );
       mainPerf_Present.Start(true);

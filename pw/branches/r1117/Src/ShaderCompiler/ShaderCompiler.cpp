@@ -5,16 +5,36 @@
 #include "crc_math.h"
 #include "parse.h"
 
-#include <d3dx9shader.h>
+#include <d3d9.h>          // D3D_OK / D3DERR_NOTFOUND (used to come from d3dx9.h)
+#include <d3dcompiler.h>
+
+// D3DCompile загружается динамически: импортная либа SDK (единственная
+// в ней — d3dcompiler.lib) привязана к D3DCOMPILER_43.dll, которой нет на
+// урезанных образах Windows (на tiny10 есть только 47), и всегда лишь одна
+// версия. Типы из заголовка при этом обычные.
+typedef HRESULT (WINAPI *D3DCompileFn)(const void *pSrcData, SIZE_T SrcDataSize,
+                                        LPCSTR pSourceName, const D3D_SHADER_MACRO *pDefines,
+                                        ID3DInclude *pInclude, LPCSTR pEntrypoint, LPCSTR pTarget,
+                                        UINT Flags1, UINT Flags2, ID3DBlob **ppCode, ID3DBlob **ppErrorMsgs);
+D3DCompileFn s_pD3DCompile = 0;
+
+bool InitD3DCompiler()
+{
+  static const char *names[] = { "d3dcompiler_47.dll", "d3dcompiler_48.dll",
+                                  "d3dcompiler_50.dll", "d3dcompiler_43.dll", 0 };
+  for (int i = 0; names[i] && !s_pD3DCompile; ++i)
+  {
+    HMODULE h = LoadLibraryA(names[i]);
+    if (h) s_pD3DCompile = (D3DCompileFn)GetProcAddress(h, "D3DCompile");
+  }
+  return s_pD3DCompile != 0;
+}
 
 //#define IS_MULTYTHREAD 1
 
 namespace
 {
   const int strsize = 32;
-
-  const char macroV20[strsize] = "FORCE_SM20";
-  const char macroV20_dummy[strsize] = "1";
 
   NFile::CFilePath s_directory;
   NFile::CFilePath s_outDirectory;
@@ -23,13 +43,13 @@ namespace
 
   MTWorkerLite * s_mtWorker = 0;
 
-  LPD3DXBUFFER *g_matrix;
+  ShaderBlob *g_matrix;
 }
 
-class MyInclude : public ID3DXInclude
+class MyInclude : public ID3DInclude
 {
 public:
-  __declspec(nothrow) HRESULT __stdcall Open ( D3DXINCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID * ppData, UINT * pBytes) 
+  __declspec(nothrow) HRESULT __stdcall Open ( D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID * ppData, UINT * pBytes) 
   { 
     int cnt = files.size();
 
@@ -81,22 +101,29 @@ protected:
 
 MyInclude g_includeHandler;
 
-bool CompileOneShader( DWORD &Flags, CObj<FileStream> pStream, D3DXMACRO* pDefines, MyInclude pInclude, LPCSTR const profile, LPCSTR const entryPoint, LPD3DXBUFFER* ppShader )
+bool CompileOneShader( DWORD &Flags, CObj<FileStream> pStream, D3D_SHADER_MACRO* pDefines, MyInclude pInclude, LPCSTR const srcName, LPCSTR const profile, LPCSTR const entryPoint, ShaderBlob* ppShader )
 {
   HRESULT hr;
-  LPD3DXBUFFER pErrorMsgs;
+  ShaderBlob pErrorMsgs;
 
-  hr = D3DXCompileShader( 
+  if (!s_pD3DCompile) { printf("D3DCompile not loaded\n"); return false; }
+
+  // D3DCompile (the fxc successor) instead of D3DXCompileShader: current .hlsl
+  // do not build with d3dx9_43 at all (E5017 "Resource load type 4" on tex2Dlod
+  // in vs_3_0) but do build here. Profiles stay vs_3_0/ps_3_0 - D3D9 (June 2010
+  // SDK and later) eats DXBC from either compiler. See docs/PLAN_NVRHI.md.
+  hr = s_pD3DCompile( 
     pStream->GetBuffer(), 
     pStream->GetSize(), 
+    srcName,
     pDefines, 
     &pInclude,
     entryPoint,
     profile,
     Flags, 
+    0,
     ppShader, 
-    &pErrorMsgs, 
-    0
+    &pErrorMsgs
     );
 
   if (D3D_OK != hr)
@@ -122,7 +149,6 @@ public:
   CObj<FileStream> *pStream;
   UberShaderDesc *curShader;
   DWORD Flags;
-  int   isV20;
 
   void DoJob()
   {
@@ -131,25 +157,16 @@ public:
     bool bOK;
 
     // build macros array
-    int macroCnt = totalPinsCnt + isV20 + 1;
-    D3DXMACRO* pDefines;
-    pDefines = new D3DXMACRO[macroCnt];
+    // SM2.0-фолбэк удалён (в клиенте тоже, см. Render/renderer.cpp): профиль один.
+    int macroCnt = totalPinsCnt + 1;
+    D3D_SHADER_MACRO* pDefines;
+    pDefines = new D3D_SHADER_MACRO[macroCnt];
 
     pDefines[macroCnt - 1].Definition = 0;
     pDefines[macroCnt - 1].Name = 0;
 
-    if (1 == isV20)
-    {
-      vsProfile = "vs_2_0";
-      psProfile = "ps_2_0";
-      pDefines[macroCnt - 1 - 1].Name = macroV20;
-      pDefines[macroCnt - 1 - 1].Definition = macroV20_dummy;
-    }
-    else
-    {
-      vsProfile = "vs_3_0";
-      psProfile = "ps_3_0";
-    }
+    vsProfile = "vs_3_0";
+    psProfile = "ps_3_0";
 
     // get total codes value
     string *pinValues = 0;
@@ -183,8 +200,8 @@ public:
         currentPinValue = currentPinValue % curPin.pinMultiplier;
       }
                                               
-      bOK = CompileOneShader(Flags, *pStream, pDefines, includeManager, vsProfile.c_str(), "MainPass_VSMain", &g_matrix[idx * 2]);
-      bOK = CompileOneShader(Flags, *pStream, pDefines, includeManager, psProfile.c_str(), "MainPass_PSMain", &g_matrix[idx * 2 + 1]);
+      bOK = CompileOneShader(Flags, *pStream, pDefines, includeManager, curShader->shaderName.c_str(), vsProfile.c_str(), "MainPass_VSMain", &g_matrix[idx * 2]);
+      bOK = CompileOneShader(Flags, *pStream, pDefines, includeManager, curShader->shaderName.c_str(), psProfile.c_str(), "MainPass_PSMain", &g_matrix[idx * 2 + 1]);
       
       printf("%d ", idx);
     } while(1);
@@ -216,39 +233,29 @@ struct ShaderObjInfo
   unsigned int psOffset;
 };
 
-LPD3DXBUFFER* BuildShaderMatrix( CObj<FileStream> pStream, UberShaderDesc &curShader, DWORD &Flags, int isV20, UberShaderFileInfo &info )
+ShaderBlob* BuildShaderMatrix( CObj<FileStream> pStream, UberShaderDesc &curShader, DWORD &Flags, UberShaderFileInfo &info )
 {
   string vsProfile, psProfile;
   int totalPinsCnt = curShader.pins.size();
   bool bOK = true;
 
   // build macros array
-  int macroCnt = totalPinsCnt + isV20 + 1;
-  D3DXMACRO* pDefines;
-  pDefines = new D3DXMACRO[macroCnt];
+  int macroCnt = totalPinsCnt + 1;
+  D3D_SHADER_MACRO* pDefines;
+  pDefines = new D3D_SHADER_MACRO[macroCnt];
                                                                                        
   pDefines[macroCnt - 1].Definition = 0;
   pDefines[macroCnt - 1].Name = 0;
 
-  if (1 == isV20)
-  {
-    vsProfile = "vs_2_0";
-    psProfile = "ps_2_0";
-    pDefines[macroCnt - 1 - 1].Name = macroV20;
-    pDefines[macroCnt - 1 - 1].Definition = macroV20_dummy;
-  }
-  else
-  {
-    vsProfile = "vs_3_0";
-    psProfile = "ps_3_0";
-  }
+  vsProfile = "vs_3_0";
+  psProfile = "ps_3_0";
 
   // get total codes value
   int fullCount = curShader.GetTotalCount();
 
-  LPD3DXBUFFER *matrix;
-  matrix = new LPD3DXBUFFER[fullCount * 2];
-  memset(matrix, 0, sizeof(LPD3DXBUFFER) * fullCount * 2);
+  ShaderBlob *matrix;
+  matrix = new ShaderBlob[fullCount * 2];
+  memset(matrix, 0, sizeof(ShaderBlob) * fullCount * 2);
 
   string* pinValues = 0;
   if (totalPinsCnt > 0)
@@ -287,7 +294,7 @@ LPD3DXBUFFER* BuildShaderMatrix( CObj<FileStream> pStream, UberShaderDesc &curSh
       matrix[vsCode]->AddRef();
     }
     else
-      bOK = CompileOneShader(Flags, pStream, pDefines, g_includeHandler, vsProfile.c_str(), "MainPass_VSMain", &matrix[idx * 2]);
+      bOK = CompileOneShader(Flags, pStream, pDefines, g_includeHandler, curShader.shaderName.c_str(), vsProfile.c_str(), "MainPass_VSMain", &matrix[idx * 2]);
 
     int psCode = info.GetIdx(idx * 2 + 1);
     if (psCode != -1)
@@ -296,7 +303,7 @@ LPD3DXBUFFER* BuildShaderMatrix( CObj<FileStream> pStream, UberShaderDesc &curSh
       matrix[psCode]->AddRef();
     }                                                  
     else
-      bOK = CompileOneShader(Flags, pStream, pDefines, g_includeHandler, psProfile.c_str(), "MainPass_PSMain", &matrix[idx * 2 + 1]);
+      bOK = CompileOneShader(Flags, pStream, pDefines, g_includeHandler, curShader.shaderName.c_str(), psProfile.c_str(), "MainPass_PSMain", &matrix[idx * 2 + 1]);
     
     printf("\r%d ", idx);
 
@@ -320,16 +327,16 @@ LPD3DXBUFFER* BuildShaderMatrix( CObj<FileStream> pStream, UberShaderDesc &curSh
   return matrix;
 }
 
-LPD3DXBUFFER* BuildShaderMatrixMultyThread( UberShaderDesc &curShader, MTWorkerLite *mtworker )
+ShaderBlob* BuildShaderMatrixMultyThread( UberShaderDesc &curShader, MTWorkerLite *mtworker )
 {
-  g_matrix = new LPD3DXBUFFER[curShader.GetTotalCount() * 2];
+  g_matrix = new ShaderBlob[curShader.GetTotalCount() * 2];
 
   mtworker->ExecuteJob();
 
   return g_matrix;
 }
 
-int WriteMatrix(LPD3DXBUFFER* matrix, UberShaderDesc &curShader, int isV20)
+int WriteMatrix(ShaderBlob* matrix, UberShaderDesc &curShader)
 {
   int offset = 0;
   
@@ -362,12 +369,7 @@ int WriteMatrix(LPD3DXBUFFER* matrix, UberShaderDesc &curShader, int isV20)
 
   // output to file
   string outFileName;
-  string ext;
-
-  if (1 == isV20)
-    ext = ".shd2";
-  else
-    ext = ".shd";
+  string ext = ".shd";
 
   outFileName = s_outDirectory + curShader.shaderName + ext;
 
@@ -399,6 +401,11 @@ int WriteMatrix(LPD3DXBUFFER* matrix, UberShaderDesc &curShader, int isV20)
   }
   
   free(pInfo);
+
+  // fclose is required: without it the tail stays in the CRT buffer, so the
+  // file ends up truncated (size rounded down to 4096) or empty (0 bytes) if
+  // the process is terminated rather than exiting normally
+  if (fpFile) fclose(fpFile);
 
   return num;
 }
@@ -433,6 +440,12 @@ int main( int argc, char *argv[ ] )
 
   // parse command string
   params.Parse(argc, argv);
+
+  if (!InitD3DCompiler())
+  {
+    printf("Can not load D3DCompile (d3dcompiler_47/48/50/43.dll)\n");
+    return -1;
+  }
 
   const NFile::CFilePath fullFilePath = argv[1];
 
@@ -488,7 +501,7 @@ int main( int argc, char *argv[ ] )
       info.Reset();
     }
     else
-      info.Read(params.GetVersion());
+      info.Read();
 
     shaderName = s_directory + curShader.shaderName + ".hlsl";
     // open file
@@ -500,9 +513,9 @@ int main( int argc, char *argv[ ] )
     }
 
     DWORD Flags;
-    Flags = D3DXSHADER_OPTIMIZATION_LEVEL3;
+    Flags = D3DCOMPILE_OPTIMIZATION_LEVEL3;
 
-    LPD3DXBUFFER *matrix;
+    ShaderBlob *matrix;
 
     // reset & build data
     shaderIndex = -1;
@@ -511,13 +524,12 @@ int main( int argc, char *argv[ ] )
     {
       contexts[i].curShader = &curShader;                 
       contexts[i].Flags = Flags;
-      contexts[i].isV20 = params.GetVersion();
       contexts[i].pStream = &pStream;
     }                      
 #endif
     // compile one shader matrix
 #ifndef IS_MULTYTHREAD
-    matrix = BuildShaderMatrix(pStream, curShader, Flags, params.GetVersion(), info);
+    matrix = BuildShaderMatrix(pStream, curShader, Flags, info);
 #else
     matrix = BuildShaderMatrixMultyThread(curShader, s_mtWorker);
 #endif
@@ -527,15 +539,15 @@ int main( int argc, char *argv[ ] )
       {
         // write matrix to file
         printf("Writing matrix to file\n");
-        WriteMatrix(matrix, curShader, params.GetVersion());
+        WriteMatrix(matrix, curShader);
 
         // build info
         info.Build(matrix);
-        info.Write(params.GetVersion());
+        info.Write();
       }
       else
       {
-        void WriteSharedFileFormat(LPD3DXBUFFER const buffers[], UberShaderDesc const& shader, CommandLine const& params);
+        void WriteSharedFileFormat(ShaderBlob const buffers[], UberShaderDesc const& shader, CommandLine const& params);
         WriteSharedFileFormat(matrix, curShader, params);
       }
 
@@ -568,7 +580,7 @@ int main( int argc, char *argv[ ] )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // keep file format compatible with the old reading code
-void WriteSharedFileFormat(LPD3DXBUFFER const buffers[], UberShaderDesc const& shader, CommandLine const& params)
+void WriteSharedFileFormat(ShaderBlob const buffers[], UberShaderDesc const& shader, CommandLine const& params)
 {
   NI_ASSERT(!params.IsNoShare(), "Should not use shared function in NoShare mode");
 
@@ -581,10 +593,21 @@ void WriteSharedFileFormat(LPD3DXBUFFER const buffers[], UberShaderDesc const& s
   nstl::vector<unsigned> byIndex(bufferCount);
   nstl::hash_map<unsigned, unsigned> byHash;
 
+  // Если вариация не скомпилировалась, в матрице null. NI_ASSERT в shipping
+  // выключен, и дальше был бы null deref — не пишем такой .shd целиком,
+  // чтобы в контент не уехал битый контейнер (старый остаётся в другом pile).
+  for (unsigned bufferIdx = 0; bufferIdx < bufferCount; ++bufferIdx)
+    if (!buffers[bufferIdx])
+    {
+      printf("ERROR: shader '%s' has failed variations, .shd is not written\n",
+             shader.shaderName.c_str());
+      return;
+    }
+
   // find equal buffers
   for (unsigned bufferIdx = 0; bufferIdx < bufferCount; ++bufferIdx)
   {
-    LPD3DXBUFFER pBuffer = buffers[bufferIdx];
+    ShaderBlob pBuffer = buffers[bufferIdx];
     NI_ASSERT(pBuffer, "Missing compiled data");
     NI_ASSERT(pBuffer->GetBufferPointer(), "Missing compiled data");
     NI_ASSERT(pBuffer->GetBufferSize() > 0, "Zero compiled data size");
@@ -601,7 +624,7 @@ void WriteSharedFileFormat(LPD3DXBUFFER const buffers[], UberShaderDesc const& s
     {
       // the buffer looks similar, double check
       unsigned otherIdx = it->second;
-      LPD3DXBUFFER pOther = buffers[otherIdx];
+      ShaderBlob pOther = buffers[otherIdx];
       if (pOther->GetBufferSize() == pBuffer->GetBufferSize() && memcmp(pOther->GetBufferPointer(), pBuffer->GetBufferPointer(), pBuffer->GetBufferSize()) == 0)
       {
         // the buffers are completely the same, save reference
@@ -670,7 +693,7 @@ void WriteSharedFileFormat(LPD3DXBUFFER const buffers[], UberShaderDesc const& s
   // Write data to a file
 
   // open file
-  string fileName = s_outDirectory + shader.shaderName + (params.GetVersion() == 1 ? ".shd2" : ".shd");
+  string fileName = s_outDirectory + shader.shaderName + ".shd";
   FILE* fp = NULL;
   if (fopen_s(&fp, fileName.c_str(), "wb") != 0 || !fp)
   {
@@ -707,6 +730,11 @@ void WriteSharedFileFormat(LPD3DXBUFFER const buffers[], UberShaderDesc const& s
   }
   NI_ASSERT(offset == fullSize, "Offset mismatch at the end of file");
   NI_ASSERT(ftell(fp) == (int)offset, "Offset mismatch at the end of file");
+
+  // fclose is required: without it the tail stays in the CRT buffer, so the
+  // file ends up truncated (size rounded down to 4096) or empty (0 bytes) if
+  // the process is terminated rather than exiting normally
+  fclose(fp);
 
   delete[] offsets;
 }

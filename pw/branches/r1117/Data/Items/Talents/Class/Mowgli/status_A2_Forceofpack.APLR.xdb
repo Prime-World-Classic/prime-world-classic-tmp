@@ -14,9 +14,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FQAAAAAAAAAAVYvsg+wMi0UMixCLTQyLgrgAAAD/0ItNDIsRi00Mi4K8AAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoPi0UMixCLTQyLgiwBAAD/0A+28GoQi00MixGLTQyLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqD4tVDIsCi00Mi5AsAQAA/9IPtvBqEItFDIsQi00Mi4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UMiwKLTQyLkLgAAAD/0otFDIsQi00Mi4K8AAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IpF/F6L5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>rBaseStrength &gt;= rBaseIntellect</sString>
+					<sString>(pSecond-&gt;IsRecommended(15) &gt; pSecond-&gt;IsRecommended(16) ? 1 : pSecond-&gt;IsRecommended(15) &lt; pSecond-&gt;IsRecommended(16) ? 0 : rBaseStrength&gt;=rBaseIntellect)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -61,9 +61,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FQAAAAAAAAAAVYvsg+wMi0UMixCLTQyLgrgAAAD/0ItNDIsRi00Mi4K8AAAA3V34/9DcXfjf4PbEQXUJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoPi0UMixCLTQyLgiwBAAD/0A+28GoQi00MixGLTQyLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqD4tVDIsCi00Mi5AsAQAA/9IPtvBqEItFDIsQi00Mi4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UMiwKLTQyLkLgAAAD/0otFDIsQi00Mi4K8AAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/DPAg338AA+UwF6L5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>rBaseStrength &lt; rBaseIntellect</sString>
+					<sString>!(pSecond-&gt;IsRecommended(15) &gt; pSecond-&gt;IsRecommended(16) ? 1 : pSecond-&gt;IsRecommended(15) &lt; pSecond-&gt;IsRecommended(16) ? 0 : rBaseStrength&gt;=rBaseIntellect)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -108,9 +108,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FR4AAAACAAAAJQAAAD4AAABNb3dnbGlfQTJfU1VQAAAATW93Z2xpX0EyX1NVUABVi+yD7BRoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaBAAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AA+2TfuFyXQ2i1UMiwKLTQyLkMgAAAD/0otFDIsQi00Mi4LMAAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAIpF7IvlXcM=</compiledString>
+					<compiledString>FR4AAAACAAAAJgAAAD8AAABNb3dnbGlfQTJfU1VQAAAATW93Z2xpX0EyX1NVUABVi+yD7CBWaAAAAACLRQiLEItNCIuCqAEAAP/QhcB0KmgQAAAAi00IixGLTQiLgqgBAAD/0IlF/ItN/IsRi038i0IE/9CIRfvrBMZF+wAPtk37hckPhMkAAABqE4tVDIsCi00Mi5AsAQAA/9IPtvBqFItFDIsQi00Mi4IsAQAA/9APtsg78X4Mx0X0AQAAAOmAAAAAahOLVQyLAotNDIuQLAEAAP/SD7bwahSLRQyLEItNDIuCLAEAAP/QD7bIO/F9CcdF8AAAAADrQ4tVDIsCi00Mi5DIAAAA/9KLRQyLEItNDIuCzAAAAN1d6P/Q3F3o3+D2xEF6CcdF5AEAAADrB8dF5AAAAACLTeSJTfCLVfCJVfSDffQAdAnHReABAAAA6wfHReAAAAAAikXgXovlXcM=</compiledString>
 					<returnType>bool</returnType>
-					<sString>tal("Mowgli_A2_SUP") &amp;&amp; (rBaseStamina &gt;= rBaseWill)</sString>
+					<sString>tal("Mowgli_A2_SUP") &amp;&amp; (pSecond-&gt;IsRecommended(19) &gt; pSecond-&gt;IsRecommended(20) ? 1 : pSecond-&gt;IsRecommended(19) &lt; pSecond-&gt;IsRecommended(20) ? 0 : rBaseStamina&gt;=rBaseWill)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -155,9 +155,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FR4AAAACAAAAJQAAAD4AAABNb3dnbGlfQTJfU1VQAAAATW93Z2xpX0EyX1NVUABVi+yD7BRoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaBAAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AA+2TfuFyXQ2i1UMiwKLTQyLkMgAAAD/0otFDIsQi00Mi4LMAAAA3V3w/9DcXfDf4PbEQXUJx0XsAQAAAOsHx0XsAAAAAIpF7IvlXcM=</compiledString>
+					<compiledString>FR4AAAACAAAAJgAAAD8AAABNb3dnbGlfQTJfU1VQAAAATW93Z2xpX0EyX1NVUABVi+yD7CBWaAAAAACLRQiLEItNCIuCqAEAAP/QhcB0KmgQAAAAi00IixGLTQiLgqgBAAD/0IlF/ItN/IsRi038i0IE/9CIRfvrBMZF+wAPtk37hckPhMkAAABqE4tVDIsCi00Mi5AsAQAA/9IPtvBqFItFDIsQi00Mi4IsAQAA/9APtsg78X4Mx0X0AQAAAOmAAAAAahOLVQyLAotNDIuQLAEAAP/SD7bwahSLRQyLEItNDIuCLAEAAP/QD7bIO/F9CcdF8AAAAADrQ4tVDIsCi00Mi5DIAAAA/9KLRQyLEItNDIuCzAAAAN1d6P/Q3F3o3+D2xEF6CcdF5AEAAADrB8dF5AAAAACLTeSJTfCLVfCJVfSDffQAdQnHReABAAAA6wfHReAAAAAAikXgXovlXcM=</compiledString>
 					<returnType>bool</returnType>
-					<sString>tal("Mowgli_A2_SUP") &amp;&amp; (rBaseStamina &lt; rBaseWill)</sString>
+					<sString>tal("Mowgli_A2_SUP") &amp;&amp; !(pSecond-&gt;IsRecommended(19) &gt; pSecond-&gt;IsRecommended(20) ? 1 : pSecond-&gt;IsRecommended(19) &lt; pSecond-&gt;IsRecommended(20) ? 0 : rBaseStamina&gt;=rBaseWill)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>

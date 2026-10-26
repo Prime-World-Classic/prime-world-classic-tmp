@@ -665,6 +665,34 @@ void SetScene( NScene::IScene* scene )
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Создаёт и инициализирует систему событий FMOD. directSoundStereo: вывод через DirectSound
+// в стерео (свести стерео в моно для устройства Windows умеет сама).
+static FMOD_RESULT CreateEventSystem( int maxNumberOfSounds, FMOD_INITFLAGS initFlags, bool directSoundStereo )
+{
+  FMOD_RESULT result = FMOD::EventSystem_Create( &eventSystem );
+  if ( result == FMOD_OK )
+    result = eventSystem->getSystemObject( &fmodSystem );
+  if ( result == FMOD_OK && directSoundStereo )
+    result = fmodSystem->setOutput( FMOD_OUTPUTTYPE_DSOUND );
+  if ( result == FMOD_OK )
+    result = fmodSystem->setFileSystem( fileOpen, fileClose, fileRead, fileSeek, 0, 0, 4096 );
+  if ( result == FMOD_OK && directSoundStereo )
+    result = fmodSystem->setSpeakerMode( FMOD_SPEAKERMODE_STEREO );
+  if ( result == FMOD_OK )
+    result = eventSystem->init( maxNumberOfSounds, initFlags, 0, FMOD_EVENT_INIT_FAIL_ON_MAXSTREAMS );
+  return result;
+}
+
+// Освобождает только систему событий, пул памяти FMOD (lpMemoryPool) остаётся.
+static void ReleaseEventSystemOnly()
+{
+  if ( eventSystem )
+    eventSystem->release();
+  eventSystem = 0;
+  fmodSystem = 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 FMOD::System* EventSystemInit( const NDb::SoundEnvironment *pSoundEnvironment, int maxNumberOfSounds, float unitsInMeter )
 {
 	threading::MutexLock lock( fmodMutex );
@@ -732,6 +760,26 @@ FMOD::System* EventSystemInit( const NDb::SoundEnvironment *pSoundEnvironment, i
   
   const FMOD_INITFLAGS initFlags = FMOD_INIT_3D_RIGHTHANDED | ( sound_enableProfile ? FMOD_INIT_ENABLE_PROFILE : 0 );
   result = eventSystem->init( maxNumberOfSounds, initFlags, 0, FMOD_EVENT_INIT_FAIL_ON_MAXSTREAMS );
+  // На моно-устройстве (например, «Arctis 7 Chat») WASAPI открывает микшер FMOD в 1 канал
+  // и setSpeakerMode(STEREO) не помогает, а x64 FMOD Ex на моно падает в микшере на части
+  // DSP-эффектов (ParamEQ, IT Lowpass). Тогда пересоздаём вывод через DirectSound в стерео;
+  // не вышло — возвращаемся к прежнему выводу.
+  if ( result == FMOD_OK )
+  {
+    FMOD_SPEAKERMODE speakerMode = FMOD_SPEAKERMODE_STEREO;
+    fmodSystem->getSpeakerMode( &speakerMode );
+    if ( speakerMode == FMOD_SPEAKERMODE_MONO )
+    {
+      ReleaseEventSystemOnly();
+      result = CreateEventSystem( maxNumberOfSounds, initFlags, true );
+      DebugTrace( "FMOD: mono output, DirectSound stereo: %s", FMOD_ErrorString( result ) );
+      if ( result != FMOD_OK )
+      {
+        ReleaseEventSystemOnly();
+        result = CreateEventSystem( maxNumberOfSounds, initFlags, false );
+      }
+    }
+  }
   if ( result == FMOD_ERR_OUTPUT_INIT )
   {
     isSoundAvalible = false;

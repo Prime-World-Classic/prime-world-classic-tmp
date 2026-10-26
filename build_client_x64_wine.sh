@@ -18,6 +18,9 @@
 #   ./build_client_x64_wine.sh --prefix=PATH   # другой Wine-префикс
 #   ./build_client_x64_wine.sh --keep-going    # ninja -k0 (обзор ошибок компиляции)
 #   ./build_client_x64_wine.sh --check         # только сверка артефакта
+#   ./build_client_x64_wine.sh --vendor        # + собрать вендор рендера
+#     (цель render_vendor: NVRHI/SDL3/DirectX-Headers — см. Vendor/fetch_render_deps.sh;
+#      в линковку PW_Game они пока не входят)
 #   PW_BUILD_JOBS=8 ./build_client_x64_wine.sh
 #   PW_EXTRA_OPTS / PW_EXTRA_DEFS / PW_EXTRA_LINK_OPTS — см. ниже
 #
@@ -83,7 +86,7 @@ JOBS="${PW_BUILD_JOBS:-8}"
 CMAKE_DIR="${PW_CMAKE_DIR:-$HOME/pwbuild/wintools/cmake-3.31.6-windows-x86_64}"
 NINJA="${PW_NINJA:-$HOME/pwbuild/wintools/ninja.exe}"
 
-DO_CLEAN=0; DO_GEN_ONLY=0; DO_KEEP=0; DO_CHECK=0; PREFIX_FORCED=0
+DO_CLEAN=0; DO_GEN_ONLY=0; DO_KEEP=0; DO_CHECK=0; DO_VENDOR=0; PREFIX_FORCED=0
 for arg in "$@"; do
     case "$arg" in
         --prefix=*)   WINEPREFIX="${arg#--prefix=}"; PREFIX_FORCED=1 ;;
@@ -91,6 +94,7 @@ for arg in "$@"; do
         --gen-only)   DO_GEN_ONLY=1 ;;
         --keep-going) DO_KEEP=1 ;;
         --check)      DO_CHECK=1 ;;
+        --vendor)     DO_VENDOR=1 ;;
         -h|--help)    grep '^# ' "$0" | sed 's/^# \{0,1\}//' | head -60; exit 0 ;;
         *) echo "Неизвестный аргумент: $arg (см. --help)" >&2; exit 2 ;;
     esac
@@ -100,8 +104,20 @@ done
 # привязан и к компилятору, и к каталогу исходников (gen/), поэтому два
 # прогона в одном build-каталоге вынуждают пересобирать весь граф (1145 TU).
 # Набор флагов при этом обязан быть идентичным — см. BUILD_CLIENT_X64.md.
-BUILD="$CCT/build/$TC_TAG"
-GEN="$CCT/gen/$TC_TAG"
+# Отдельный build/gen-каталог для сборок с изменёнными флагами компиляции.
+# PW_EXTRA_DEFS / PW_EXTRA_OPTS попадают в командную строку КАЖДОЙ TU, поэтому
+# инструментальный прогон (например -DPW_RENDER_SHADER_STATS) в общем каталоге
+# сносит весь кэш — 1159 TU, ~35 минут — и затем требует полной пересборки
+# обычного артефакта. Суффикс берётся из PW_BUILD_SUFFIX, а если он не задан —
+# из хэша этих переменных: инструментальная сборка попадает в свой каталог
+# автоматически и повторяется уже инкрементально.
+SFX="${PW_BUILD_SUFFIX:-}"
+if [ -z "$SFX" ] && { [ -n "${PW_EXTRA_DEFS:-}" ] || [ -n "${PW_EXTRA_OPTS:-}" ]; }; then
+    SFX="_$(printf '%s|%s' "${PW_EXTRA_DEFS:-}" "${PW_EXTRA_OPTS:-}" | md5sum | cut -c1-8)"
+fi
+BUILD="$CCT/build/$TC_TAG$SFX"
+GEN="$CCT/gen/$TC_TAG$SFX"
+CMD="$CCT/$TC_TAG$SFX.cmd"
 KEEP=""
 if [ "$DO_KEEP" = 1 ]; then KEEP="-k0"; fi
 
@@ -181,6 +197,19 @@ case "${PW_PCH:-}" in
 esac
 export PW_PCH
 echo "== PCH: ${PW_PCH:-ВЫКЛЮЧЕН (релизный режим)}"
+# .pch под Wine нельзя класть в build-каталог: cl повторно открывает его по
+# НИЖНЕРЕГИСТРОВОМУ пути, а каталоги репо (PW/Tools/ClientCMake) — с верхним
+# регистром, Wine их так не находит -> C1083. Поэтому по умолчанию .pch уезжают
+# в ~/pwbuild/pch/<тег графа> (все компоненты в нижнем регистре). Подробности и
+# wine-трейс — в Tools/ClientCMake/pch_rules.py.
+if [ -n "$PW_PCH" ] && [ -z "${PW_PCH_DIR:-}" ]; then
+    PW_PCH_DIR="$HOME/pwbuild/pch/$TC_TAG"
+fi
+if [ -n "${PW_PCH_DIR:-}" ]; then
+    mkdir -p "$PW_PCH_DIR" 2>/dev/null
+    export PW_PCH_DIR
+    echo "   .pch: $PW_PCH_DIR (нижний регистр — требование Wine)"
+fi
 if [ -n "$PW_PCH" ] && [ -n "${PW_CACHE_LAUNCHER:-}" ]; then
     echo "!! PCH + кэш: sccache помечает компиляции с /Fp и /Yc как non-cacheable"
     echo "   (sccache --show-stats: 'Non-cacheable reasons: /Fp, /Yc') — кэш не ускорит"
@@ -230,7 +259,7 @@ mkdir -p "$BUILD"
 python3 "$CCT/gen_cmake.py" "$BR/Src" "$CCT/model.json" "$GEN"
 # cmd-обёртка пишется и при --gen-only: её содержимое (пути, окружение тулчейна,
 # аргументы cmake) — часть проверки того, что конфигурирование было бы корректным.
-cat > "$CCT/$TC_TAG.cmd" <<'CMDEOF'
+cat > "$CMD" <<'CMDEOF'
 @echo off
 set PATH=__CMAKE_WIN__;__NINJADIR_WIN__;__CL_PATH__;%PATH%
 set INCLUDE=__CL_INC__
@@ -245,14 +274,15 @@ cmake -G Ninja -DPW_SRC=__SRC_FWD__ -DR1117=__R1117_FWD__ ^
   __GEN_FWD__
 if errorlevel 1 exit /b 1
 cmake --build . -- __KEEP__ __NSTATS__ -j__JOBS__
+__VENDOR_BUILD__
 CMDEOF
 # подстановка путей отдельным прогоном: в heredoc не смешивать $-расширения
-python3 - "$CCT/$TC_TAG.cmd" "$BR/Src" "$BR" "$GEN" "$BUILD" "$CMAKE_DIR/bin" \
+python3 - "$CMD" "$BR/Src" "$BR" "$GEN" "$BUILD" "$CMAKE_DIR/bin" \
           "$NINJA" "$KEEP" "$NSTATS" "$JOBS" "$CL_PATH" "$CL_INC" "$CL_LIB" \
-          "$LAUNCHER" <<'PY'
+          "$LAUNCHER" "$DO_VENDOR" <<'PY'
 import os, sys
 (p, src, r1117, gen, build, cmakedir, ninja,
- keep, nstats, jobs, clpath, clinc, cllib, launcher) = sys.argv[1:15]
+ keep, nstats, jobs, clpath, clinc, cllib, launcher, vendor) = sys.argv[1:16]
 
 
 def w(x):        # windows-путь для cmd (set / cd /d): wine требует букву диска
@@ -270,13 +300,15 @@ for k, v in {"__CMAKE_WIN__": w(cmakedir), "__NINJADIR_WIN__": w(os.path.dirname
              "__BUILD_WIN__": w(build), "__SRC_FWD__": f(src), "__R1117_FWD__": f(r1117),
              "__GEN_FWD__": f(gen), "__NINJA_FWD__": f(ninja),
              "__LAUNCHER__": launcher_flag,
+             "__VENDOR_BUILD__": (f"cmake --build . --target render_vendor -j{jobs}"
+                                  if vendor == "1" else "rem --vendor не запрошен"),
              "__KEEP__": keep, "__NSTATS__": nstats, "__JOBS__": jobs}.items():
     s = s.replace(k, v)
 open(p, "w", encoding="utf-8").write(s)
 PY
 
 if [ "$DO_GEN_ONLY" = 1 ]; then
-    echo "== --gen-only: граф в $GEN, cmd-обёртка в $CCT/$TC_TAG.cmd"
+    echo "== --gen-only: граф в $GEN, cmd-обёртка в $CMD"
     exit 0
 fi
 
@@ -313,7 +345,7 @@ if [ "$DO_CHECK" = 1 ]; then
     echo "== --check: сборка пропущена, проверяю артефакт"
 else
     echo "== 2/3. cmake -G Ninja (configure) + ninja"
-    WINEDEBUG=-all wine cmd /c "$(zpath "$CCT/$TC_TAG.cmd")"
+    WINEDEBUG=-all wine cmd /c "$(zpath "$CMD")"
 fi
 # ----------------------------------------------------------- 3. результат
 EXE="$BUILD/PW_Game.exe"
@@ -330,8 +362,11 @@ python3 "$CCT/check_exe.py" "$EXE" "$BR/Src/Version.h"
 # .pdb/.map, если собирались с PW_PDB=1 / PW_EXTRA_LINK_OPTS=/MAP) туда же.
 OUT="$REPO/build"
 mkdir -p "$OUT"
-cp -f "$EXE" "$OUT/PW_Game.exe"
+# Артефакт инструментальной сборки НЕ затирает обычный PW_Game.exe: иначе
+# «собрал со статистикой» = потерял стендовый бинарник (проверено на себе).
+ART="$OUT/PW_Game$SFX.exe"
+cp -f "$EXE" "$ART"
 for ext in pdb map; do
-    [ -f "$BUILD/PW_Game.$ext" ] && cp -f "$BUILD/PW_Game.$ext" "$OUT/"
+    [ -f "$BUILD/PW_Game.$ext" ] && cp -f "$BUILD/PW_Game.$ext" "$OUT/PW_Game$SFX.$ext"
 done
-echo "== артефакт: $OUT/PW_Game.exe"
+echo "== артефакт: $ART"

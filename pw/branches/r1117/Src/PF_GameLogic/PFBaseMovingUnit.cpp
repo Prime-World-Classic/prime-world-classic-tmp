@@ -78,6 +78,80 @@ namespace
 
 namespace NWorld
 {
+
+// Ghost move restricted to a corridor (Laguna's jellyfish trail, see PFApplGhostMove): while the unit computes its
+// movement, the corridor tiles are passable for it in spite of static obstacles, so the ordinary path finding leads it
+// along the trail like along a road, wherever the player clicks. Static obstacles outside the corridor stay obstacles.
+class GhostCorridorScope : public NonCopyable
+{
+public:
+  explicit GhostCorridorScope( MovingUnit & unit )
+    : pMap( 0 ), pPrevious( 0 ), active( false ), extended( 0 )
+  {
+    if ( ( unit.GetGhostMode() & GHOSTMOVE_CORRIDOR_FLAG ) == 0 || !IsValid( unit.pMap ) || !IsValid( unit.pOwner ) )
+      return;
+    pMap      = unit.pMap.GetPtr();
+    pPrevious = pMap->GetPassOverride();
+    if ( pPrevious && pPrevious->pOwnerKey == &unit )
+      return;                                     // already set by an outer call
+
+    vector<CVec2> points;
+    float radius = 0.0f;
+    extended = unit.pOwner->CollectGhostCorridor( points, radius );
+    if ( points.empty() || radius <= 0.0f )
+      return;
+
+    float minX = points[0].x, maxX = points[0].x, minY = points[0].y, maxY = points[0].y;
+    for ( int i = 1; i < points.size(); ++i )
+    {
+      minX = ( points[i].x < minX ) ? points[i].x : minX;
+      maxX = ( points[i].x > maxX ) ? points[i].x : maxX;
+      minY = ( points[i].y < minY ) ? points[i].y : minY;
+      maxY = ( points[i].y > maxY ) ? points[i].y : maxY;
+    }
+    const SVector tileMin = pMap->GetTile( minX - radius, minY - radius );
+    const SVector tileMax = pMap->GetTile( maxX + radius, maxY + radius );
+    corridor.x0    = tileMin.x;
+    corridor.y0    = tileMin.y;
+    corridor.sizeX = tileMax.x - tileMin.x + 1;
+    corridor.sizeY = tileMax.y - tileMin.y + 1;
+    corridor.cells.resize( corridor.sizeX * corridor.sizeY );
+    for ( int i = 0; i < corridor.cells.size(); ++i )
+      corridor.cells[i] = 0;
+
+    const float radius2 = radius * radius;
+    for ( int i = 0; i < points.size(); ++i )
+    {
+      const SVector a = pMap->GetTile( points[i].x - radius, points[i].y - radius );
+      const SVector b = pMap->GetTile( points[i].x + radius, points[i].y + radius );
+      for ( int y = a.y; y <= b.y; ++y )
+        for ( int x = a.x; x <= b.x; ++x )
+          if ( fabs2( pMap->GetPointByTile( x, y ) - points[i] ) <= radius2 )
+            corridor.cells[( y - corridor.y0 ) * corridor.sizeX + ( x - corridor.x0 )] = 1;
+    }
+
+    corridor.pOwnerKey = &unit;
+    pMap->SetPassOverride( &corridor );
+    active = true;
+  }
+
+  ~GhostCorridorScope()
+  {
+    if ( active )
+      pMap->SetPassOverride( pPrevious );
+  }
+
+  // grows when the corridor appears and when it is extended to the end of a flight (see MovingUnit::MovingUnitStep)
+  int GetSignature() const { return active ? 1 + 2 * extended : 0; }
+
+private:
+  TileMap *                pMap;
+  TilePassOverride const * pPrevious;
+  TilePassOverride         corridor;
+  bool                     active;
+  int                      extended;
+};
+
 static bool g_lockMove = false;							// debug: disable movement of WORLD unit (for asynchronous tests)
 
 static bool g_reversePathOff = false;
@@ -142,6 +216,7 @@ MovingUnit::MovingUnit(const CVec3 &pos, const CVec2 & direction, TileMap *pTile
 , isFollowingForced(false)
 , ignoreCollision(false)
 , directMove(false)
+, ghostCorridorSignature(0)
 , vDirectTarget(VNULL2)
 {
 	splinePoint.resize(NUM_SPLINE_POINTS);
@@ -168,9 +243,11 @@ void MovingUnit::InitMapMode()
     mapMode = 0;
     mapModeStatic = 0;
 
-    if ( ( GetGhostMode() & NDb::GHOSTMOVEMODE_IGNORESTATIC ) == 0 )
+    // ghost corridor: static obstacles stay obstacles, the corridor tiles are made passable by GhostCorridorScope
+    const bool corridor = ( GetGhostMode() & GHOSTMOVE_CORRIDOR_FLAG ) != 0;
+    if ( corridor || ( GetGhostMode() & NDb::GHOSTMOVEMODE_IGNORESTATIC ) == 0 )
       mapModeStatic |= MAP_MODE_STATIC;
-    if ( ( GetGhostMode() & NDb::GHOSTMOVEMODE_IGNOREBUILDINGS ) == 0 )
+    if ( corridor || ( GetGhostMode() & NDb::GHOSTMOVEMODE_IGNOREBUILDINGS ) == 0 )
       mapModeStatic |= MAP_MODE_BUILDING;
     if ( ( GetGhostMode() & NDb::GHOSTMOVEMODE_IGNOREDYNAMIC ) == 0 )
       mapMode |= MAP_MODE_DYNAMIC;
@@ -189,6 +266,7 @@ void MovingUnit::InitMapMode()
 void MovingUnit::RecalculateGhostMode()
 {
   curGhostMode = 0;
+  int staticsIgnoredByOthers = 0;
 
   for ( int i = ghostMode.size() - 1; i >= 0; i-- )
   {
@@ -200,8 +278,14 @@ void MovingUnit::RecalculateGhostMode()
     else
     {
       curGhostMode |= ghostMode[i].mode;
+      if ( ( ghostMode[i].mode & GHOSTMOVE_CORRIDOR_FLAG ) == 0 )
+        staticsIgnoredByOthers |= ghostMode[i].mode & ( NDb::GHOSTMOVEMODE_IGNORESTATIC | NDb::GHOSTMOVEMODE_IGNOREBUILDINGS );
     }
   }
+
+  // another ghost mode lets the unit through static obstacles everywhere (a jump, a throw): no corridor restriction
+  if ( staticsIgnoredByOthers != 0 )
+    curGhostMode &= ~GHOSTMOVE_CORRIDOR_FLAG;
 }
 
 void MovingUnit::ApplyGhostMode()
@@ -774,6 +858,7 @@ struct PathChecker : public IPathValidator
 
 bool MovingUnit::MoveToShort(CVec2 dest)
 {
+  GhostCorridorScope corridorScope( *this );
   MapModeChanger mode(mapModeAll, pMap);
   const bool wasDirect = directMove;    // stale tile path after direct movement: rebuild it (see RecomputePath)
   directMove = false;
@@ -822,6 +907,7 @@ bool MovingUnit::MoveToShort(CVec2 dest)
 
 bool MovingUnit::RecomputePath(int allowedOverhead)
 {
+  GhostCorridorScope corridorScope( *this );
 	MapModeChanger mode(mapModeAll, pMap);
   // After straight (direct) movement the tile path was never advanced, its progress is far behind the unit:
   // recalculating it would send the unit BACK along old tiles. Build a fresh path from the current position.
@@ -1173,6 +1259,7 @@ void MovingUnit::MoveTo( PFBaseUnit* target, float stopDistance, IPointChecking*
 
 void MovingUnit::MoveToInternal( const CVec2& target, float _stopDistance, IPointChecking* pointChecking )
 {
+  GhostCorridorScope corridorScope( *this );
 	CVec2 roundedTarget = pMap->GetPointByTile( pMap->GetTile( target ) );	// round target position to a nearest tile
 	CVec2 realTarget    = GetOrigin( roundedTarget );	  										// unit center -> unit origin
 	// reject repeated MoveTo() commands when target is not changed
@@ -1669,10 +1756,18 @@ void MovingUnit::PreStep(float timeDelta)
 // called from UpdateMovements() (after collision) -> PFBaseMovingUnit::MovingUnitStep()
 void MovingUnit::MovingUnitStep(float timeDelta)
 {
+  GhostCorridorScope corridorScope( *this );
   NI_PROFILE_FUNCTION
-  
+
 	if (moveState == MOVE_STATE_DEAD)
 		return;
+
+  // the ghost corridor appeared or reached the end of the flight laying it (the jellyfish trail): take the path along it
+  // at once instead of the path around the obstacles taken before
+  const int corridorSignature = corridorScope.GetSignature();
+  if ( corridorSignature > ghostCorridorSignature )
+    RepathForGhostCorridor();
+  ghostCorridorSignature = corridorSignature;
 
 	if (timeDelta <= 0.001f)		// skip zero timeDelta
 		return;
@@ -1796,6 +1891,91 @@ bool MovingUnit::IsTerrainNative( SVector tile ) const
 bool MovingUnit::IsTerrainNative() const
 {
   return IsTerrainNative( pOwner->GetPos().x, pOwner->GetPos().y );
+}
+
+// The nearest free place (static obstacles only) from which a large open area is reachable: a road, not a small
+// clearing enclosed by a forest. Deterministic: tiles are checked ring by ring around the position.
+bool MovingUnit::FindRoadPlace( CVec2 const& position, float radius, CVec2& foundPosition )
+{
+  const int roadAreaTiles = 3000;           // ~1200 m2: a clearing inside a forest is smaller
+
+  MapModeChanger mode( MAP_MODE_ALL_STATICS, pMap );
+
+  const int unitRadius   = pOwner->GetUnitRadius();
+  const int sizeX        = pMap->GetSizeX();
+  const int sizeY        = pMap->GetSizeY();
+  const int searchRadius = Round( radius / pMap->GetTileSize() );
+  const SVector center   = pMap->GetTile( GetOrigin( position ) );
+
+  vector<int> fillIds;
+  fillIds.resize( sizeX * sizeY );
+  for ( int i = 0; i < fillIds.size(); ++i )
+    fillIds[i] = 0;
+  vector<SVector> queue;
+  int fillId = 0;
+
+  for ( int dist = 0; dist <= searchRadius; ++dist )
+  {
+    const int sideCount = ( dist == 0 ) ? 1 : 8 * dist;
+    for ( int k = 0; k < sideCount; ++k )
+    {
+      // k-th tile of the square ring at the distance dist
+      SVector tile = center;
+      if ( dist > 0 )
+      {
+        const int side = k / ( 2 * dist ), step = k % ( 2 * dist );
+        if ( side == 0 )      { tile.x += -dist + step; tile.y -= dist; }
+        else if ( side == 1 ) { tile.x += dist;         tile.y += -dist + step; }
+        else if ( side == 2 ) { tile.x += dist - step;  tile.y += dist; }
+        else                  { tile.x -= dist;         tile.y += dist - step; }
+      }
+      if ( pMap->IsPointOutsideMap( tile.x, tile.y ) || fillIds[tile.y * sizeX + tile.x] != 0 || !pMap->CanUnitGo( unitRadius, tile ) )
+        continue;
+
+      // flood fill from the tile: a small enclosed area is a clearing, its tiles are not checked again
+      ++fillId;
+      queue.clear();
+      queue.push_back( tile );
+      fillIds[tile.y * sizeX + tile.x] = fillId;
+      for ( int head = 0; head < queue.size() && queue.size() < roadAreaTiles; ++head )
+      {
+        const SVector t = queue[head];
+        const SVector neighbours[4] = { SVector( t.x + 1, t.y ), SVector( t.x - 1, t.y ), SVector( t.x, t.y + 1 ), SVector( t.x, t.y - 1 ) };
+        for ( int n = 0; n < 4; ++n )
+        {
+          const SVector& nt = neighbours[n];
+          if ( pMap->IsPointOutsideMap( nt.x, nt.y ) || fillIds[nt.y * sizeX + nt.x] != 0 || !pMap->CanUnitGo( unitRadius, nt ) )
+            continue;
+          fillIds[nt.y * sizeX + nt.x] = fillId;
+          queue.push_back( nt );
+        }
+      }
+
+      if ( queue.size() >= roadAreaTiles )
+      {
+        foundPosition = GetCenter( pMap->GetPointByTile( tile ) );
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// The ghost corridor appeared or got longer while the unit moves: build the path to the same target again, so that it goes
+// along the corridor (see GhostCorridorScope)
+void MovingUnit::RepathForGhostCorridor()
+{
+  if ( moveState == MOVE_STATE_IDLE || moveState == MOVE_STATE_DEAD || moveState == MOVE_STATE_SPECIAL_MOVE || moveState == MOVE_STATE_MOUNTED )
+    return;
+
+  const CVec2 lastTarget = vLastMoveTarget;
+  const CVec2 target     = directMove ? vDirectTarget : GetCenter( lastTarget );
+  const float distance   = stopDistance;
+  // the range checking made by MoveToInternal for stopDistance is made again there; an external one is kept
+  IPointChecking * pExternalChecking = ( distance == 0.0f ) ? pChecking.GetPtr() : 0;
+
+  vLastMoveTarget = CVec2( -1.0e6f, -1.0e6f );   // MoveToInternal rejects the same target
+  MoveToInternal( target, distance, pExternalChecking );
 }
 
 bool MovingUnit::CanOccupyPosition( CVec2 const& position )

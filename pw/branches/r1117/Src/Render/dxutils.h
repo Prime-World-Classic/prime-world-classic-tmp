@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Vendor/DirectX/Include/d3d9.h"
-#include "Vendor/DirectX/Include/d3dx9.h"
+#include "Vendor/DirectX/Include/d3dx9.h"  // D3DX* (ReadDDS/TextureManager/shadercompiler берут его транзитивно)
 
 #include "DxIntrusivePtr.h"
-#include "DeviceLost.h"
+#include "Reallocate.h"
+#include "locktype.h"   // Render::ERenderLockType — режим блокировки буфера
 
 template<typename T>
 T* Get(T* &p)
@@ -12,7 +13,7 @@ T* Get(T* &p)
   return p;
 }
 
-class DXVertexBufferDynamicRef : public Render::DeviceLostHandler
+class DXVertexBufferDynamicRef : public Render::ReallocateHandler
 {
   DXVertexBufferRef pDXBuffer;
   UINT size;
@@ -23,7 +24,7 @@ protected:
 
 public:
   typedef IDirect3DVertexBuffer9 Iface;
-  typedef Render::DeviceLostWrapper<DXVertexBufferDynamicRef> Wrapped;
+  typedef Render::ReallocateWrapper<DXVertexBufferDynamicRef> Wrapped;
 
   bool Resize(int size, bool nullOnLostDevice = false);
   UINT GetSize() const { return size; }
@@ -34,12 +35,12 @@ public:
   IDirect3DVertexBuffer9* __gEt__() const { return Get(pDXBuffer); }
 
   // Handle lost device
-  virtual void OnDeviceLost() 
+  virtual void OnResourcesRelease() 
 	{ 
 		NI_ASSERT( size > 0 || !pDXBuffer, "Invalid dynamic VB size"); 
 		pDXBuffer = 0; 
 	}
-  virtual void OnDeviceReset();
+  virtual void OnResourcesReallocate();
 };
 
 inline IDirect3DVertexBuffer9* Get(DXVertexBufferDynamicRef const& sp)
@@ -48,7 +49,7 @@ inline IDirect3DVertexBuffer9* Get(DXVertexBufferDynamicRef const& sp)
 }
 
 template<UINT elemSize>
-class DXIndexBufferDynamicRef_ : public Render::DeviceLostHandler
+class DXIndexBufferDynamicRef_ : public Render::ReallocateHandler
 {
   DXIndexBufferRef pDXBuffer;
   UINT size;
@@ -60,7 +61,7 @@ protected:
 
 public:
   typedef IDirect3DIndexBuffer9 Iface;
-  typedef Render::DeviceLostWrapper<DXIndexBufferDynamicRef_> Wrapped;
+  typedef Render::ReallocateWrapper<DXIndexBufferDynamicRef_> Wrapped;
 
   bool Resize(int _size);
   UINT GetSize() const { return size; }
@@ -71,13 +72,13 @@ public:
   IDirect3DIndexBuffer9* __gEt__() const { return Get(pDXBuffer); }
 
   // Handle lost device
-  virtual void OnDeviceLost()
+  virtual void OnResourcesRelease()
 	{ 
 		NI_ASSERT( size > 0 || !pDXBuffer, "Invalid dynamic IB size"); 
 		pDXBuffer = 0; 
 	}
 
-  virtual void OnDeviceReset();
+  virtual void OnResourcesReallocate();
 };
 
 typedef DXIndexBufferDynamicRef_<32> DXIndexBufferDynamicRef;
@@ -120,12 +121,6 @@ class SharedD3DBufferST : protected _DynBuffer
   float minSizeScale;
   bool  isLocked;
 
-  enum LOCK_FLAGS
-  {
-    LOCKFLAGS_FLUSH  = D3DLOCK_DISCARD,
-    LOCKFLAGS_APPEND = D3DLOCK_NOOVERWRITE
-  };
-
   void Init() // Call this ONCE in constructor
   {
     ptr = 0; position = 0; timeStamp = 0;
@@ -161,8 +156,8 @@ public :
 
   void Clear() { CheckForST(); Reset(); _DynBuffer::Reset(); }
 
-  virtual void OnDeviceLost()  { CheckForST(); Reset(); _DynBuffer::OnDeviceLost(); }
-  virtual void OnDeviceReset() { CheckForST(); _DynBuffer::OnDeviceReset(); }
+  virtual void OnResourcesRelease()  { CheckForST(); Reset(); _DynBuffer::OnResourcesRelease(); }
+  virtual void OnResourcesReallocate() { CheckForST(); _DynBuffer::OnResourcesReallocate(); }
 
   UINT GetSize()  const  { CheckForST(); return _DynBuffer::GetSize(); }
   UINT GetTimeStamp() const { CheckForST(); return timeStamp; }
@@ -197,7 +192,7 @@ public :
   {
     CheckForST();
     if(isLocked) {
-      (*this)->Unlock();
+      BackendUnlockBuffer(Get(*this));
       isLocked = false;
     }
   }
@@ -222,9 +217,9 @@ public :
   }
 };  // class SharedD3DBufferST
 
-// DeviceLostWrapper MUST be terminal class! Don't inherit from SharedVB, only from SharedD3DBufferST!
-typedef DeviceLostWrapper< SharedD3DBufferST<DXVertexBufferDynamicRef> > SharedVB;
-typedef DeviceLostWrapper< SharedD3DBufferST<DXIndexBufferDynamicRef> >  SharedIB;
+// ReallocateWrapper MUST be terminal class! Don't inherit from SharedVB, only from SharedD3DBufferST!
+typedef ReallocateWrapper< SharedD3DBufferST<DXVertexBufferDynamicRef> > SharedVB;
+typedef ReallocateWrapper< SharedD3DBufferST<DXIndexBufferDynamicRef> >  SharedIB;
 
 
 //==== SharedD3DBufferST helper - holds info about acquired buffer space ====================================
@@ -269,20 +264,31 @@ enum PoolType
 
 void GetD3DPoolAndUsagesParamaters(DWORD& usage, D3DPOOL& pool, PoolType poolType);
 
+// Блокировка буферов — за бэкендом (этап 2 плана NVRHI, §2.3): режим приходит
+// из locktype.h, механика (флаги D3D9, а на этапе 3 — кольцо записи и
+// догоняющие барьеры) у бэкенда. Раздельно для VB и IB: в D3D9 это разные
+// COM-интерфейсы, у Lock/Unlock разные слоты vtable, кастом не обойтись.
+INTERMODULE_EXPORT HRESULT BackendLockBuffer(IDirect3DVertexBuffer9* pBuff, unsigned offset, unsigned size,
+                                             ERenderLockType mode, void** ppData);
+INTERMODULE_EXPORT HRESULT BackendLockBuffer(IDirect3DIndexBuffer9* pBuff, unsigned offset, unsigned size,
+                                             ERenderLockType mode, void** ppData);
+INTERMODULE_EXPORT HRESULT BackendUnlockBuffer(IDirect3DVertexBuffer9* pBuff);
+INTERMODULE_EXPORT HRESULT BackendUnlockBuffer(IDirect3DIndexBuffer9* pBuff);
+
 DXVertexBufferRef CreateVB(int size, PoolType type, void const *pData = 0);
-void* LockVB(IDirect3DVertexBuffer9 *pBuff, unsigned int flags, int size = 0);
-void FillVB(IDirect3DVertexBuffer9 *pBuff, int size, void const *pData, unsigned int lockFlags = 0);
+void* LockVB(IDirect3DVertexBuffer9 *pBuff, ERenderLockType mode, int size = 0);
+void FillVB(IDirect3DVertexBuffer9 *pBuff, int size, void const *pData, ERenderLockType lockFlags = LOCK_DEFAULT);
 
 template <typename T>
-T* LockVB(IDirect3DVertexBuffer9 *pBuff, unsigned int flags, int size = 0)
+T* LockVB(IDirect3DVertexBuffer9 *pBuff, ERenderLockType mode, int size = 0)
 {
-	return reinterpret_cast<T*>( LockVB(pBuff, flags, size) );
+	return reinterpret_cast<T*>( LockVB(pBuff, mode, size) );
 }
 
 DXIndexBufferRef CreateIB(int size, PoolType poolType, UINT const *pData = 0);
 DXIndexBufferRef CreateIB16(int size, PoolType poolType, WORD const *pData = 0);
-unsigned int* LockIB(IDirect3DIndexBuffer9 *pBuff, unsigned int flags, int size = 0);
-void FillIB(IDirect3DIndexBuffer9 *pBuff, int size, void const *pData, unsigned int lockFlags);
+unsigned int* LockIB(IDirect3DIndexBuffer9 *pBuff, ERenderLockType mode, int size = 0);
+void FillIB(IDirect3DIndexBuffer9 *pBuff, int size, void const *pData, ERenderLockType lockFlags);
 
 int D3DFormatNumBits(D3DFORMAT format);
 
@@ -436,10 +442,10 @@ private:
   Type p;
 };
 
-// holder for resources listening for OnDeviceLost
+// holder for resources listening for OnResourcesRelease
 // Initializer class must provide Delete(Initializer::Type &p) and Init(Initializer::Type &p)
 template<class Initializer>
-struct DefPoolResource : public Initializer, public DeviceLostHandler
+struct DefPoolResource : public Initializer, public ReallocateHandler
 {
   typedef typename Initializer::Type Type;
   typedef typename Shims::PointedType<Type>::pointer Pointer;
@@ -448,7 +454,7 @@ struct DefPoolResource : public Initializer, public DeviceLostHandler
   DefPoolResource(const Initializer& _initializer) : Initializer(_initializer), p() {}
   ~DefPoolResource() { Initializer::Delete(p); }
 
-  virtual void OnDeviceLost()
+  virtual void OnResourcesRelease()
   {
     Initializer::Delete(p);
   }

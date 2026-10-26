@@ -305,9 +305,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FSQAAAAFAAAALAAAAEUAAAB7AAAAmwAAALsAAABHNzkyAAAAAEc3OTIAAAAARzc5MgAAAABHNzk1X0FjdGl2ZQBVi+yD7ChWaAAAAACLRQiLEItNCIuCqAEAAP/QhcB0KmgIAAAAi00IixGLTQiLgqgBAAD/0IlF/ItN/IsRi038i0IE/9CIRfvrBMZF+wAPtk37hcl0N2gQAAAAi1UIiwKLTQiLkKgBAAD/0olF9ItFDFCLTQhRaBgAAACLVfSLAotN9ItQUP/S2V3w6wXZ7tld8NlF8NwdogEAAN/g9sRED4rJAAAAahOLRQiLEItNCIuCLAEAAP/QD7bwahSLTQiLEYtNCIuCLAEAAP/QD7bIO/F+DMdF7AEAAADpgAAAAGoTi1UIiwKLTQiLkCwBAAD/0g+28GoUi0UIixCLTQiLgiwBAAD/0A+2yDvxfQnHRegAAAAA60OLVQiLAotNCIuQyAAAAP/Si0UIixCLTQiLgswAAADdXeD/0Nxd4N/g9sRBegnHRdwBAAAA6wfHRdwAAAAAi03ciU3oi1XoiVXsg33sAHUJx0XYAQAAAOsHx0XYAAAAAIpF2F6L5V3DAAAAAAAA8D8AAAAA</compiledString>
+					<compiledString>FSQAAAAFAAAALAAAAEUAAAB7AAAAmwAAALsAAABHNzkyAAAAAEc3OTIAAAAARzc5MgAAAABHNzk1X0FjdGl2ZQBVi+yD7ChWaAAAAACLRQiLEItNCIuCqAEAAP/QhcB0KmgIAAAAi00IixGLTQiLgqgBAAD/0IlF/ItN/IsRi038i0IE/9CIRfvrBMZF+wAPtk37hcl0N2gQAAAAi1UIiwKLTQiLkKgBAAD/0olF9ItFDFCLTQhRaBgAAACLVfSLAotN9ItQUP/S2V3w6wXZ7tld8NlF8NwdogEAAN/g9sRED4rJAAAAahOLRQyLEItNDIuCLAEAAP/QD7bwahSLTQyLEYtNDIuCLAEAAP/QD7bIO/F+DMdF7AEAAADpgAAAAGoTi1UMiwKLTQyLkCwBAAD/0g+28GoUi0UMixCLTQyLgiwBAAD/0A+2yDvxfQnHRegAAAAA60OLVQyLAotNDIuQyAAAAP/Si0UMixCLTQyLgswAAADdXeD/0Nxd4N/g9sRBegnHRdwBAAAA6wfHRdwAAAAAi03ciU3oi1XoiVXsg33sAHUJx0XYAQAAAOsHx0XYAAAAAIpF2F6L5V3DAAAAAAAA8D8AAAAA</compiledString>
 					<returnType>bool</returnType>
-					<sString>talconst("G792","G795_Active") == 1 &amp;&amp; !(pFirst-&gt;IsRecommended(19) &gt; pFirst-&gt;IsRecommended(20) ? 1 : pFirst-&gt;IsRecommended(19) &lt; pFirst-&gt;IsRecommended(20) ? 0 : sBaseStamina&gt;=sBaseWill)</sString>
+					<sString>talconst("G792","G795_Active") == 1 &amp;&amp; !(pSecond-&gt;IsRecommended(19) &gt; pSecond-&gt;IsRecommended(20) ? 1 : pSecond-&gt;IsRecommended(19) &lt; pSecond-&gt;IsRecommended(20) ? 0 : rBaseStamina&gt;=rBaseWill)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -352,9 +352,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FSQAAAAFAAAALAAAAEUAAAB7AAAAmwAAALsAAABHNzkyAAAAAEc3OTIAAAAARzc5MgAAAABHNzk1X0FjdGl2ZQBVi+yD7ChWaAAAAACLRQiLEItNCIuCqAEAAP/QhcB0KmgIAAAAi00IixGLTQiLgqgBAAD/0IlF/ItN/IsRi038i0IE/9CIRfvrBMZF+wAPtk37hcl0N2gQAAAAi1UIiwKLTQiLkKgBAAD/0olF9ItFDFCLTQhRaBgAAACLVfSLAotN9ItQUP/S2V3w6wXZ7tld8NlF8NwdogEAAN/g9sRED4rJAAAAahOLRQiLEItNCIuCLAEAAP/QD7bwahSLTQiLEYtNCIuCLAEAAP/QD7bIO/F+DMdF7AEAAADpgAAAAGoTi1UIiwKLTQiLkCwBAAD/0g+28GoUi0UIixCLTQiLgiwBAAD/0A+2yDvxfQnHRegAAAAA60OLVQiLAotNCIuQyAAAAP/Si0UIixCLTQiLgswAAADdXeD/0Nxd4N/g9sRBegnHRdwBAAAA6wfHRdwAAAAAi03ciU3oi1XoiVXsg33sAHQJx0XYAQAAAOsHx0XYAAAAAIpF2F6L5V3DAAAAAAAA8D8AAAAA</compiledString>
+					<compiledString>FSQAAAAFAAAALAAAAEUAAAB7AAAAmwAAALsAAABHNzkyAAAAAEc3OTIAAAAARzc5MgAAAABHNzk1X0FjdGl2ZQBVi+yD7ChWaAAAAACLRQiLEItNCIuCqAEAAP/QhcB0KmgIAAAAi00IixGLTQiLgqgBAAD/0IlF/ItN/IsRi038i0IE/9CIRfvrBMZF+wAPtk37hcl0N2gQAAAAi1UIiwKLTQiLkKgBAAD/0olF9ItFDFCLTQhRaBgAAACLVfSLAotN9ItQUP/S2V3w6wXZ7tld8NlF8NwdogEAAN/g9sRED4rJAAAAahOLRQyLEItNDIuCLAEAAP/QD7bwahSLTQyLEYtNDIuCLAEAAP/QD7bIO/F+DMdF7AEAAADpgAAAAGoTi1UMiwKLTQyLkCwBAAD/0g+28GoUi0UMixCLTQyLgiwBAAD/0A+2yDvxfQnHRegAAAAA60OLVQyLAotNDIuQyAAAAP/Si0UMixCLTQyLgswAAADdXeD/0Nxd4N/g9sRBegnHRdwBAAAA6wfHRdwAAAAAi03ciU3oi1XoiVXsg33sAHQJx0XYAQAAAOsHx0XYAAAAAIpF2F6L5V3DAAAAAAAA8D8AAAAA</compiledString>
 					<returnType>bool</returnType>
-					<sString>talconst("G792","G795_Active") == 1 &amp;&amp; (pFirst-&gt;IsRecommended(19) &gt; pFirst-&gt;IsRecommended(20) ? 1 : pFirst-&gt;IsRecommended(19) &lt; pFirst-&gt;IsRecommended(20) ? 0 : sBaseStamina&gt;=sBaseWill)</sString>
+					<sString>talconst("G792","G795_Active") == 1 &amp;&amp; (pSecond-&gt;IsRecommended(19) &gt; pSecond-&gt;IsRecommended(20) ? 1 : pSecond-&gt;IsRecommended(19) &lt; pSecond-&gt;IsRecommended(20) ? 0 : rBaseStamina&gt;=rBaseWill)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>

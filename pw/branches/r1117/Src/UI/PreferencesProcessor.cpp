@@ -369,7 +369,8 @@ Strong<IPrefVar> createControl( FlashInterface *pFlash, const string &varId, con
 // Rows whose variable is not registered in this build are skipped.
 // To add a setting: add one line to s_advancedVars.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-enum EAdvancedControl { ADV_CHECKBOX, ADV_SLIDER, ADV_HEADER, ADV_PAGE, ADV_KEY, ADV_SLOT, ADV_NOTE };
+enum EAdvancedControl { ADV_CHECKBOX, ADV_SLIDER, ADV_HEADER, ADV_PAGE, ADV_KEY, ADV_SLOT, ADV_NOTE, ADV_SLIDER_OFF };
+// ADV_SLIDER_OFF: slider whose left end is "off" (value 0), the other positions go from minValue to maxValue
 // ADV_KEY: varName = bind command, the key is set in Flash; ADV_SLOT: varName = a control of the main settings tab moved
 // to this place by Flash (still driven by the data-defined preferences); ADV_NOTE: small text under the previous row
 
@@ -382,7 +383,8 @@ struct AdvancedVarDesc
   float            maxValue;     // slider: value at the right end
   int              steps;        // slider: number of positions
   const wchar_t *  format;       // slider: value text, printf-like
-  const char *     enabledFrom;  // varId of the checkbox that enables this row ("" = always enabled)
+  const char *     enabledFrom;  // varId of the checkbox that enables this row ("" = always enabled,
+                                 // "!id" = enabled while that checkbox is off)
   const wchar_t *  label;
   const wchar_t *  labelEn;      // English label (client language "en"), ASCII
 };
@@ -449,6 +451,11 @@ static const AdvancedVarDesc s_advancedVars[] =
   { "adv_ping_wheel_scale", "ping_wheel_scale", ADV_SLIDER, 60.0f, 160.0f, 11, L"%.0f%%", "adv_ping_wheel", L"\u0420\u0430\u0437\u043c\u0435\u0440 \u043a\u043e\u043b\u0435\u0441\u0430", L"Wheel size" },
   { "adv_page_game_sound", "", ADV_PAGE, 4.0f, 0.0f, 0, L"", "", L"", L"" },
   { "adv_ping_sound_volume", "ping_sound_volume", ADV_SLIDER, 0.0f, 100.0f, 11, L"%.0f%%", "adv_ping_sound", L"\u0413\u0440\u043e\u043c\u043a\u043e\u0441\u0442\u044c \u0441\u0438\u0433\u043d\u0430\u043b\u043e\u0432", L"Signal volume" }, // Flash puts it into the sound section (no value text)
+  { "adv_hdr_frame_rate", "", ADV_HEADER, 0.0f, 0.0f, 0, L"", "", L"\u0427\u0430\u0441\u0442\u043e\u0442\u0430 \u043a\u0430\u0434\u0440\u043e\u0432", L"Frame Rate" },
+  { "adv_vsync", "gfx_vsync", ADV_CHECKBOX, 0.0f, 0.0f, 0, L"", "", L"\u0412\u0435\u0440\u0442\u0438\u043a\u0430\u043b\u044c\u043d\u0430\u044f \u0441\u0438\u043d\u0445\u0440\u043e\u043d\u0438\u0437\u0430\u0446\u0438\u044f", L"Vertical Sync" },
+  { "adv_note_vsync", "", ADV_NOTE, 0.0f, 0.0f, 0, L"", "", L"\u0423\u0431\u0438\u0440\u0430\u0435\u0442 \u0440\u0430\u0437\u0440\u044b\u0432\u044b, \u043d\u043e FPS \u043d\u0435 \u0432\u044b\u0448\u0435 \u0447\u0430\u0441\u0442\u043e\u0442\u044b \u043c\u043e\u043d\u0438\u0442\u043e\u0440\u0430", L"No tearing, but FPS is capped at the refresh rate" },
+  { "adv_max_fps", "gfx_max_fps", ADV_SLIDER_OFF, 30.0f, 360.0f, 332, L"%.0f", "!adv_vsync", L"\u041e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u0438\u0435 FPS", L"FPS limit" },
+  { "adv_note_max_fps", "", ADV_NOTE, 0.0f, 0.0f, 0, L"", "", L"\u041a\u043e\u043b\u0451\u0441\u0438\u043a\u043e \u043c\u044b\u0448\u0438 \u043d\u0430\u0434 \u043f\u043e\u043b\u0437\u0443\u043d\u043a\u043e\u043c \u2014 \u0442\u043e\u0447\u043d\u043e\u0435 \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u0435", L"Mouse wheel over the slider: exact value" },
 };
 #pragma warning( pop )
 
@@ -502,11 +509,24 @@ private:
   void UpdateValueText()
   {
     const float value = GetVar( desc.varName ).GetFloat();
+    if ( desc.type == ADV_SLIDER_OFF && value <= 0.0f )
+    {
+      pFlash->CallMethod( "SetAdvancedValueText", desc.varId, wstring( GetLanguageShortCode() == "en" ? L"Off" : L"\u0412\u044b\u043a\u043b" ) );
+      return;
+    }
     pFlash->CallMethod( "SetAdvancedValueText", desc.varId, wstring( NStr::StrFmtW( desc.format, value ) ) ); // StrFmtW returns a pointer: pass wstring, not wchar_t*
   }
 
   virtual int convertValueToUI( const VariantValue &val ) const
   {
+    if ( desc.type == ADV_SLIDER_OFF )
+    {
+      // position 0 = off, positions 1 .. steps-1 = minValue .. maxValue
+      if ( val.GetFloat() <= 0.0f || desc.steps < 3 || desc.maxValue <= desc.minValue )
+        return 0;
+      const int pos = 1 + static_cast<int>( ( val.GetFloat() - desc.minValue ) / ( desc.maxValue - desc.minValue ) * ( desc.steps - 2 ) + 0.5f );
+      return pos < 1 ? 1 : ( pos > desc.steps - 1 ? desc.steps - 1 : pos );
+    }
     const float range = desc.maxValue - desc.minValue;
     if ( range <= 0.0f || desc.steps < 2 )
       return 0;
@@ -516,6 +536,12 @@ private:
 
   virtual const VariantValue convertValueFromUI( int val ) const
   {
+    if ( desc.type == ADV_SLIDER_OFF )
+    {
+      if ( val <= 0 || desc.steps < 3 )
+        return VariantValue( 0 );
+      return VariantValue( static_cast<int>( desc.minValue + ( desc.maxValue - desc.minValue ) * ( val - 1 ) / static_cast<float>( desc.steps - 2 ) + 0.5f ) );
+    }
     if ( desc.steps < 2 )
       return VariantValue( desc.minValue );
     return VariantValue( desc.minValue + ( desc.maxValue - desc.minValue ) * val / static_cast<float>( desc.steps - 1 ) );
@@ -598,7 +624,7 @@ void PreferencesProcessor::Init( const NDb::Preferences &desc )
     }
     if( !NGlobal::IsCommandRegistred( adv.varName ) )
       continue;                                   // variable is not present in this build
-    if( adv.enabledFrom[0] != '\0' && variables.find( adv.enabledFrom ) == variables.end() )
+    if( adv.enabledFrom[0] != '\0' && variables.find( adv.enabledFrom + ( adv.enabledFrom[0] == '!' ? 1 : 0 ) ) == variables.end() )
       continue;                                   // parent checkbox was skipped
 
     NDb::PrefVariable &pref = s_advancedPrefVars[i];
@@ -702,6 +728,9 @@ bool PreferencesProcessor::CalcEnabledState( const string &varId ) const
   if( varId.empty() ) 
     return true;
 
+  if( varId[0] == '!' )
+    return !CalcEnabledState( varId.substr( 1 ) ); // enabled while the checkbox is off
+
   Variables::const_iterator it = variables.find( varId );
   
   if( it == variables.end() )
@@ -716,9 +745,12 @@ bool PreferencesProcessor::CalcEnabledState( const string &varId ) const
 
 void PreferencesProcessor::UpdateEnabledState( const string &enabledFromVarId, bool isEnabled )
 {
+  const string inverted = "!" + enabledFromVarId;
   for( Variables::const_iterator it = variables.begin(); it != variables.end(); ++it )
     if( it->second.pDesc->enabledFromOtherVarId == enabledFromVarId )
       it->second.pAbstract->UpdateEnabledState( isEnabled );
+    else if( it->second.pDesc->enabledFromOtherVarId == inverted )
+      it->second.pAbstract->UpdateEnabledState( !isEnabled );
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -729,6 +761,48 @@ void PreferencesProcessor::UpdateValue( const VarData &var, int value )
 
   var.pAbstract->UpdateCurValue( value );
   UpdateEnabledState( var.pDesc->varId, var.pAbstract->GetEnabledStateForDependents() );
+  RefreshSameVariable( var );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// One variable can have two controls: a data-defined one and an "Advanced" row (gfx_vsync: "VSync" of Preferences.xdb has
+// no checkbox in main.swf, the row "adv_vsync" shows it). The other control and its dependent rows show the new value.
+void PreferencesProcessor::RefreshSameVariable( const VarData &var )
+{
+  for( Variables::const_iterator it = variables.begin(); it != variables.end(); ++it )
+  {
+    if( &it->second == &var || it->second.pDesc->commandName != var.pDesc->commandName )
+      continue;
+    it->second.pAbstract->UpdateEnabledState( CalcEnabledState( it->second.pDesc->enabledFromOtherVarId ) );
+    UpdateEnabledState( it->second.pDesc->varId, it->second.pAbstract->GetEnabledStateForDependents() );
+  }
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// An "Advanced" row is applied at once: when it changes a variable of a data-defined control, the apply command of that
+// control runs now (gfx_vsync -> render_apply_present_params), and the change is not left for "Apply" / "Cancel".
+void PreferencesProcessor::ApplyAdvancedRow( const string &varId )
+{
+  Variables::const_iterator changed = variables.find( varId );
+  if( changed == variables.end() || !changed->second.pDesc->applyCommandName.empty() )
+    return;
+
+  typedef set<string> ApplyCommands;
+  ApplyCommands applyCommands;
+  for( Variables::iterator it = variables.begin(); it != variables.end(); ++it )
+  {
+    if( it->first == varId || it->second.pDesc->commandName != changed->second.pDesc->commandName )
+      continue;
+    if( NeedToApplyCommand( it->second ) )
+      applyCommands.insert( it->second.pDesc->applyCommandName );
+    it->second.defaultValue = it->second.pAbstract->GetCurrValue();
+  }
+
+  for( ApplyCommands::iterator it = applyCommands.begin(); it != applyCommands.end(); ++it )
+  {
+    DebugTrace( "RunCommand: %s", it->c_str() );
+    NGlobal::RunCommand( NStr::ToUnicode( *it ) );
+  }
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -847,6 +921,7 @@ void PreferencesProcessor::OnFSCommand( UI::FlashContainer2* _wnd, const char* l
     
     sscanf_s( args, "%d", &value );
     UpdateValue( varId, value );
+    ApplyAdvancedRow( varId );
   }
   else if( strcmp(listenerID, szLoadPresetFlashCommand) == 0 )
   {  

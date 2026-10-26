@@ -61,100 +61,6 @@ void SHShaderConstants::Export(vector<float>& _dst) const
 }
 
 
-void EvaluateSHCoeffsForCubeMap(const TextureCubeRef &pCube, SHCoeffs &coeffs)
-{
-	D3DXSHProjectCubeMap(3, pCube->GetDXTexture(), &(coeffs.coeffs[0][0]), &(coeffs.coeffs[1][0]), &(coeffs.coeffs[2][0]));
-
-//   float ROut[9], GOut[9], BOut[9];
-//   D3DXSHProjectCubeMap(3, pCube->GetDXTexture(), ROut, GOut, BOut);
-//   float	gEnvIntensity = 1;
-//   const int ENV_SH_ORDER = 3;
-// 
-//   // Convert coeffs & save to grid
-//   D3DXSHScale( coeffs.RCoeffs(), ENV_SH_ORDER, ROut, gEnvIntensity );
-//   D3DXSHScale( coeffs.GCoeffs(), ENV_SH_ORDER, GOut, gEnvIntensity );
-//   D3DXSHScale( coeffs.BCoeffs(), ENV_SH_ORDER, BOut, gEnvIntensity );
-
-}
-
-void EvaluateSHCoeffsFor2DTexture(Texture2DRef const &pTarget, Texture2DRef const &pWeightsTexture, SHCoeffs &coeffs)
-{
-  RenderState renderState;
-  renderState.SetBlendMode(NDb::BLENDMODE_OFF);
-  renderState.SetAlphaTest(NDb::ONOFFSTATE_OFF);
-  renderState.SetCulling(NDb::ONOFFSTATE_OFF);
-  GetStatesManager()->SetState(renderState);
-  GetStatesManager()->SetStateDirect(D3DRS_ZENABLE, 0);
-  GetStatesManager()->SetStateDirect(D3DRS_ZWRITEENABLE, 0);
-  GetStatesManager()->SetStateDirect(D3DRS_SEPARATEALPHABLENDENABLE, 0);
-
-
-  D3DSURFACE_DESC dd;
-  pTarget->GetDXTexture()->GetLevelDesc(0, &dd);
-  int dimension = dd.Width;
-  Texture2DRef pProject0 = CreateRenderTexture2D(9 * dimension / 2, dimension / 2, FORMAT_A32B32G32R32F);
-
-  GetStatesManager()->SetSampler(0, SamplerState::PRESET_WRAP_POINT(), pTarget);
-  GetStatesManager()->SetSampler(1, SamplerState::PRESET_WRAP_POINT(), pWeightsTexture);
-  SmartRenderer::BindRenderTarget(pProject0);
-  GetRenderer()->SetPixelShaderConstantsFloat( PSHADER_LOCALCONST0, 1.f / dimension );
-
-  GetRenderer()->BeginScene();
-  GetImmRenderer()->RenderScreenQuad(ImmRenderer::Params("SH"));
-  GetRenderer()->EndScene();
-#ifdef DEBUG_SH
-  D3DXSaveTextureToFile("Z:/tst_tex/project.dds", D3DXIFF_DDS, pProject0->GetDXTexture(), NULL);
-  {
-    Texture2DRef pProj00 = CreateTexture2D(9 * dimension / 2, dimension / 2, 0, RENDER_POOL_SYSMEM, FORMAT_A32B32G32R32F);
-    GetDevice()->GetRenderTargetData(::Get(pProject0->GetSurface(0)), ::Get(pProj00->GetSurface(0)));
-    LockedRect lr = pProj00->LockRect(0, LOCK_DEFAULT);
-    float coeffs[10000];
-    CopyMemory(coeffs, lr.data, min(lr.pitch * dimension / 2, 10000));
-  }
-#endif // DEBUG_SH
-  int dim = dimension / 4;
-  Texture2DRef pProjectSrc = pProject0, pProjectDst;
-  while (dim > 0)
-  {
-    pProjectDst = CreateRenderTexture2D(9 * dim, dim, FORMAT_A32B32G32R32F);
-
-    GetStatesManager()->SetSampler(0, SamplerState::PRESET_WRAP_POINT(), pProjectSrc);
-    SmartRenderer::BindRenderTarget(pProjectDst);
-    GetRenderer()->SetPixelShaderConstantsFloat( PSHADER_LOCALCONST0, .5f / dim);
-
-    GetRenderer()->BeginScene();
-    GetImmRenderer()->RenderScreenQuad(ImmRenderer::Params("SH2"));
-    GetRenderer()->EndScene();
-    pProjectSrc = pProjectDst;
-#ifdef DEBUG_SH
-    D3DXSaveTextureToFile("Z:/tst_tex/project.dds", D3DXIFF_DDS, pProjectDst->GetDXTexture(), NULL);
-    {
-      Texture2DRef pProj = CreateTexture2D(9 * dim, dim, 0, RENDER_POOL_SYSMEM, FORMAT_A32B32G32R32F);
-      GetDevice()->GetRenderTargetData(::Get(pProjectDst->GetSurface(0)), ::Get(pProj->GetSurface(0)));
-      LockedRect lr = pProj->LockRect(0, LOCK_DEFAULT);
-      float coeffs[10000];
-      CopyMemory(coeffs, lr.data, min(lr.pitch * dim, 10000));
-    }
-#endif // DEBUG_SH
-
-    dim /= 2;
-  }
-
-  Texture2DRef pRes = CreateTexture2D(9, 1, 0, RENDER_POOL_SYSMEM, FORMAT_A32B32G32R32F);
-  GetDevice()->GetRenderTargetData(::Get(pProjectDst->GetSurface(0)), ::Get(pRes->GetSurface(0)));
-  LockedRect lr = pRes->LockRect(0, LOCK_DEFAULT);
-  float rawCoeffs[4 * 9];
-  CopyMemory(rawCoeffs, lr.data, 9 * 4 * sizeof(float));
-
-  for (int i = 0; i < 9; i++)
-  {
-    coeffs.RCoeffs()[i] = rawCoeffs[4 * i + 0];
-    coeffs.GCoeffs()[i] = rawCoeffs[4 * i + 1];
-    coeffs.BCoeffs()[i] = rawCoeffs[4 * i + 2];
-  }
-  pRes->UnlockRect(0);
-}
-
 void ConvertSHCoeffs2ShaderConstants(const SHCoeffs &c, SHShaderConstants &s)
 {
 	// Lighting environment coefficients
@@ -163,7 +69,7 @@ void ConvertSHCoeffs2ShaderConstants(const SHCoeffs &c, SHShaderConstants &s)
 	// These constants are described in the article by Peter-Pike Sloan titled 
 	// "Efficient Evaluation of Irradiance Environment Maps" in the book 
 	// "ShaderX 2 - Shader Programming Tips and Tricks" by Wolfgang F. Engel.
-	static const float s_fSqrtPI = ((float)sqrtf(D3DX_PI));
+	static const float s_fSqrtPI = ((float)sqrtf(3.14159265358979323846f)); // = D3DX_PI
 	const float fC0 = 1.0f/(2.0f*s_fSqrtPI);
 	const float fC1 = (float)sqrt(3.0f)/(3.0f*s_fSqrtPI);
 	const float fC2 = (float)sqrt(15.0f)/(8.0f*s_fSqrtPI);
@@ -238,21 +144,47 @@ void EvaluateLightingBySHShaderConstants(const SHShaderConstants &consts, const 
 //   if ( color.B < 0.f ) color.B = 0.f;
 }
 
+namespace
+{
+  // Константы сняты битами с настоящей d3dx9_43.dll (x64) — базис, знаки и
+  // значения восстанавливает прогон tools/sh_math_test (README там же).
+  // Базис: ортонормированные вещественные сферические гармоники в порядке
+  // индексов D3DX; ЗНАК у x и y отрицательный (D3DX — левая система
+  // координат), l=2,m=0 = (3z^2-1)/2.
+  inline float FBits(unsigned b) { float f; memcpy(&f, &b, sizeof(f)); return f; }
+
+  void EvalDirLightSH(const CVec3 &dir, float I, float *sh)
+  {
+    const float c0 = FBits(0x3F558751);  // 0.834096014
+    const float c1 = FBits(0x3FB8EBD2);  // 1.444696665
+    const float c2 = FBits(0x404EBF89);  // 3.230440378
+    const float c3 = FBits(0x3FEEBB70);  // 1.865095139
+    const float c4 = FBits(0x3FCEBF88);  // 1.615220070
+
+    const float x = dir.x, y = dir.y, z = dir.z;
+    sh[0] = c0 * I;
+    sh[1] = (-c1 * y) * I;
+    sh[2] = ( c1 * z) * I;
+    sh[3] = (-c1 * x) * I;
+    sh[4] = (( c2 * x) * y) * I;
+    sh[5] = ((-c2 * y) * z) * I;
+    sh[6] = (c3 * (0.5f * (3.0f * z * z - 1.0f))) * I;
+    sh[7] = ((-c2 * x) * z) * I;
+    sh[8] = (c4 * (x * x - y * y)) * I;
+  }
+}
+
 void EvaluateSHCoeffsForDirLight(const HDRColor &color, const CVec3 &dir, SHCoeffs &coeffs)
 {
-	if( !Renderer::Get()->IsRunningUnderPerfHUD() // Hack, coz PerfHUD can't live with this function
-      && !Compatibility::IsRunnedUnderWine() )
-	{
-		D3DXSHEvalDirectionalLight(3, (const D3DXVECTOR3*)(&dir), color.R, color.G, color.B, 
-													  	 coeffs.RCoeffs(), coeffs.GCoeffs(), coeffs.BCoeffs());
-	}
-	else
-	{
-		memset(&coeffs, 0, sizeof(SHCoeffs));
-		coeffs.RCoeffs()[0] = color.R;
-		coeffs.GCoeffs()[0] = color.B;
-		coeffs.BCoeffs()[0] = color.G;
-	}
+  // D3DXSHEvalDirectionalLight убрана. Причина не только в зависимости от
+  // d3dx9_математики: её же Wine/PerfHUD-фолбэк писал только DC-член и по
+  // пути менял каналы местами (G<->B), т.е. под Wine и под нативным Windows
+  // свет считался по-разному. Теперь считается одинаково. Точность замены
+  // измерена: maxAbs = 9.5e-7 (~1 ULP), maxRel = 4.3e-6 только на вычитании
+  // в члене (3z^2-1)/2 вблизи нуля.
+  EvalDirLightSH(dir, color.R, coeffs.RCoeffs());
+  EvalDirLightSH(dir, color.G, coeffs.GCoeffs());
+  EvalDirLightSH(dir, color.B, coeffs.BCoeffs());
 }
 
 }

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "shadercompiler.h"
+#include "renderbackend.h"   // seam этапа 2: GetBackend()/Create*Shader
 #include "DxResourcesControl.h"
 #include "../System/InlineProfiler.h"
 
@@ -197,24 +198,21 @@ DXPixelShaderRef CompilePixelShaderFromFile(const char* filename, const ShaderDe
 	//systemLog( NLogg::LEVEL_MESSAGE ) << "deprecated online PS compiling: " << filename << endl;
   ShaderDefines defines(definesTable);
   defines.AddDefine("PS", "1");
-	bool bSupportSM30 = GetRenderer()->GetCaps().bSupportSM30;
-	if (!bSupportSM30)
-	{
-    defines.AddDefine("FORCE_SM20");
-	}
   defines.End();
 
-  CompiledShaderInfo info = CompileShader(filename, defines.Items(), "PS_main", bSupportSM30 ? "ps_3_0" : "ps_2_0");
+  // SM2.0-фолбэк (FORCE_SM20 / ps_2_0) удалён: см. renderer.cpp.
+  CompiledShaderInfo info = CompileShader(filename, defines.Items(), "PS_main", "ps_3_0");
   if (info.isOk())
   {
-    IDirect3DPixelShader9* d3dshader = 0;
-    HRESULT res = GetDevice()->CreatePixelShader(static_cast<DWORD*>(info.code->GetBufferPointer()), &d3dshader);
+    HShader hShader;
+    HRESULT res = GetBackend()->CreatePixelShader(info.code->GetBufferPointer(),
+                                                (unsigned)info.code->GetBufferSize(), &hShader);
     NI_DX_THROW(res, "CreatePixelShader");
 
     info.Clear();
 
     //INCREMENTTIME(shaderCompileTime)
-    return DXPixelShaderRef(d3dshader, false);
+    return DXPixelShaderRef(static_cast<IDirect3DPixelShader9*>(hShader.p), false);
   }
   else
   {
@@ -233,26 +231,24 @@ DXVertexShaderRef CompileVertexShaderFromFile(const char* filename, const Shader
 	////////////////////
   ShaderDefines defines(definesTable);
   defines.AddDefine("VS", "1");
-	bool bSupportSM30 = GetRenderer()->GetCaps().bSupportSM30;
-	if (!bSupportSM30)
-	{
-    defines.AddDefine("FORCE_SM20");
-	}
 	defines.End();
 
-  CompiledShaderInfo info = CompileShader(filename, defines.Items(), "VS_main", bSupportSM30 ? "vs_3_0" : "vs_2_0");
+  // SM2.0-фолбэк (FORCE_SM20 / vs_2_0) удалён: см. renderer.cpp.
+  CompiledShaderInfo info = CompileShader(filename, defines.Items(), "VS_main", "vs_3_0");
   if (info.isOk())
   {
     IDirect3DVertexShader9* d3dshader = 0;
 
     // constant_table
-    HRESULT res = GetDevice()->CreateVertexShader(static_cast<DWORD*>(info.code->GetBufferPointer()), &d3dshader);
+    HShader hShader;
+    HRESULT res = GetBackend()->CreateVertexShader(info.code->GetBufferPointer(),
+                                                (unsigned)info.code->GetBufferSize(), &hShader);
     NI_DX_THROW(res, "CreateVertexShader");
 
     info.Clear();
     //INCREMENTTIME(shaderCompileTime)
 
-    return DXVertexShaderRef(d3dshader, false);
+    return DXVertexShaderRef(static_cast<IDirect3DVertexShader9*>(hShader.p), false);
   }
   else
   {

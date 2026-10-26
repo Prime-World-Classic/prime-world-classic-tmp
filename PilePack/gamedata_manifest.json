@@ -36590,8 +36590,8 @@
     {
       "id": 184,
       "name": "gamedata042.pile",
-      "packed_size": 18308528,
-      "source_size": 63462465,
+      "packed_size": 18309620,
+      "source_size": 63485743,
       "files": [
         ["Items/Talents/Class/Alchemist/status_A1Poison.APLR_description.txt", 484, 1654016972],
         ["Items/Talents/Class/Alchemist/status_A1Poison.APLR_description_en.txt", 484, 2356444648],
@@ -41094,7 +41094,7 @@
         ["Items/Talents/Class/Laguna/Ability_A0.TALENT_description_en.txt", 90, 47084363],
         ["Items/Talents/Class/Laguna/Ability_A0.TALENT_name.txt", 20, 603867201],
         ["Items/Talents/Class/Laguna/Ability_A0.TALENT_name_en.txt", 34, 3997673379],
-        ["Items/Talents/Class/Laguna/Ability_A1.TALENT.xdb", 70979, 1256357222],
+        ["Items/Talents/Class/Laguna/Ability_A1.TALENT.xdb", 94142, 2755466187],
         ["Items/Talents/Class/Laguna/Ability_A1.TALENT_commonDescription.txt", 1340, 1795446694],
         ["Items/Talents/Class/Laguna/Ability_A1.TALENT_commonDescription_en.txt", 1348, 4027315112],
         ["Items/Talents/Class/Laguna/Ability_A1.TALENT_description.txt", 90, 47084363],
@@ -41189,7 +41189,7 @@
         ["Items/Talents/Class/Laguna/status_A1_Burn.APLR_description_en.txt", 476, 3623810626],
         ["Items/Talents/Class/Laguna/status_A1_Burn.APLR_name.txt", 32, 1383554473],
         ["Items/Talents/Class/Laguna/status_A1_Burn.APLR_name_en.txt", 28, 995285717],
-        ["Items/Talents/Class/Laguna/status_A1u_Current.APLR.xdb", 3843, 152356947],
+        ["Items/Talents/Class/Laguna/status_A1u_Current.APLR.xdb", 3958, 900528533],
         ["Items/Talents/Class/Laguna/status_A1u_Current.APLR_description.txt", 396, 3468571695],
         ["Items/Talents/Class/Laguna/status_A1u_Current.APLR_description_en.txt", 400, 1442140280],
         ["Items/Talents/Class/Laguna/status_A1u_Current.APLR_name.txt", 16, 1455709380],

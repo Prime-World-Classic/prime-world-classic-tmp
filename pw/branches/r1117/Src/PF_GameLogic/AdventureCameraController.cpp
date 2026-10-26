@@ -22,7 +22,7 @@ REGISTER_VAR("fixedTeamCam", g_fixedTeamCam, STORAGE_USER)
 // near/far считаютс€ так, чтобы весь уровень (углы и верхн€€ точка рельефа включительно)
 // попал в кадр. ќстальные переменные - ручна€ настройка (0/отрицательное = авторасчЄт).
 static bool  gOverviewOn = false;
-static float gOverviewHeight = 0.f;      // высота камеры; 0 = расчЄт под кадр
+static float gOverviewHeight = 0.f;      // rod (дистанци€ до €кор€); 0 = расчЄт под кадр
 static float gOverviewMargin = 0.08f;    // поле вокруг уровн€ (дол€ полуразмера уровн€)
 static float gOverviewPitch = -90.f;     // градусы; -90 = строго вниз
 static float gOverviewYaw = -999.f;      // градусы; -999 = centerYaw из настроек камеры
@@ -31,6 +31,10 @@ static float gOverviewNearBelow = 120.f; // near = дистанци€ до центра уровн€ ми
 static float gOverviewFarAbove = 80.f;   // far = дистанци€ до дальнего угла плюс это
 static bool  gOverviewLog = true;
 static bool  gOverviewNoEffects = true;  // выключить эффекты камеры (тр€ску)
+static float gOverviewAnchorX = -9999.f; // €корь пресета по X уровн€; -9999 = центр уровн€
+static float gOverviewAnchorY = -9999.f; // €корь пресета по Y уровн€; -9999 = центр уровн€
+static bool  gOverviewPlanes = true;     // подбор near/far под rod; false = near/far основной камеры
+static float gOverviewAnchorZ = 0.f;     // высота €кор€ пресета; 0 = уровень земли
 REGISTER_VAR( "overview_camera", gOverviewOn, STORAGE_NONE )
 REGISTER_VAR( "overview_height", gOverviewHeight, STORAGE_NONE )
 REGISTER_VAR( "overview_margin", gOverviewMargin, STORAGE_NONE )
@@ -41,6 +45,10 @@ REGISTER_VAR( "overview_near_below", gOverviewNearBelow, STORAGE_NONE )
 REGISTER_VAR( "overview_far_above", gOverviewFarAbove, STORAGE_NONE )
 REGISTER_VAR( "overview_log", gOverviewLog, STORAGE_NONE )
 REGISTER_VAR( "overview_no_effects", gOverviewNoEffects, STORAGE_NONE )
+REGISTER_VAR( "overview_x", gOverviewAnchorX, STORAGE_NONE )
+REGISTER_VAR( "overview_y", gOverviewAnchorY, STORAGE_NONE )
+REGISTER_VAR( "overview_planes", gOverviewPlanes, STORAGE_NONE )
+REGISTER_VAR( "overview_z", gOverviewAnchorZ, STORAGE_NONE )
 
 namespace NSoundScene
 {
@@ -809,12 +817,40 @@ namespace NGameX
     // чтобы поворот камеры не срезал уровень, берЄм проекцию пр€моугольника worldSize на оси экрана:
     // при yaw=45 прот€жЄнность по экрану равна полудиагонали, а не половине стороны
     const float yaw = gOverviewYaw < -900.f ? settings.centerYaw : gOverviewYaw * fRad;
-    const float cy = fabsf( cosf( yaw ) ), sy = fabsf( sinf( yaw ) );
+    const float cy = cosf( yaw ), sy = sinf( yaw );
     const float offX = fabsf( settings.centerOffset.x ), offY = fabsf( settings.centerOffset.y );
-    // €корь камеры смещЄн из центра bbox (centerOffset), поэтому опорные прот€жЄнности
-    // считаютс€ от €кор€: иначе дальн€€ сторона уровн€ срезана, ближн€€ имеет запас
-    float extR = ( halfX + offX ) * cy + ( halfY + offY ) * sy;
-    float extF = ( halfX + offX ) * sy + ( halfY + offY ) * cy;
+    // €корь: по умолчанию центр уровн€ (+ centerOffset настроек камеры);
+    // overview_x/overview_y задают локальный €корь пресета (арсенал линии, точка бо€)
+    bool anchorSet = false;
+    float ancX = halfX + settings.centerOffset.x;
+    float ancY = halfY + settings.centerOffset.y;
+    if ( gOverviewAnchorX > -9000.f ) { ancX = gOverviewAnchorX; anchorSet = true; }
+    if ( gOverviewAnchorY > -9000.f ) { ancY = gOverviewAnchorY; anchorSet = true; }
+    // опорные прот€жЄнности уровн€ на ос€х экрана: берутс€ от €кор€,
+    // иначе дальн€€ сторона срезана, ближн€€ имеет запас
+    float extR, extF;
+    if ( !anchorSet )
+    {
+      const float acy = fabsf( cy ), asy = fabsf( sy );
+      extR = ( halfX + offX ) * acy + ( halfY + offY ) * asy;
+      extF = ( halfX + offX ) * asy + ( halfY + offY ) * acy;
+    }
+    else
+    {
+      // локальный €корь: берЄм дальнюю проекцию углов bbox, а не симметричную
+      const float bx[2] = { -offX, gc.worldSize.x + offX };
+      const float by[2] = { -offY, gc.worldSize.y + offY };
+      extR = 0.f; extF = 0.f;
+      for ( int i = 0; i < 2; ++i )
+        for ( int j = 0; j < 2; ++j )
+        {
+          const float dx = bx[i] - ancX, dy = by[j] - ancY;
+          const float pr = fabsf( dx * cy + dy * sy );
+          const float pu = fabsf( -dx * sy + dy * cy );
+          if ( pr > extR ) extR = pr;
+          if ( pu > extF ) extF = pu;
+        }
+    }
     const float tilt = fabsf( gOverviewPitch + 90.f ) * fRad;  // отклонение от вертикали
     extF += zMax * sinf( tilt );           // на наклонной камере высоты лезут в кадр
     const float fitR = extR * ( 1.f + margin ) / tanH;
@@ -822,25 +858,32 @@ namespace NGameX
     const float fit = fitR > fitV ? fitR : fitV;
     const float rod = gOverviewHeight > 1.f ? gOverviewHeight : fit + zMax;
 
-    const float farExtra = gOverviewFarAbove > 0.f ? gOverviewFarAbove : 0.f;
-    const float nearBelow = gOverviewNearBelow > 1.f ? gOverviewNearBelow : 1.f;
-    const float distCorner = sqrtf( rod * rod + halfX * halfX + halfY * halfY );
-    float nearPlane = rod - nearBelow;
-    if ( nearPlane < 1.f )
-      nearPlane = 1.f;
-    const float farPlane = distCorner + farExtra;
-    if ( farPlane <= nearPlane )
-      return false;
+    // near/far: тонкий слэб под дистанцию обзора (на высоте ~1300 точности
+    // глубины не хватает) либо, если overview_planes 0, значени€ основной камеры
+    float nearPlane = 0.f, farPlane = 0.f, distCorner = 0.f;
+    if ( gOverviewPlanes )
+    {
+      const float farExtra = gOverviewFarAbove > 0.f ? gOverviewFarAbove : 0.f;
+      const float nearBelow = gOverviewNearBelow > 1.f ? gOverviewNearBelow : 1.f;
+      distCorner = sqrtf( rod * rod + halfX * halfX + halfY * halfY );
+      nearPlane = rod - nearBelow;
+      if ( nearPlane < 1.f )
+        nearPlane = 1.f;
+      farPlane = distCorner + farExtra;
+      if ( farPlane <= nearPlane )
+        return false;
+    }
 
     NScene::SCameraPosition pos;
-    pos.vAnchor = CVec3( halfX + settings.centerOffset.x, halfY + settings.centerOffset.y, 0.f );
+    pos.vAnchor = CVec3( ancX, ancY, gOverviewAnchorZ );
     pos.fRod = rod;
     pos.fPitch = gOverviewPitch * fRad;
     pos.fYaw = yaw;
     pos.fRoll = 0.f;
 
     pCamera->SetFOV( fov );
-    pCamera->SetPlanes( nearPlane, farPlane );
+    if ( gOverviewPlanes )
+      pCamera->SetPlanes( nearPlane, farPlane );
 
     static bool s_logged = false;
     if ( gOverviewLog && !s_logged )
@@ -850,7 +893,9 @@ namespace NGameX
         << "x" << zMax << ", screen " << sw << "x" << sh << ", ext " << extR << "x" << extF
         << ", fov " << fov << " (corrected "
         << fov * corrector << "), rod " << rod << ", near " << nearPlane << ", far " << farPlane
-        << ", dist to corner " << distCorner << endl;
+        << ", dist to corner " << distCorner << ", anchor " << ancX << "x" << ancY
+        << ", planes " << ( gOverviewPlanes ? "auto" : "camera" )
+        << ", anchorZ " << gOverviewAnchorZ << endl;
     }
 
     *pResultPos = pos;

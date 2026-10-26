@@ -6185,13 +6185,45 @@ static nvrhi::SamplerAddressMode AddressOf(NvrhiBackendImpl& d, unsigned d3dAddr
 }
 
 // подпись одного сэмплера (для кэша объектов сэмплеров)
-static unsigned long long SamplerKeyOf(const BackendSamplerState& s)
+// PW_VK_SHCMP=1 — сэмплер СРАВНЕНИЯ (Dref) для слотов, куда привязана
+// depth-текстура. D3D9/DXVK читает аппаратную карту теней сравнением
+// (в DXVK-капче: сэмплер #13177 compareEnable=1, compareOp=LESS_OR_EQUAL, его
+// дескриптор ci=84825 в одном кластере с view карты #13180 ci=84827), а DXC по
+// обычному `sampler` собирает выборку без Dref — шов получает сырую глубину
+// карты (mean 0.676 по дампу PW_VK_TEXGPU) и ровную пелену α~0.08 вместо
+// силуэта. Разбор — pw-render-ab/references/shadow-chain.md.
+static bool SamplerCmpEnabled()
+{
+  static int v = -1;
+  if (v < 0)
+  {
+    // по умолчанию ВКЛ: сайдкары ShadowPassPCFDST* в контенте уже собираются
+    // с Dref-выборкой (tools/spirv_probe/shim.py), и без comparison-сэмплера
+    // такая выборка невалидна (замер: драйвер возвращает сырую глубину,
+    // т.е. картина откатывается к прежней пелене, но пара «шейдер/сэмплер»
+    // рассинхронизирована). PW_VK_SHCMP=0 — только для A/B со старыми блобами.
+    const char* e = getenv("PW_VK_SHCMP");
+    v = (e && *e) ? atoi(e) : 1;
+  }
+  return v != 0;
+}
+
+static bool DepthBoundAtSlot(NvrhiBackendImpl& d, unsigned slot)
+{
+  if (slot >= kMaxSamplerSlots) return false;
+  const unsigned t = d.texBound[slot];
+  if (t == kNoRes || t >= d.textures.size()) return false;
+  const EBackendFormat f = d.textures[t].seamFormat;
+  return f == bfD16 || f == bfD24S8;
+}
+
+static unsigned long long SamplerKeyOf(const BackendSamplerState& s, bool cmp = false)
 {
   unsigned long long h = 1469598103934665603ull;
   const unsigned vals[] = { s.minFilter, s.magFilter, s.mipFilter, s.addressU,
                             s.addressV, s.addressW, s.borderColor, s.maxAnisotropy,
                             (unsigned)s.maxMipLevel, (unsigned)s.lodBias,
-                            s.set ? 1u : 0u };
+                            s.set ? 1u : 0u, cmp ? 1u : 0u };
   for (size_t i = 0; i < sizeof(vals) / sizeof(vals[0]); ++i)
   {
     h ^= vals[i];
@@ -6252,7 +6284,8 @@ static nvrhi::SamplerHandle FindOrCreateSampler(NvrhiBackendImpl& d, unsigned sl
   }
   const BackendSamplerState& s = d.model.sampler[useSlot];
   if (!s.set) return d.defSampler;      // этого слота модель не касалась
-  unsigned long long key = SamplerKeyOf(s);
+  const bool cmpSmp = SamplerCmpEnabled() && DepthBoundAtSlot(d, useSlot);
+  unsigned long long key = SamplerKeyOf(s, cmpSmp);
   if (forceAddr >= 0) key ^= 0x9e3779b97f4a7c15ull * (unsigned long long)(forceAddr + 1);
   for (size_t i = 0; i < d.samplerCache.size(); ++i)
     if (d.samplerCache[i].first == key) return d.samplerCache[i].second;
@@ -6264,6 +6297,13 @@ static nvrhi::SamplerHandle FindOrCreateSampler(NvrhiBackendImpl& d, unsigned sl
     .setAddressU(AddressOf(d, s.addressU))
     .setAddressV(AddressOf(d, s.addressV))
     .setAddressW(AddressOf(d, s.addressW));
+  if (cmpSmp)
+  {
+    // reductionType==Comparison включает compareEnable у VkSampler; оператор —
+    // LESS_OR_EQUAL, как у DXVK (вендорский дефолт был eLess).
+    sd.reductionType = nvrhi::SamplerReductionType::Comparison;
+    sd.setComparison(nvrhi::ComparisonFunc::LessOrEqual);
+  }
   if (forceAddr >= 0)
   {
     const nvrhi::SamplerAddressMode m = (forceAddr == 3)
@@ -6337,7 +6377,9 @@ static unsigned long long SamplerSetSignature(NvrhiBackendImpl& d, const NvrhiBa
     {
       const unsigned slot = it.binding + e;
       unsigned long long sk = 0;
-      if (slot < kMaxSamplerSlots) sk = SamplerKeyOf(d.model.sampler[slot]);
+      if (slot < kMaxSamplerSlots)
+        sk = SamplerKeyOf(d.model.sampler[slot],
+                          SamplerCmpEnabled() && DepthBoundAtSlot(d, slot));
       h ^= sk;
       h *= 1099511628211ull;
       h ^= slot;

@@ -173,13 +173,14 @@ AUTO_RES = re.compile(r"\b(Texture2D|Texture2DArray|TextureCube|StructuredBuffer
 _TEXCOORD_CTR = [200]
 
 def rewrite(src, stage=None, ps_ret_structs=(), vs_ret_structs=(), set_layout=False,
-            cbank=False, src_path=None):
+            cbank=False, src_path=None, cmp_slots=()):
     notes = []
     # имя текстуры -> номер D3D9-слота; слот -> имя уже объявленного SamplerState
     tex_reg = {}
     state_of_reg = {}
     state_reg_taken = set()
     need_regs = set()   # слоты, реально используемые выборками этого файла
+    n_dref = 0        # подмен tex2Dproj -> SampleCmp (Dref)
     decl_extra = []     # алиасы ресурсов (пер-слотовые элементы массивов)
     if src_path:
         for extra in include_texts(src_path):
@@ -380,9 +381,28 @@ def rewrite(src, stage=None, ps_ret_structs=(), vs_ret_structs=(), set_layout=Fa
         r"\btex2Dlod\s*\(\s*(\w+)\s*,\s*float4\s*\(\s*([^,()]+)\s*,\s*([^,()]+)\s*,\s*[^,()]+\s*,\s*([^,()]+)\s*\)\s*\)",
         lod_sub, src)
     # tex2Dproj( t, float4 ) -> t.Sample(g_smp, c.xy / c.w)
+    # Для слотов из cmp_slots (D3D9-ные depth-выборки: карта теней) — Dref:
+    # tex2Dproj по depth-текстуре в D3D9 = аппаратное сравнение (Dref = c.z/c.w),
+    # в SPIR-V это SampleCmp по SamplerComparisonState, иначе DXC соберёт
+    # обычную выборку и шейдер получит сырую глубину вместо 0/1.
+    dref_slots = set()   # слоты, где реально случилась Dref-подмена
+    def _tex_slot(name):
+        mm = re.match(r"\s*(\w+)", name)
+        return tex_reg.get(mm.group(1)) if mm else None
     def proj_sub(m):
         t, c = m.group(1), m.group(2)
-        return "%s.Sample(%s, (%s).xy / (%s).w)" % (t, smp_for(t)[0], c, c)
+        smp = smp_for(t)[0]
+        if _tex_slot(t) in cmp_slots:
+            nonlocal n_dref
+            n_dref += 1
+            # DXC (SPIR-V) не знает шаблон ComparisonFunc<F> — оператор берётся
+            # из SamplerComparisonState (его ставит seam: reductionType=
+            # Comparison + comparison=LessOrEqual), поэтому форма —
+            # SampleCmp(sampler, uv, refZ).
+            dref_slots.add(_tex_slot(t))
+            return ("%s.SampleCmp(%s, (%s).xy / (%s).w, (%s).z / (%s).w)"
+                    % (t, smp, c, c, c, c))
+        return "%s.Sample(%s, (%s).xy / (%s).w)" % (t, smp, c, c)
     # 2-й аргумент — выражение, а не только имя (замер: UberShadowPassDST.hlsl
     # `tex2Dproj(shadowMap, PositionLS + texelShift.xxzz)` — из-за ограничителя
     # `\w+` ShadowPassPCFDST4/4Add не собирались вообще)
@@ -502,7 +522,8 @@ def rewrite(src, stage=None, ps_ret_structs=(), vs_ret_structs=(), set_layout=Fa
     stats = dict(samplers=n_samp, regs=n_reg, tex2D=n_t2, tex1D=n_t1, texCUBE=n_cube,
                  tex2Dlod=n_lod + n_lod_var + n_lod3, tex2Dproj=n_proj, position=n_pos,
                  color=n_col, ps_position=n_pspos, vpos=n_vpos + n_frag, vface=n_vface,
-                 regs_auto=n_auto, out_position=n_outpos if stage == "vs" else 0)
+                 regs_auto=n_auto, out_position=n_outpos if stage == "vs" else 0,
+                 dref=n_dref)
     # per-slot сэмплеры объявляем в шапке ПОСЛЕ обхода исходника: номера известны
     # только после разбора объявлений и выборок. Объявления в шапке — до первого
     # использования, порядок корректен.
@@ -520,9 +541,13 @@ def rewrite(src, stage=None, ps_ret_structs=(), vs_ret_structs=(), set_layout=Fa
             parts.append("#ifndef PW_RES_%s\n#define PW_RES_%s\n%s\n#endif\n" % (nm, nm, d))
         need = sorted(need_regs - {0} - set(state_of_reg))
         for r in need:
+            typ = "SamplerComparisonState" if r in dref_slots else "SamplerState"
             parts.append("#ifndef PW_SMP_%d\n#define PW_SMP_%d\n"
-                         "SamplerState %s : register(s%d, space3);\n#endif\n"
-                         % (r, r, smp_name(r), r))
+                         "%s %s : register(s%d, space3);\n#endif\n"
+                         % (r, r, typ, smp_name(r), r))
+        if dref_slots:
+            notes.append("Dref-сэмплеры по слотам: %s" % ",".join(
+                str(r) for r in sorted(dref_slots)))
         head = HEADER_SET + "".join(parts)
         if need:
             notes.append("per-slot сэмплеры: %s" % ",".join(str(r) for r in need))

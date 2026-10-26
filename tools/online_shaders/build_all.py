@@ -103,8 +103,17 @@ def mirror(dirs, stage, rewritten):
             dst = os.path.join(dst_dir, out_name)
             text = fix_includes(rename_entry(read(p), stage))
             if rewritten:
+                # карта теней выбирается из D3D9-слота 1 (ShadowMap.cpp:291
+                # SetSampler(1, PRESET_CLAMP_BILINEAR, pDepth)) — для этих юнитов
+                # прослойка обязана собрать Dref-выборку (SamplerComparisonState),
+                # иначе Vulkan-контур читает сырую глубину карты.
+                bn = os.path.basename(p)
+                # только PCF_DS-семейство (ShadowMapPCF_DS::Apply): у него в
+                # слоте 1 лежит depth-текстура карты. У PCF/ESM/SAESM в этом
+                # слоте цветная R32F-копия — Dref к ним не применяется.
+                cs = (1,) if ('ShadowPassPCFDST' in bn or 'UberShadowPassDST' in bn) else ()
                 text, _st, _n = shim.rewrite(text, stage, set_layout=True,
-                                             cbank=True, src_path=p)
+                                             cbank=True, src_path=p, cmp_slots=cs)
             with open(dst, "w", encoding="utf-8") as f:
                 f.write(text)
 

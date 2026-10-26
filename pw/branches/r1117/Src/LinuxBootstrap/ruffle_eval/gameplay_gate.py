@@ -204,7 +204,7 @@ def replay(stdout):
 	require(len(header) == 2 and header[0] == 'yes' and integer(header[1]) > 0, 'replay header')
 	integer(storage['client'], signed=True)
 	require(integer(storage['stepLength']) > 0 and storage['map'] not in ('', '<none>', 'none'), 'replay map/step length')
-	return storage['commands'][0], capture['bytesRead'][0], last
+	return storage['commands'][0], capture['bytesRead'][0], last - capture['startStep']
 
 
 def hero_execution(stdout, client_log):
@@ -271,10 +271,11 @@ def validate(stdout, client_log, mode, *, session_mode='ordinary', expected_move
 	require(record(client_log, 'finalGameTransceiverWorldAttached', '=') == 'yes', 'world not attached')
 	step = integer(record(client_log, 'finalGameTransceiverWorldStep', '='))
 	require(step > 0 and integer(record(client_log, 'finalNativeWorldPresentationFrames', '=')) > 0, 'no world progress')
-	commands, byte_count, replay_step = replay(stdout)
+	commands, byte_count, replay_ticks = replay(stdout)
 	world = fields(record(stdout, 'Final game transceiver runtime', ': '), '=')
 	require(world.get('ready') == world.get('world') == 'yes', 'transceiver not ready')
-	require(integer(world.get('step', '')) == step and replay_step <= step, 'world/replay steps disagree')
+	# PFWorld starts at -1; the writer stamps a segment after incrementing its index.
+	require(integer(world.get('step', '')) == step and replay_ticks == step + 1, 'world/replay duration disagrees')
 	require(integer(world.get('commands', '')) == integer(world.get('replayCommands', '')) == commands,
 		'world/replay command counts disagree')
 	require(integer(world.get('replayBytes', '')) == byte_count, 'world/replay byte counts disagree')

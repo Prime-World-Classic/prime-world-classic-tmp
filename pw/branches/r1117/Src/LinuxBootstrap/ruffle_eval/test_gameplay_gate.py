@@ -68,8 +68,8 @@ def fixture(mode='targeting', session_mode='ordinary', expected_moves=0):
 		f'replayCommands={commands} replayBytes=50 runtimeSent={commands} productionSent={production}\n'
 		'Final replay capture validation: valid=yes magic=yes bounds=yes bytes=yes commands=yes statuses=yes '
 		f'records=2 steps=2 commandBlocks={commands}/{commands} statusBlocks=1/1 active=1 away=0 disconnected=0 leaver=0 '
-		'bytesRead=50/50 largest=30 startStep=0 firstStep=1 lastStep=90 error=none\n'
-		f'Final replay storage: valid=yes segments=2/2 commands={commands}/{commands} statuses=1/1 failures=0 steps=1..90 '
+		'bytesRead=50/50 largest=30 startStep=0 firstStep=1 lastStep=1001 error=none\n'
+		f'Final replay storage: valid=yes segments=2/2 commands={commands}/{commands} statuses=1/1 failures=0 steps=1..1001 '
 		'segmentMatch=yes commandMatch=yes statusMatch=yes header=yes/10 client=1984 stepLength=100 '
 		'map=Maps/Map.xdb error=none source=ReplayStorage2\n'
 		'Final hero gameplay command execution: useUnit=0/0/0/0 can=0 '
@@ -86,6 +86,15 @@ def fixture(mode='targeting', session_mode='ordinary', expected_moves=0):
 
 class GameplayGateTests(unittest.TestCase):
 	'''Reject malformed counters, false success flags, omissions and duplicate evidence.'''
+
+	def test_replay_covers_exact_world_duration(self):
+		'''Matching command totals cannot excuse a truncated or overlong quiet tail.'''
+		stdout, client = fixture('default')
+		for last in (90, 1000, 1002):
+			with self.subTest(last=last), self.assertRaises(gate.EvidenceError):
+				changed = re.sub(r'lastStep=\d+', f'lastStep={last}', stdout)
+				changed = re.sub(r'steps=1\.\.\d+', f'steps=1..{last}', changed)
+				gate.validate(changed, client, 'default')
 
 	def test_startup_policy_is_explicit_and_independent_of_hud(self):
 		'''A diagnostic run cannot satisfy ordinary acceptance, even with identical HUD receipts.'''
@@ -464,7 +473,7 @@ class GameplayGateTests(unittest.TestCase):
 			('commandBlocks=3/3', 'commandBlocks=1/3'), ('commands=3/3', 'commands=4/4'),
 			('statuses=1/1', 'statuses=2/2'), ('segments=2/2', 'segments=1/2'),
 			('bytesRead=50/50', 'bytesRead=49/50'), ('commandMatch=yes', 'commandMatch=no'),
-			('error=none', 'error=bad'), ('steps=1..90', 'steps=1..89'),
+			('error=none', 'error=bad'), ('steps=1..1001', 'steps=1..1000'),
 			('useTalent=2/2/1/1', 'useTalent=2/2/0/0'), ('0.00->10.00', '0.00->0.00'),
 			('0.00->10.00', '0.00->nan'), ('0.00->10.00', '0.00->1e309'),
 			('gold=400->100', 'gold=400->400'), ('step=1000', 'step=0'),

@@ -100,6 +100,16 @@ public:
   virtual bool IsOk() { return linuxOk; }
 
   size_t GetLinuxReplayLoadedSegments() const { return linuxSegments.size(); }
+	/** Physical records remain available for exact capture/byte-accounting validation. */
+	bool GetNextLinuxRecord(NCore::ReplaySegment& output);
+	bool GetNextLinuxRecord(NCore::SyncSegment& output);
+	/** Native records are stamped after incrementing the scheduler's segment index.
+	 * Expand through the final stored stamp; absent historical tail duration is unknowable.
+	 */
+	size_t GetLinuxReplayTimelineSteps() const
+	{
+		return linuxOk && !linuxSegments.empty() ? static_cast<size_t>(linuxLastStep - linuxStartStep) : 0;
+	}
   size_t GetLinuxReplayLoadedCommands() const { return linuxLoadedCommands; }
   size_t GetLinuxReplayLoadedStatuses() const { return linuxLoadedStatuses; }
   size_t GetLinuxReplayDecodeFailures() const { return linuxDecodeFailures; }
@@ -118,6 +128,10 @@ private:
   bool LinuxFail(const char* message);
   bool LinuxLoad(const char* fileName);
   void LinuxLoadHeader(const char* fileName);
+	/** Materialize one tick with constant auxiliary memory, independently for both readers. */
+	bool LinuxReadTimeline(size_t& tick, size_t& record, NCore::ReplaySegment* client, NCore::SyncSegment* server);
+	size_t linuxClientTick = 0, linuxClientRecord = 0;
+	size_t linuxServerTick = 0, linuxServerRecord = 0;
 
   vector<NCore::ReplaySegment> linuxSegments;
   vector<int> linuxSegmentSteps;

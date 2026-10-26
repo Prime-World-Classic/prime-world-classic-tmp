@@ -34653,14 +34653,14 @@ void ValidateLinuxBootstrapReplayFileProof(
       replayHeaderStepLength);
 
   NCore::ReplaySegment segment;
-  while (storage.GetNextSegment(segment))
+  while (storage.GetNextLinuxRecord(segment))
   {
     ++proof->consumedSegments;
     proof->consumedCommands += segment.seg.size();
   }
 
   NCore::SyncSegment syncSegment;
-  while (storage.GetNextSegment(syncSegment))
+  while (storage.GetNextLinuxRecord(syncSegment))
   {
     proof->consumedStatuses += syncSegment.statuses.size();
   }
@@ -34725,7 +34725,7 @@ void ValidateLinuxBootstrapReplayFileProof(
   proof->playbackWorldAttached =
     replayTransceiver->GetWorld() == static_cast<NCore::IWorldBase*>(probeWorld.GetPtr());
 
-  for (size_t i = 0; i <= playbackStorage->GetLinuxReplayLoadedSegments(); ++i)
+  for (size_t i = 0; i <= playbackStorage->GetLinuxReplayTimelineSteps(); ++i)
   {
     ++proof->playbackStepCalls;
     replayTransceiver->Step(static_cast<float>(probeWorld->GetStepLength()));
@@ -34736,10 +34736,10 @@ void ValidateLinuxBootstrapReplayFileProof(
   proof->playbackCommands = probeWorld->GetCommands();
   proof->playbackFinalWorldStep = replayTransceiver->GetWorldStep();
   proof->playbackStepCountMatches =
-    proof->playbackWorldSteps == proof->loadedSegments &&
-    proof->playbackFinalWorldStep == static_cast<int>(proof->loadedSegments);
+    proof->playbackWorldSteps == playbackStorage->GetLinuxReplayTimelineSteps() &&
+    proof->playbackFinalWorldStep == static_cast<int>(playbackStorage->GetLinuxReplayTimelineSteps());
   proof->playbackCommandCountMatches =
-    proof->playbackCommandBatches == proof->loadedSegments &&
+    proof->playbackCommandBatches == playbackStorage->GetLinuxReplayTimelineSteps() &&
     proof->playbackCommands == proof->loadedCommands;
   proof->playbackValidated =
     proof->playbackWorldAttached &&
@@ -34771,7 +34771,7 @@ void ValidateLinuxBootstrapReplayFileProof(
   proof->serverPlaybackWorldAttached =
     serverReplayTransceiver->GetWorld() == static_cast<NCore::IWorldBase*>(serverProbeWorld.GetPtr());
 
-  for (size_t i = 0; i <= serverStorage->GetLinuxReplayLoadedSegments(); ++i)
+  for (size_t i = 0; i <= serverStorage->GetLinuxReplayTimelineSteps(); ++i)
   {
     ++proof->serverPlaybackStepCalls;
     serverReplayTransceiver->Step(static_cast<float>(serverProbeWorld->GetStepLength()));
@@ -34783,10 +34783,10 @@ void ValidateLinuxBootstrapReplayFileProof(
   proof->serverPlaybackStatusUpdates = serverProbeWorld->GetStatusUpdates();
   proof->serverPlaybackFinalWorldStep = serverReplayTransceiver->GetWorldStep();
   proof->serverPlaybackStepCountMatches =
-    proof->serverPlaybackWorldSteps == proof->loadedSegments &&
-    proof->serverPlaybackFinalWorldStep == static_cast<int>(proof->loadedSegments);
+    proof->serverPlaybackWorldSteps == serverStorage->GetLinuxReplayTimelineSteps() &&
+    proof->serverPlaybackFinalWorldStep == static_cast<int>(serverStorage->GetLinuxReplayTimelineSteps());
   proof->serverPlaybackCommandCountMatches =
-    proof->serverPlaybackCommandBatches == proof->loadedSegments &&
+    proof->serverPlaybackCommandBatches == serverStorage->GetLinuxReplayTimelineSteps() &&
     proof->serverPlaybackCommands == proof->loadedCommands;
   proof->serverPlaybackStatusCountMatches =
     proof->serverPlaybackStatusUpdates == proof->loadedStatuses;
@@ -34869,7 +34869,7 @@ void ValidateLinuxBootstrapReplayFileProof(
             proof->liveWorldAttached =
               liveReplayTransceiver->GetWorld() == static_cast<NCore::IWorldBase*>(liveWorldBase.GetPtr());
 
-            for (size_t i = 0; i < liveStorage->GetLinuxReplayLoadedSegments(); ++i)
+            for (size_t i = 0; i < liveStorage->GetLinuxReplayTimelineSteps(); ++i)
             {
               ++proof->liveWorldStepCalls;
               liveReplayTransceiver->Step(static_cast<float>(proof->headerStepLength));
@@ -34886,10 +34886,9 @@ void ValidateLinuxBootstrapReplayFileProof(
                 proof->liveWorldCommandsAfter - proof->liveWorldCommandsBefore :
                 0;
             proof->liveWorldStepCountMatches =
-              proof->liveWorldStepCalls == proof->loadedSegments &&
+              proof->liveWorldStepCalls == liveStorage->GetLinuxReplayTimelineSteps() &&
               proof->liveWorldFinalStep >= 0 &&
-              (proof->liveWorldFinalStep == static_cast<int>(proof->loadedSegments) ||
-               proof->liveWorldFinalStep + 1 == static_cast<int>(proof->loadedSegments));
+              proof->liveWorldFinalStep + 1 == static_cast<int>(liveStorage->GetLinuxReplayTimelineSteps());
             proof->liveWorldCommandCountMatches =
               proof->liveWorldCommandsExecuted == proof->loadedCommands;
             proof->liveWorldValidated =
@@ -34972,14 +34971,14 @@ void ValidateLinuxBootstrapReplayStorage(LinuxBootstrapScreenRuntime* runtime)
       replayHeaderStepLength);
 
   NCore::ReplaySegment segment;
-  while (storage.GetNextSegment(segment))
+  while (storage.GetNextLinuxRecord(segment))
   {
     ++runtime->replayStorageConsumedSegments;
     runtime->replayStorageConsumedCommands += segment.seg.size();
   }
 
   NCore::SyncSegment syncSegment;
-  while (storage.GetNextSegment(syncSegment))
+  while (storage.GetNextLinuxRecord(syncSegment))
   {
     runtime->replayStorageConsumedStatuses += syncSegment.statuses.size();
   }
@@ -35079,7 +35078,7 @@ void ValidateLinuxBootstrapReplayTransceiverPlayback(LinuxBootstrapScreenRuntime
   runtime->replayPlaybackWorldAttached =
     replayTransceiver->GetWorld() == static_cast<NCore::IWorldBase*>(probeWorld.GetPtr());
 
-  for (size_t i = 0; i <= storage->GetLinuxReplayLoadedSegments(); ++i)
+  for (size_t i = 0; i <= storage->GetLinuxReplayTimelineSteps(); ++i)
   {
     ++runtime->replayPlaybackStepCalls;
     replayTransceiver->Step(static_cast<float>(probeWorld->GetStepLength()));
@@ -35090,10 +35089,10 @@ void ValidateLinuxBootstrapReplayTransceiverPlayback(LinuxBootstrapScreenRuntime
   runtime->replayPlaybackCommands = probeWorld->GetCommands();
   runtime->replayPlaybackFinalWorldStep = replayTransceiver->GetWorldStep();
   runtime->replayPlaybackStepCountMatches =
-    runtime->replayPlaybackWorldSteps == storage->GetLinuxReplayLoadedSegments() &&
-    runtime->replayPlaybackFinalWorldStep == static_cast<int>(storage->GetLinuxReplayLoadedSegments());
+    runtime->replayPlaybackWorldSteps == storage->GetLinuxReplayTimelineSteps() &&
+    runtime->replayPlaybackFinalWorldStep == static_cast<int>(storage->GetLinuxReplayTimelineSteps());
   runtime->replayPlaybackCommandCountMatches =
-    runtime->replayPlaybackCommandBatches == runtime->replayCaptureRecords &&
+    runtime->replayPlaybackCommandBatches == storage->GetLinuxReplayTimelineSteps() &&
     runtime->replayPlaybackCommands == runtime->replayCaptureCommandBlocks;
   runtime->replayPlaybackValidated =
     runtime->replayPlaybackHeaderValidated &&
@@ -35148,7 +35147,7 @@ void ValidateLinuxBootstrapReplayTransceiverPlayback(LinuxBootstrapScreenRuntime
   runtime->replayServerPlaybackWorldAttached =
     serverReplayTransceiver->GetWorld() == static_cast<NCore::IWorldBase*>(serverProbeWorld.GetPtr());
 
-  for (size_t i = 0; i <= serverStorage->GetLinuxReplayLoadedSegments(); ++i)
+  for (size_t i = 0; i <= serverStorage->GetLinuxReplayTimelineSteps(); ++i)
   {
     ++runtime->replayServerPlaybackStepCalls;
     serverReplayTransceiver->Step(static_cast<float>(serverProbeWorld->GetStepLength()));
@@ -35160,10 +35159,10 @@ void ValidateLinuxBootstrapReplayTransceiverPlayback(LinuxBootstrapScreenRuntime
   runtime->replayServerPlaybackStatusUpdates = serverProbeWorld->GetStatusUpdates();
   runtime->replayServerPlaybackFinalWorldStep = serverReplayTransceiver->GetWorldStep();
   runtime->replayServerPlaybackStepCountMatches =
-    runtime->replayServerPlaybackWorldSteps == serverStorage->GetLinuxReplayLoadedSegments() &&
-    runtime->replayServerPlaybackFinalWorldStep == static_cast<int>(serverStorage->GetLinuxReplayLoadedSegments());
+    runtime->replayServerPlaybackWorldSteps == serverStorage->GetLinuxReplayTimelineSteps() &&
+    runtime->replayServerPlaybackFinalWorldStep == static_cast<int>(serverStorage->GetLinuxReplayTimelineSteps());
   runtime->replayServerPlaybackCommandCountMatches =
-    runtime->replayServerPlaybackCommandBatches == runtime->replayCaptureRecords &&
+    runtime->replayServerPlaybackCommandBatches == serverStorage->GetLinuxReplayTimelineSteps() &&
     runtime->replayServerPlaybackCommands == runtime->replayCaptureCommandBlocks;
   runtime->replayServerPlaybackStatusCountMatches =
     runtime->replayServerPlaybackStatusUpdates == runtime->replayCaptureStatusBlocks;
@@ -42134,7 +42133,7 @@ void EnsureLinuxBootstrapGameScheduler(
         runtime->replayInputPaceMs = static_cast<size_t>(runtime->replayInputStepLength);
       }
 
-      runtime->replayInputLoadedSegments = runtime->replayInputStorage->GetLinuxReplayLoadedSegments();
+      runtime->replayInputLoadedSegments = runtime->replayInputStorage->GetLinuxReplayTimelineSteps();
       runtime->replayInputLoadedCommands = runtime->replayInputStorage->GetLinuxReplayLoadedCommands();
       runtime->replayInputLoadedStatuses = runtime->replayInputStorage->GetLinuxReplayLoadedStatuses();
       runtime->transceiverWorld = NWorld::PFWorld::CreatePFWorld();
@@ -46021,6 +46020,7 @@ LinuxTimedExit ServiceLinuxTimedExit(const LinuxClientLaunchSettings& settings,
 }
 
 #include "LinuxBootstrap/ai_input_drain_probe.inl"
+#include "LinuxBootstrap/replay_timeline_probe.inl"
 #include "LinuxBootstrap/timed_exit_probe.inl"
 #include "LinuxBootstrap/native_input_probe.inl"
 #include "LinuxBootstrap/file_path_probe.inl"
@@ -71763,7 +71763,8 @@ int main(int argc, char** argv)
 	if (CmdLineLite::Instance().IsKeyDefined("--bootstrap-visibility-query-probe"))
 		return RunPrimeWorldLinuxVisibilityQueryProbe() ? 0 : 1;
 	if (CmdLineLite::Instance().IsKeyDefined("--bootstrap-scheduler-drain-probe"))
-		return RunPrimeWorldLinuxSchedulerDrainProbe() && RunLinuxTimedExitProbe() && RunLinuxAIInputDrainProbe() ? 0 : 1;
+		return RunPrimeWorldLinuxSchedulerDrainProbe() && RunLinuxTimedExitProbe() && RunLinuxAIInputDrainProbe()
+			&& RunLinuxReplayTimelineProbe() ? 0 : 1;
 	if (CmdLineLite::Instance().IsKeyDefined("--bootstrap-applicator-formula-probe"))
 		return RunPrimeWorldLinuxApplicatorFormulaProbe(CmdLineLite::Instance().GetStringKey("--bootstrap-nature-data", 0)) ? 0 : 1;
 	if (CmdLineLite::Instance().IsKeyDefined("--bootstrap-map-clock-probe"))

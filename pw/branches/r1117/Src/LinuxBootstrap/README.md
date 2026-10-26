@@ -152,6 +152,35 @@ regression for wall deadlines, diagnostic step limits and direct scheduler closu
 plus unbounded-session and replay isolation. See C118 in the port plan for the
 repeated strict display gate and retained before/after evidence.
 
+## Replay Timing
+
+Native replay playback expands sparse event records into simulation ticks without
+allocating empty records. Both client and server playback retain the original
+command tick; server playback also retains status delivery. Raw-record inspection
+remains separate for byte/count validation. Malformed record order fails closed.
+
+Finite local sessions write one final empty record at the sealed input boundary,
+so a quiet ending is not lost. The ordinary acceptance gate requires the recorded
+duration to equal the live world's tick count. Older recordings retain their
+recorded event timing, but an omitted quiet tail cannot be recovered. This does
+not establish complete replay state/CRC equivalence or save/reconnect support.
+The C119 display comparison still rejects recorded talent actions because live and
+replay setup allocate map object IDs differently. Command-count success alone is
+not gameplay replay acceptance; this remains the next tracked repair.
+
+Keep the `.pwrp.info` sidecar with its matching `.pwrp` file. Play a recording with:
+
+```sh
+cd "$ROOT/pw/branches/r1117/Bin"
+"$BUILD/PrimeWorldLinuxClient" --root "$ROOT/pw/branches/r1117" \
+	--seconds 120 /absolute/path/session.pwrp
+```
+
+`--replay-realtime` paces simulation using the header's tick length; allow time for
+loading plus the recording duration. Pause/speed controls count simulation ticks,
+not physical event records. See [ReplayTransceiver.cpp](../PW_Client/ReplayTransceiver.cpp)
+and the real scheduler/writer tests in [replay_timeline_probe.inl](replay_timeline_probe.inl).
+
 ## Diagnostic Cost
 
 The native scheduler and loading reports collect creep/spawner counters in one

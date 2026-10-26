@@ -142,6 +142,8 @@ bool ReplayStorage2::LinuxLoad(const char* fileName)
   if (!ReadLinuxReplayBytes(&input, &serverId, sizeof(serverId), &bytesRead) ||
       !ReadLinuxReplayBytes(&input, &linuxStartStep, sizeof(linuxStartStep), &bytesRead))
     return LinuxFail("truncated-start");
+	if (linuxStartStep < 0)
+		return LinuxFail("invalid-start-step");
 
   while (bytesRead < fileSize)
   {
@@ -155,6 +157,10 @@ bool ReplayStorage2::LinuxLoad(const char* fileName)
         !ReadLinuxReplayBytes(&input, &commandsCount, sizeof(commandsCount), &bytesRead) ||
         !ReadLinuxReplayBytes(&input, &statusesCount, sizeof(statusesCount), &bytesRead))
       return LinuxFail("truncated-record");
+		// Equal empty records are the existing writer's optional finish marker.
+		if (step <= linuxStartStep || step < linuxLastStep ||
+			(step == linuxLastStep && (commandsCount || statusesCount)))
+			return LinuxFail("invalid-record-step");
 
     NCore::ReplaySegment segment;
     segment.deltaTime = 0.0f;
@@ -330,9 +336,9 @@ void ReplayStorage2::LinuxLoadHeader(const char* fileName)
     expectedPlayers == linuxHeaderMapStartInfo.playersInfo.size();
 }
 
-bool ReplayStorage2::GetNextSegment( NCore::ReplaySegment& segOut )
+bool ReplayStorage2::GetNextLinuxRecord( NCore::ReplaySegment& segOut )
 {
-  if (linuxReplayCursor >= linuxSegments.size())
+  if (!linuxOk || linuxReplayCursor >= linuxSegments.size())
     return false;
 
   segOut = linuxSegments[linuxReplayCursor];
@@ -340,9 +346,9 @@ bool ReplayStorage2::GetNextSegment( NCore::ReplaySegment& segOut )
   return true;
 }
 
-bool ReplayStorage2::GetNextSegment( NCore::SyncSegment & segOut )
+bool ReplayStorage2::GetNextLinuxRecord( NCore::SyncSegment & segOut )
 {
-  if (linuxSyncCursor >= linuxSegments.size() ||
+  if (!linuxOk || linuxSyncCursor >= linuxSegments.size() ||
       linuxSyncCursor >= linuxSegmentSteps.size() ||
       linuxSyncCursor >= linuxSegmentStatuses.size())
     return false;
@@ -352,6 +358,41 @@ bool ReplayStorage2::GetNextSegment( NCore::SyncSegment & segOut )
   segOut.step = static_cast<uint>(linuxSegmentSteps[linuxSyncCursor]);
   ++linuxSyncCursor;
   return true;
+}
+
+bool ReplayStorage2::LinuxReadTimeline(size_t& tick, size_t& record,
+	NCore::ReplaySegment* client, NCore::SyncSegment* server)
+{
+	if (tick >= GetLinuxReplayTimelineSteps()) return false;
+	const int stamp = linuxStartStep + static_cast<int>(tick) + 1;
+	if (client) *client = NCore::ReplaySegment();
+	if (server)
+	{
+		server->commands.clear(); server->statuses.clear();
+		server->step = static_cast<uint>(tick);
+	}
+	if (record < linuxSegments.size() && linuxSegmentSteps[record] == stamp)
+	{
+		if (client) *client = linuxSegments[record];
+		if (server)
+		{
+			server->commands = linuxSegments[record].seg;
+			server->statuses = linuxSegmentStatuses[record];
+		}
+		do { ++record; } while (record < linuxSegments.size() && linuxSegmentSteps[record] == stamp);
+	}
+	++tick;
+	return true;
+}
+
+bool ReplayStorage2::GetNextSegment(NCore::ReplaySegment& output)
+{
+	return LinuxReadTimeline(linuxClientTick, linuxClientRecord, &output, nullptr);
+}
+
+bool ReplayStorage2::GetNextSegment(NCore::SyncSegment& output)
+{
+	return LinuxReadTimeline(linuxServerTick, linuxServerRecord, nullptr, &output);
 }
 
 bool ReplayStorage2::GetHeader( NCore::MapStartInfo * info, int * clientId, int * stepLength, NCore::ClientSettings * clientSettings, lobby::SGameParameters* gameParams )

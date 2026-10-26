@@ -103,7 +103,13 @@ void LocalCmdScheduler::Step( float dt )
   {
     int commandsCount = segmentToWrite->commands.size();
     int statusesCount = segmentToWrite->statuses.size();
+#if defined(PW_LINUX_DB_BOOTSTRAP)
+		// Preserve the final quiet tick without making every idle tick a physical record.
+	if (commandsCount > 0 || statusesCount > 0 ||
+		(linuxInputFinishStep >= 0 && segmentToWrite->step == static_cast<uint>(linuxInputFinishStep)))
+#else
     if (commandsCount > 0 || statusesCount > 0)
+#endif
     {
       vector<MemoryStream> commandsAsStreams(commandsCount);
       vector<rpc::MemoryBlock> commands(commandsCount);

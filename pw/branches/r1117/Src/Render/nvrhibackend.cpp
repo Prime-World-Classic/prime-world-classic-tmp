@@ -7824,7 +7824,21 @@ HRESULT NvrhiBackend::DrawImpl(ERenderPrimitiveType type, bool indexed, unsigned
     if (GetEnvironmentVariableA("PW_VK_ZNEAR_FOG", bz2, sizeof(bz2) - 1) > 0)
       s_znearFog = (float)atof(bz2);
   }
-  if (s_znearFog < 1e29f)
+  // PW_VK_SHARPZERO_FOG=1 — обнулить VS c28 (`g_sharpPixelSize`) и c29
+  // (`g_sharpCoef`) у того же вывода, что читает binding 10 (т.е. у поста
+  // FullScreenMaterial): sharpCoef=0 и sharpPixelSize=0 -> `DoSharp`
+  // становится чистым копированием (Coeffs=(1,0), все 4 отсчёта в center).
+  // Отличие от PW_VK_SHARPZERO=<ps>: не нужен seam-индекс PS (он нестабилен).
+  // Нужен, чтобы проверить, не является ли избыточная ВЧ-энергия vulkan-контура
+  // следствием sharp-фильтра (замер обзора: |x-blur| 8,13 d3d9 против 18,13 vk
+  // без тумана; |laplacian| медиана 9,3 против 55,2).
+  static int s_sharpZeroFog = -1;
+  if (s_sharpZeroFog < 0)
+  {
+    const char* eSz = getenv("PW_VK_SHARPZERO_FOG");
+    s_sharpZeroFog = (eSz && *eSz) ? atoi(eSz) : 0;
+  }
+  if (s_znearFog < 1e29f || s_sharpZeroFog)
   {
     const int rmFog = FindOrCreateResMap(d);
     bool fogSampler = false;
@@ -7836,10 +7850,14 @@ HRESULT NvrhiBackend::DrawImpl(ERenderPrimitiveType type, bool indexed, unsigned
     }
     if (fogSampler)
     {
-      m_constShadow[csPixel][21 * 4] = s_znearFog;
+      if (s_znearFog < 1e29f) m_constShadow[csPixel][21 * 4] = s_znearFog;
+      if (s_sharpZeroFog) memset(m_constShadow[csVertex] + 28 * 4, 0, 8 * 16);   // c28, c29
+      if (s_znearFog < 1e29f || s_sharpZeroFog)
+        MarkConstDirty(d, csVertex, 28u, 2u);
       if (d.traceConstLogged < 3u)
       {
-        DebugTrace("VkTraceC: ps=%u warfog (binding 10) zNear := %.6g", d.curPs, s_znearFog);
+        DebugTrace("VkTraceC: ps=%u warfog (binding 10) zNear := %.6g sharpZero=%u",
+                   d.curPs, s_znearFog, (unsigned)s_sharpZeroFog);
         ++d.traceConstLogged;
       }
     }

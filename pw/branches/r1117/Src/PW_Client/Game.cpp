@@ -34586,9 +34586,25 @@ bool IsLinuxBootstrapReplayFileHeaderUsable(
     !replayHeaderInfo.playersInfo.empty();
 }
 
+/** Match live pre-map manager allocation so serialized object IDs resolve unchanged.
+ * Replay consumes recorded bot input; its manager has no sender and starts no controllers.
+ */
+CObj<NCore::IWorldBase> CreateLinuxReplayWorld()
+{
+	CObj<NCore::IWorldBase> result = NWorld::PFWorld::CreatePFWorld();
+	if (auto* world = dynamic_cast<NWorld::PFWorld*>(result.GetPtr()))
+	{
+		world->SetLinuxAutoAIEnabled(false);
+		world->SetLinuxAbilityAnimationTiming(std::make_shared<LinuxAuthoredAbilityTiming>());
+		world->SetAIContainer(new NWorld::PFAIContainer(world, nullptr));
+	}
+	return result;
+}
+
 void ValidateLinuxBootstrapReplayFileProof(
   const fs::path& replayPath,
-  LinuxBootstrapReplayFileProof* proof
+  LinuxBootstrapReplayFileProof* proof,
+	bool simulateLiveWorld
 )
 {
   if (!proof)
@@ -34798,6 +34814,17 @@ void ValidateLinuxBootstrapReplayFileProof(
   proof->serverPlaybackValidationError =
     proof->serverPlaybackValidated ? "none" : "counter-mismatch";
 
+	proof->validated = storageValidated && proof->playbackValidated && proof->serverPlaybackValidated;
+	proof->validationError = proof->validated ? "none" :
+		(proof->playbackValidated ? "server-playback-failed" : "playback-failed");
+	// Ordinary playback already owns a real world. A second simulation duplicates receipts
+	// and mutates shared diagnostics after the displayed session has ended.
+	if (!simulateLiveWorld)
+	{
+		proof->liveWorldValidationError = "disabled";
+		return;
+	}
+
   NDb::Ptr<NDb::AdvMapDescription> dbMapDescription =
     NDb::Get<NDb::AdvMapDescription>(NDb::DBID(replayHeaderInfo.mapDescName.c_str()));
   if (!IsValid(dbMapDescription))
@@ -34819,7 +34846,7 @@ void ValidateLinuxBootstrapReplayFileProof(
     }
     else
     {
-      CObj<NCore::IWorldBase> liveWorldBase = NWorld::PFWorld::CreatePFWorld();
+      CObj<NCore::IWorldBase> liveWorldBase = CreateLinuxReplayWorld();
       NWorld::PFWorld* liveWorld = dynamic_cast<NWorld::PFWorld*>(liveWorldBase.GetPtr());
       proof->liveWorldCreated = liveWorld != 0;
       if (!liveWorld)
@@ -34828,7 +34855,6 @@ void ValidateLinuxBootstrapReplayFileProof(
       }
       else
       {
-				liveWorld->SetLinuxAbilityAnimationTiming(std::make_shared<LinuxAuthoredAbilityTiming>());
         StrongMT<NWorld::MapLoadingJob> liveMapLoadingJob =
           new NWorld::MapLoadingJob(
             liveWorldBase,
@@ -34907,13 +34933,6 @@ void ValidateLinuxBootstrapReplayFileProof(
     }
   }
 
-  proof->validated =
-    storageValidated &&
-    proof->playbackValidated &&
-    proof->serverPlaybackValidated;
-  proof->validationError =
-    proof->validated ? "none" :
-      (proof->playbackValidated ? "server-playback-failed" : "playback-failed");
 }
 
 void ValidateLinuxBootstrapReplayStorage(LinuxBootstrapScreenRuntime* runtime)
@@ -42136,9 +42155,7 @@ void EnsureLinuxBootstrapGameScheduler(
       runtime->replayInputLoadedSegments = runtime->replayInputStorage->GetLinuxReplayTimelineSteps();
       runtime->replayInputLoadedCommands = runtime->replayInputStorage->GetLinuxReplayLoadedCommands();
       runtime->replayInputLoadedStatuses = runtime->replayInputStorage->GetLinuxReplayLoadedStatuses();
-      runtime->transceiverWorld = NWorld::PFWorld::CreatePFWorld();
-			if (auto* world = dynamic_cast<NWorld::PFWorld*>(runtime->transceiverWorld.GetPtr()))
-				world->SetLinuxAbilityAnimationTiming(std::make_shared<LinuxAuthoredAbilityTiming>());
+      runtime->transceiverWorld = CreateLinuxReplayWorld();
       runtime->replayInputTransceiver =
         new NWorld::ReplayTransceiver(
           runtime->replayInputStorage.GetPtr(),
@@ -46021,6 +46038,7 @@ LinuxTimedExit ServiceLinuxTimedExit(const LinuxClientLaunchSettings& settings,
 
 #include "LinuxBootstrap/ai_input_drain_probe.inl"
 #include "LinuxBootstrap/replay_timeline_probe.inl"
+#include "LinuxBootstrap/replay_identity_probe.inl"
 #include "LinuxBootstrap/timed_exit_probe.inl"
 #include "LinuxBootstrap/native_input_probe.inl"
 #include "LinuxBootstrap/file_path_probe.inl"
@@ -71764,7 +71782,7 @@ int main(int argc, char** argv)
 		return RunPrimeWorldLinuxVisibilityQueryProbe() ? 0 : 1;
 	if (CmdLineLite::Instance().IsKeyDefined("--bootstrap-scheduler-drain-probe"))
 		return RunPrimeWorldLinuxSchedulerDrainProbe() && RunLinuxTimedExitProbe() && RunLinuxAIInputDrainProbe()
-			&& RunLinuxReplayTimelineProbe() ? 0 : 1;
+			&& RunLinuxReplayTimelineProbe() && RunLinuxReplayIdentityProbe() ? 0 : 1;
 	if (CmdLineLite::Instance().IsKeyDefined("--bootstrap-applicator-formula-probe"))
 		return RunPrimeWorldLinuxApplicatorFormulaProbe(CmdLineLite::Instance().GetStringKey("--bootstrap-nature-data", 0)) ? 0 : 1;
 	if (CmdLineLite::Instance().IsKeyDefined("--bootstrap-map-clock-probe"))
@@ -73789,7 +73807,8 @@ int main(int argc, char** argv)
     usleep(16 * 1000);
   }
 
-  ValidateLinuxBootstrapReplayFileProof(settings.replayFile, &screenRuntime.replayFileProof);
+  ValidateLinuxBootstrapReplayFileProof(settings.replayFile, &screenRuntime.replayFileProof,
+		settings.bootstrapDiagnosticActions);
 
   AppendRuntimeInputLog(
     environment,

@@ -164,9 +164,22 @@ so a quiet ending is not lost. The ordinary acceptance gate requires the recorde
 duration to equal the live world's tick count. Older recordings retain their
 recorded event timing, but an omitted quiet tail cannot be recovered. This does
 not establish complete replay state/CRC equivalence or save/reconnect support.
-The C119 display comparison still rejects recorded talent actions because live and
-replay setup allocate map object IDs differently. Command-count success alone is
-not gameplay replay acceptance; this remains the next tracked repair.
+Live and replay setup allocate the AI manager before map objects, preserving
+serialized actor IDs. Replay keeps autonomous AI disabled and consumes recorded
+commands only. Ordinary playback does not simulate a second offline world at
+shutdown; that extra validation is restricted to `--bootstrap-diagnostic-actions`.
+Command-count success alone is not gameplay replay acceptance. Compare a completed
+original-SWF targeting session and playback of its matching recording with:
+
+```sh
+python3 -B "$ROOT/pw/branches/r1117/Src/LinuxBootstrap/ruffle_eval/replay_gate.py" \
+	--live-output /absolute/path/live.log --replay-output /absolute/path/playback.log
+```
+
+This gate requires matching actor IDs, exact timeline and command/status totals,
+no autonomous replay input, and one identical purchase, cast and mana-payment
+receipt. The real C120 comparison passes; this is not full-world CRC equivalence.
+Replay camera framing still differs from the ordinary live view.
 
 Keep the `.pwrp.info` sidecar with its matching `.pwrp` file. Play a recording with:
 

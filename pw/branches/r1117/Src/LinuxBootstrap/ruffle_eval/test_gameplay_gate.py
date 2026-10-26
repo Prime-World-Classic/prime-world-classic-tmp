@@ -87,6 +87,30 @@ def fixture(mode='targeting', session_mode='ordinary', expected_moves=0):
 class GameplayGateTests(unittest.TestCase):
 	'''Reject malformed counters, false success flags, omissions and duplicate evidence.'''
 
+	def test_replay_requires_real_paid_actions_and_identity(self):
+		'''Decoded totals cannot hide wrong actors, rejected actions or regenerated bots.'''
+		from replay_gate import validate_replay
+		live, live_log = fixture()
+		replay = (LOCAL_PURCHASE + LOCAL_CAST + PAYMENT +
+			'Final live replay input: active=yes ready=yes header=yes world=yes valid=yes '
+			'segments=1001 calls=1001 finalStep=1000 commands=3/3 statuses=1/1 '
+			'stepMatch=yes commandMatch=yes statusMatch=yes error=none\n'
+			'Prime World Linux client shell finished.\n')
+		replay_log = ('finalLiveHeroObjectId=7502\nfinalLiveHeroPlayerId=2\nfinalLiveHeroUserId=1984\n'
+			'finalLinuxAIControllers=auto:0/0 add:0/0 active:0 commands:0/0 fallback:0\n'
+			'finalReplayFileLiveWorldCreated=no\n')
+		self.assertEqual(validate_replay(live, live_log, replay, replay_log)['replay_ticks'], 1001)
+		for before, after in ((LOCAL_PURCHASE, ''), (LOCAL_CAST, ''), (PAYMENT, ''),
+			(PAYMENT, PAYMENT + PAYMENT), ('step=496', 'step=495'), ('before=725', 'before=724'),
+			('commands=3/3', 'commands=2/3'), ('finalStep=1000', 'finalStep=999'), ('valid=yes', 'valid=no')):
+			with self.subTest(before=before), self.assertRaises(gate.EvidenceError):
+				validate_replay(live, live_log, replay.replace(before, after), replay_log)
+		for before, after in (('ObjectId=7502', 'ObjectId=7501'), ('PlayerId=2', 'PlayerId=1'),
+			('UserId=1984', 'UserId=1985'), ('commands:0/0', 'commands:1/1'), ('active:0', 'active:9'),
+			('fallback:0', 'fallback:1'), ('LiveWorldCreated=no', 'LiveWorldCreated=yes')):
+			with self.subTest(before=before), self.assertRaises(gate.EvidenceError):
+				validate_replay(live, live_log, replay, replay_log.replace(before, after))
+
 	def test_replay_covers_exact_world_duration(self):
 		'''Matching command totals cannot excuse a truncated or overlong quiet tail.'''
 		stdout, client = fixture('default')

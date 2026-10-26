@@ -144,8 +144,13 @@ clicks Create and Ready, and verifies one successful transition, nine live bots 
 replay accounting. It requires the same isolated/foreground X11 conditions as the
 controls driver. The unchanged ordinary workflow omits `--reject-empty-first`.
 The longer 150-second retry run exposed a timing-sensitive AI-sent/replay-count
-mismatch during shutdown. Its strict gate remains failing evidence, not a passed
-full-session test; see C117 in the port plan for the retained logs and follow-up.
+mismatch during shutdown (C117). The native driver now quiesces autonomous bot
+decisions when local input seals, before stepping the accepted command tail. It
+retains controllers and ongoing orders; it does not freeze the world, issue stop
+orders or alter replay driving. `LinuxSchedulerDrain` includes a real-world mock-AI
+regression for wall deadlines, diagnostic step limits and direct scheduler closure,
+plus unbounded-session and replay isolation. See C118 in the port plan for the
+repeated strict display gate and retained before/after evidence.
 
 ## Diagnostic Cost
 

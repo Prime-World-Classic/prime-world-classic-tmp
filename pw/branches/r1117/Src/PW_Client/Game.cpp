@@ -58,6 +58,7 @@
 #include "Core/WorldBase.h"
 #include "Core/WorldCommand.h"
 #define PW_LINUX_DB_BOOTSTRAP 1
+#include "PF_GameLogic/PFBaseAIController.h"
 #include "PF_GameLogic/PFAuraEffect.h"
 #include "PF_GameLogic/PFApplAura.h"
 #include "PF_GameLogic/PFApplBounce.h"
@@ -42344,6 +42345,13 @@ void DriveLinuxBootstrapGameScheduler(
 		runtime->localScheduler->CloseLinuxInput();
 	const int finishStep = runtime->localScheduler->GetLinuxInputFinishStep();
 	const bool draining = finishStep >= 0;
+	// Accepted orders still need world ticks, but no producer may append behind the sealed tail.
+	if (draining && !runtime->replayFileInputActive)
+	{
+		auto* world = dynamic_cast<NWorld::PFWorld*>(runtime->transceiverWorld.GetPtr());
+		if (world && world->GetAIContainer())
+			world->GetAIContainer()->CloseLinuxInput();
+	}
 	// Seal admission first, then consume the existing tail including replay's +1 step.
 	const auto canDriveWorld = [&]() {
 		return runtime->localScheduler->CanDriveLinuxWorld(runtime->transceiverProcessedSteps,
@@ -46012,6 +46020,7 @@ LinuxTimedExit ServiceLinuxTimedExit(const LinuxClientLaunchSettings& settings,
 		? LinuxTimedExit::Complete : LinuxTimedExit::Draining;
 }
 
+#include "LinuxBootstrap/ai_input_drain_probe.inl"
 #include "LinuxBootstrap/timed_exit_probe.inl"
 #include "LinuxBootstrap/native_input_probe.inl"
 #include "LinuxBootstrap/file_path_probe.inl"
@@ -71754,7 +71763,7 @@ int main(int argc, char** argv)
 	if (CmdLineLite::Instance().IsKeyDefined("--bootstrap-visibility-query-probe"))
 		return RunPrimeWorldLinuxVisibilityQueryProbe() ? 0 : 1;
 	if (CmdLineLite::Instance().IsKeyDefined("--bootstrap-scheduler-drain-probe"))
-		return RunPrimeWorldLinuxSchedulerDrainProbe() && RunLinuxTimedExitProbe() ? 0 : 1;
+		return RunPrimeWorldLinuxSchedulerDrainProbe() && RunLinuxTimedExitProbe() && RunLinuxAIInputDrainProbe() ? 0 : 1;
 	if (CmdLineLite::Instance().IsKeyDefined("--bootstrap-applicator-formula-probe"))
 		return RunPrimeWorldLinuxApplicatorFormulaProbe(CmdLineLite::Instance().GetStringKey("--bootstrap-nature-data", 0)) ? 0 : 1;
 	if (CmdLineLite::Instance().IsKeyDefined("--bootstrap-map-clock-probe"))

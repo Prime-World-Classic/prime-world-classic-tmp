@@ -87,6 +87,11 @@ public:
   bool Remove( PFBaseHero* pUnit );
   void RemoveAll();
 #if defined( PW_LINUX_NULL_RENDER )
+	/** Stop autonomous decisions after local input seals; retain controllers and accepted orders.
+	 * This is monotonic for one session and does not close the transport or stop the world.
+	 */
+	void CloseLinuxInput() { linuxInputClosed = true; }
+	bool IsLinuxInputClosed() const { return linuxInputClosed; }
   int GetLinuxControllerCount() const { return controllers.size(); }
   void GetLinuxRegistryCounts( size_t* creepCount, size_t* unitCount, size_t* objectCount, size_t* groupCount, size_t* deadNameCount, size_t* objectNameCount, size_t* resourceCount ) const
   {
@@ -328,6 +333,9 @@ private:
   TObjectNames       objectIdToName;
   TMinimapIcons      minimapIcons;
   bool               logScriptEvents;
+#if defined( PW_LINUX_NULL_RENDER )
+	bool linuxInputClosed = false;
+#endif
 
   ZDATA_(PFWorldObjectBase)
   TCreeps            creeps;

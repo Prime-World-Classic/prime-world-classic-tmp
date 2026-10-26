@@ -34,6 +34,8 @@ PFAIContainer::PFAIContainer( PFWorld* pWorld, NCore::ITransceiver *pTransceiver
 
 bool PFAIContainer::Step( float timeDelta )
 {
+	if (linuxInputClosed)
+		return true;
   for( vector<CObj<IPFAIController>>::iterator it = controllers.begin(); it != controllers.end(); ++it )
   {
     if ( IsValid(*it) )

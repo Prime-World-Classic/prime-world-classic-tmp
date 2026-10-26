@@ -7,6 +7,10 @@
 	import fl.transitions.easing.Strong;
 	import fl.transitions.TweenEvent;
 	import flash.display.MovieClip;
+	import flash.display.Sprite;
+	import flash.display.DisplayObjectContainer;
+	import flash.events.Event;
+	import flash.utils.getQualifiedClassName;
 	
 	import flash.utils.setInterval;
 	
@@ -16,6 +20,51 @@
 	{
 		//private var myScaleBitmapBack:ScaleBitmap;
 		private var myScaleBitmapEmpty:ScaleBitmap;
+		private var hwBack:Sprite;
+		// the skin draws outside of the frame (outer border, bat): the layout code gets the size of the frame itself
+		private var hwPlain:Boolean = false;
+
+		// windows with many icons get the semi-transparent purple background instead of the wood:
+		// talents (the window and the bottom panel), statistics
+		private static const PLAIN_WINDOWS:Array = ["myTalentsBar", "TalentBar::TalentsBar", "selTalantBar",
+			"TalantBarSelection::SelectionTalentBar", "StatisticBars::FinalStatisticsBar"];
+
+		private function IsPlainWindow():Boolean
+		{
+			for (var p:DisplayObjectContainer = parent; p != null; p = p.parent)
+			{
+				if (PLAIN_WINDOWS.indexOf(getQualifiedClassName(p)) >= 0)
+					return true;
+			}
+			return false;
+		}
+
+		// the parent is known only here for the frames of the timeline: redraw if the look changes
+		private function OnSkinAdded(e:Event):void
+		{
+			if (hwBack != null && hwWidth > 0 && IsPlainWindow() != hwPlain)
+				setSize(hwWidth, hwHeight);
+		}
+
+		private var hwWidth:Number = 0;
+		private var hwHeight:Number = 0;
+
+		override public function get width():Number
+		{
+			return hwBack != null && hwWidth > 0 ? hwWidth * scaleX : super.width;
+		}
+		override public function set width(value:Number):void
+		{
+			super.width = value;
+		}
+		override public function get height():Number
+		{
+			return hwBack != null && hwHeight > 0 ? hwHeight * scaleY : super.height;
+		}
+		override public function set height(value:Number):void
+		{
+			super.height = value;
+		}
 		
 		private var Width:Number;
 		
@@ -43,7 +92,19 @@
 			myScaleBitmapEmpty = new ScaleBitmap(_wFrameEmpty);
 			myScaleBitmapEmpty.scale9Grid = new Rectangle(140,29,60,46);
 			addChildAt(myScaleBitmapEmpty, 0);
-						
+
+			// halloween skin: own picture instead of the frame bitmap and its glows
+			if (Skin.Active)
+			{
+				hwBack = new Sprite();
+				hwBack.mouseEnabled = false;
+				hwBack.mouseChildren = false;
+				addChildAt(hwBack, 0);
+				myScaleBitmapEmpty.visible = false;
+				lightFrame_mc.visible = false;
+				addEventListener(Event.ADDED_TO_STAGE, OnSkinAdded);
+			}
+
 //			setChildIndex(light_mc,1);
 //			setChildIndex(lightFrame_mc,2);
 			//TODO в клипе  lightFrame_mc visible выключается в первом кадре после проигрывании анимации она переходит в первый кадр, там стопиться и скрывается
@@ -59,6 +120,7 @@
 		}
 		private function Flash():void
 		{
+			if (hwBack != null) return;
 			var chance:Number = Math.random()*10;
 			
 			if(chance>5)
@@ -101,6 +163,7 @@
 		}
 		public function onOver():void
 		{
+			if (hwBack != null) return;
 			light_mc.visible = true;
 			TweenMouseLight.continueTo(0.4,20);
 		}
@@ -131,6 +194,27 @@
 			
 			lightFrame_mc.width = _width;
 			lightFrame_mc.height = _height;
+
+			// the same size and look: nothing to redraw
+			var plain:Boolean = IsPlainWindow();
+			if (hwBack != null && !(_width == hwWidth && _height == hwHeight && plain == hwPlain && hwBack.numChildren > 0))
+			{
+				try
+				{
+					hwPlain = plain;
+					Skin.DrawWindow(hwBack, _width, _height, plain);
+					hwWidth = _width;
+					hwHeight = _height;
+				}
+				catch (e:Error)
+				{
+					// back to the usual frame
+					Skin.Fail("WFrame", e);
+					removeChild(hwBack);
+					hwBack = null;
+					myScaleBitmapEmpty.visible = true;
+				}
+			}
 		}
 	}
 };

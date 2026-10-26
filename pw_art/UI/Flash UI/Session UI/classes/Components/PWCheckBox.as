@@ -7,6 +7,7 @@
 	import flash.display.MovieClip;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
+	import flash.utils.getQualifiedClassName;
 	
 	public class PWCheckBox extends MovieClip implements IPWComponents 
 	{
@@ -46,7 +47,9 @@
 			this.addEventListener(Event.ADDED_TO_STAGE, onAdded);
 			
 			this.mouseChildren = false;
-			
+
+			ApplySkin();
+
 			StartState();
 			up_mc.visible = true;
 			
@@ -61,6 +64,28 @@
 			togDisabled_mc.visible = false;
 		}
 		
+
+		// halloween skin: pumpkins (not for the chat mute buttons, PWMuteCheckBox)
+		private function ApplySkin():void
+		{
+			try
+			{
+				if (!Skin.Active || getQualifiedClassName(this) != "Components::PWCheckBox")
+					return;
+				Skin.Fill(up_mc, "HW_ChkOff");
+				Skin.Fill(over_mc, "HW_ChkOffOver");
+				Skin.Fill(down_mc, "HW_ChkOffDown");
+				Skin.Fill(disabled_mc, "HW_ChkOffDisable");
+				Skin.Fill(togUp_mc, "HW_ChkOn");
+				Skin.Fill(togOver_mc, "HW_ChkOnOver");
+				Skin.Fill(togDown_mc, "HW_ChkOnDown");
+				Skin.Fill(togDisabled_mc, "HW_ChkOnDisable");
+			}
+			catch (e:Error)
+			{
+				Skin.Fail("PWCheckBox", e);
+			}
+		}
 
 		private function onAdded(e:Event):void
 		{

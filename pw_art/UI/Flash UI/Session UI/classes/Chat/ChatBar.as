@@ -60,6 +60,10 @@
 			up_btn.addEventListener(MouseEvent.MOUSE_UP, ScrollOutputTextUp);
 			down_btn.addEventListener(MouseEvent.MOUSE_UP, ScrollOutputTextDown);
 			end_btn.addEventListener(MouseEvent.MOUSE_UP, ScrollOutputTextToTheEnd);
+			// halloween skin: purple scroll buttons with orange arrows
+			Components.Skin.Tint(up_btn);
+			Components.Skin.Tint(down_btn);
+			Components.Skin.Tint(end_btn);
 			
 			if (chatInput_mc != null) {
 				chatInput_mc.knownPlayers = knownPlayers;

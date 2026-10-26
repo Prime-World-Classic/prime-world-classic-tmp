@@ -1,6 +1,7 @@
 package MainScreen 
 {
 	import flash.display.MovieClip;
+	import Components.Skin;
 	
 	public class DayNight extends MovieClip 
 	{
@@ -19,6 +20,8 @@ package MainScreen
 			
 			dayNightIcon_mc.stop();
 			progress_mc.stop();
+			// halloween skin: purple ring of the day / night progress
+			Components.Skin.Tint(progress_mc);
 			
 			ApplyState();
 			ApplyStateFraction();

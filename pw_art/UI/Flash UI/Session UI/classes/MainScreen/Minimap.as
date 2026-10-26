@@ -94,6 +94,9 @@
 			this.mouseEnabled = false;
 			dragonvalAdornIco_mc.visible = false;
 			dragonvalDoctIco_mc.visible = false;
+			// halloween skin: purple buttons of the signal and of the camera
+			Components.Skin.Tint(signalBtn);
+			Components.Skin.Tint(cameraBtn);
 	
 			selfShadow_mc.stop();
 

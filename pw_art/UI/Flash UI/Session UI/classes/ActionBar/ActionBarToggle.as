@@ -13,6 +13,7 @@
 	import fl.transitions.Tween;
 	import fl.transitions.easing.Strong;
 	import Components.IcoAction;
+	import Components.Skin;
 	
 	public class ActionBarToggle extends Sprite
 	{
@@ -74,8 +75,11 @@
 			
 			over_bm.visible = false;
 			overDown_bm.visible = false;
-			
+
 			enable()
+
+			// halloween skin: purple slot, the ability icon keeps its colours
+			Skin.TintChildren(this, [ico_mc]);
 		}
 
 		private function ConvertFromMovieToBitmap(dispObject:MovieClip):DisplayObject

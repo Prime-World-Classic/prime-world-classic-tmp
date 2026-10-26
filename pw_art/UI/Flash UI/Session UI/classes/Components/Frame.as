@@ -52,7 +52,11 @@
 			Height = _height;
 		}
 		public function set Image(className:String)
-		{	
+		{
+			// halloween skin: semi-transparent purple panel instead of the teal one (same size and grid)
+			// (frameChat_png: the chat input line, its Image is a component parameter of the timeline)
+			if ((className == 'frame_png' || className == 'frameChat_png') && Skin.Has("HW_Panel"))
+				className = "HW_Panel";
 			image = getDefinitionByName(className) as Class;
 			
   			frame_bm = new image;

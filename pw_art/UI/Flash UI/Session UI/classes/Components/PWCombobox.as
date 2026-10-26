@@ -67,7 +67,8 @@
 			
 			frame = new Frame();
 			frame.y = button_mc.height;
-			frame.Image = 'frameChat_png';
+			// halloween skin: dark list with an orange border (same size and grid as frameChat_png)
+			frame.Image = Skin.Has("HW_ListBack") ? 'HW_ListBack' : 'frameChat_png';
 			frame.visible = false;
 			
 			var xOffset:int = 11;
@@ -76,8 +77,33 @@
 			
 			var rect:Rectangle = new Rectangle(xOffset, yOffset, scaleRectWidth, Math.max(0,int(button_mc.height - yOffset * 2)) );
 			button_mc.ConvertBitmapToScaleBitmap(rect);
-				
+
 			configUI();
+			ApplySkin();
+		}
+
+		private var hwSkinned:Boolean = false;
+
+		// halloween skin: the plank of the buttons
+		private function ApplySkin():void
+		{
+			try
+			{
+				if (!Skin.Active || button_mc.UpVisObj == null)
+					return;
+				hwSkinned = button_mc.SkinStates(["HW_BtnUp", "HW_BtnOver", "HW_BtnDown", "HW_BtnDisable"], PlankRect(button_mc.UpVisObj.width, button_mc.UpVisObj.height));
+			}
+			catch (e:Error)
+			{
+				Skin.Fail("PWCombobox", e);
+			}
+		}
+
+		private function PlankRect(_width:Number, _height:Number):Rectangle
+		{
+			var r:Rectangle = new Rectangle(0, 0, _width, _height);
+			r.inflate(3, 2);
+			return r;
 		}
 		
 		protected function OnKeyDown(e:KeyboardEvent):void 
@@ -117,6 +143,16 @@
 		public function setSize(_width:Number, _height:Number):void
 		{
 			button_mc.SetScaleBitmapSizes(_width, _height);
+			if (hwSkinned)
+			{
+				var r:Rectangle = PlankRect(_width, _height);
+				var states:Array = [button_mc.UpVisObj, button_mc.OverVisObj, button_mc.DownVisObj, button_mc.DisableVisObj];
+				for (var i:int = 0; i < states.length; i++)
+				{
+					if (states[i] == null) continue;
+					states[i].x = r.x; states[i].y = r.y; states[i].width = r.width; states[i].height = r.height;
+				}
+			}
 			txt.width = _width - txt.x - arrowZone;  // ширина поля со стрелкой. 
 			txt.y = button_mc.y + (button_mc.height - txt.textHeight)/2;
 			arrow_mc.x = _width - arrowZone + (arrowZone - arrow_mc.width)/2;

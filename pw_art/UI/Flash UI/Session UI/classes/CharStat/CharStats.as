@@ -23,6 +23,8 @@
 	import Utils.ColorUtils;
 	
 	import Components.RoundFrame;
+	import Components.Skin;
+	import flash.utils.getQualifiedClassName;
 	import MainScreen.MateInfoIcons;
 	import Enums.EStat;
 	import Enums.EDamageType;
@@ -205,7 +207,17 @@
 			
 			elitHero.visible = false;
 			flag.visible = false;
-			
+
+			// halloween skin: purple separator lines, arrows (timeline bitmaps: Bitmap or Shape in the game's player,
+			// the window has no shapes of its own), round frames and bottom plate; the header plates below
+			Skin.Tint(getChildByName("header_mc"));
+			for (var hw:int = 0; hw < numChildren; hw++)
+			{
+				var hwChild:DisplayObject = getChildAt(hw);
+				if (hwChild is Bitmap || hwChild is Shape || hwChild is RoundFrame || getQualifiedClassName(hwChild) == "BottomPlane")
+					Skin.Tint(hwChild);
+			}
+
 			playerNameFormater = new TextFieldFormater(playerName);
 			headerFormater = new TextFieldFormater(header_txt);
 			magicalDmgIco = ConvertFromMovieToBitmap(magicalDmgIco_mc)
@@ -217,6 +229,9 @@
 			physicalDmgIco_mc = null;
 			humanLogo_mc = null;
 			elfLogo_mc = null;
+			// halloween skin: purple header plates (after the conversion: their bitmaps are moved out of the clips)
+			Skin.Tint(humanLogo);
+			Skin.Tint(elfLogo);
 		
 			baseStatTextFields.length = 30;
 			baseStatAddTextFields.length = 30;

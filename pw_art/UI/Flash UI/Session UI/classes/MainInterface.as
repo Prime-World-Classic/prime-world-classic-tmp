@@ -3,6 +3,7 @@
 	import adobe.utils.ProductManager;
 	import BaseClasses.BaseResizableObject;
 	import Components.Bar;
+	import Components.Skin;
 	import Controllers.TutorialShower;
 	import Datas.ForceColors;
 	import Datas.LeavedPlayer;
@@ -1140,6 +1141,30 @@
 			this.mainWindow.setChildIndex(this.pingLayer,this.mainWindow.numChildren - 1);
 			return this.pingLayer;
 		}
+
+		// ping markers on the map: under all panels and windows (options, talents, statistics...), the wheels and
+		// praises stay on top in pingLayer
+		private var pingMarkerLayer:Sprite;
+
+		private function GetPingMarkerLayer() : Sprite
+		{
+			if(this.pingMarkers == null)
+			{
+				this.pingMarkers = new Object();
+			}
+			if(this.pingMarkerLayer == null)
+			{
+				this.pingMarkerLayer = new Sprite();
+				this.pingMarkerLayer.mouseEnabled = false;
+				this.pingMarkerLayer.mouseChildren = false;
+				this.mainWindow.addChildAt(this.pingMarkerLayer,0);
+			}
+			else if(this.mainWindow.getChildIndex(this.pingMarkerLayer) != 0)
+			{
+				this.mainWindow.setChildIndex(this.pingMarkerLayer,0);
+			}
+			return this.pingMarkerLayer;
+		}
 		
 		// text labels of pings, wheels and praises come from a pool: a new ShortcutItem for every ping / wheel / praise
 		// made the engine reach its limit of sprites ("Flash : Sprite count > 6000")
@@ -1188,6 +1213,9 @@
 		// textures: Data/UI/Styles/Icons/PingWheel (pw_art/UI/PingWheel): wheels for 4..8 sectors (256x256), icons 64x64
 		private static const PING_TEX:String = "/UI/Styles/Icons/PingWheel/";
 
+		// wheel textures (chat and ping) are 2x (pw_art/UI/PingWheel/wheel_hd.py): shown with this scale, offsets in wheel pixels
+		public static const WHEEL_TEX_SCALE:Number = 0.5;
+
 		private static const PING_ICON_SCALE:Number = 0.72;
 
 		private static const PING_SLOT_RADIUS:Number = 85;
@@ -1195,8 +1223,11 @@
 		// ping types that can be in the wheel (5 = the ordinary ping); same as s_pingTypes in AdventureScreen.cpp
 		private static const PING_TYPE_COUNT:int = 15;
 
-		// top-left corners of the sector highlights relative to the wheel center: [N][i * 2], [N][i * 2 + 1] (gen_pingwheel.py)
-		public static const PING_HL_OFFSETS:Array = [null,null,null,null,[-128,-128,0,-128,-128,0,-128,-128],[-128,-128,0,-128,-6,0,-122,0,-128,-128],[-64,-128,0,-117,0,-12,-64,0,-128,-12,-128,-117],[-64,-128,0,-124,0,-40,-17,0,-111,0,-128,-40,-128,-124],[-64,-128,0,-128,0,-64,0,0,-64,0,-128,0,-128,-64,-128,-128]];
+		// top-left corners of the sector highlights relative to the wheel center: [N][i * 2], [N][i * 2 + 1] (wheel_hd.py)
+		public static const PING_HL_OFFSETS:Array = [null,null,null,null,[-128,-128,0,-128,-128,0,-128,-128],[-128,-128,0,-128,-7,0,-122,0,-128,-128],[-64,-128,0,-116,0,-12,-64,0,-128,-12,-128,-116],[-64,-128,0,-124,0,-40,-18,0,-111,0,-128,-40,-128,-124],[-64,-128,0,-128,0,-64,0,0,-64,0,-128,0,-128,-64,-128,-128]];
+
+		// the same for the 1x textures of the options window preview (ping_wheel[_hw]_s_*)
+		public static const PING_HL_OFFSETS_SMALL:Array = [null,null,null,null,[-128,-128,0,-128,-128,0,-128,-128],[-128,-128,0,-128,-7,0,-122,0,-128,-128],[-64,-128,0,-116,0,-12,-64,0,-128,-12,-128,-116],[-64,-128,0,-123,0,-40,-17,0,-111,0,-128,-40,-128,-123],[-64,-128,0,-128,0,-64,0,0,-64,0,-128,0,-128,-64,-128,-128]];
 
 		private static const WHEEL_MIN:int = 4;
 
@@ -1240,7 +1271,9 @@
 				this.pingWheelHighlights.push(null);
 				if(n >= MainInterface.WHEEL_MIN)
 				{
-					ld = this.LoadPingImage("ping_wheel_bg_" + n + ".dds");
+					ld = this.LoadPingImage(Skin.WheelPrefix("ping_wheel_") + "bg_" + n + ".dds");
+					ld.scaleX = MainInterface.WHEEL_TEX_SCALE;
+					ld.scaleY = MainInterface.WHEEL_TEX_SCALE;
 					ld.x = -128;
 					ld.y = -128;
 					ld.visible = false;
@@ -1251,7 +1284,9 @@
 					i = 0;
 					while(i < n)
 					{
-						ld = this.LoadPingImage("ping_wheel_hl_" + n + "_" + i + ".dds");
+						ld = this.LoadPingImage(Skin.WheelPrefix("ping_wheel_") + "hl_" + n + "_" + i + ".dds");
+						ld.scaleX = MainInterface.WHEEL_TEX_SCALE;
+						ld.scaleY = MainInterface.WHEEL_TEX_SCALE;
 						ld.x = int(offsets[i * 2]);
 						ld.y = int(offsets[i * 2 + 1]);
 						ld.visible = false;
@@ -1309,7 +1344,7 @@
 				}
 				this.PreloadPingImage(MainInterface.SMARTCAST_TEX + "smartcast_off.dds");
 				this.PreloadPingImage(MainInterface.SMARTCAST_TEX + "smartcast_on.dds");
-				this.PreloadPingImage(MainInterface.PRAISE_TEX + "praise_bg.dds");
+				this.PreloadPingImage(MainInterface.PRAISE_TEX + (Skin.Active ? "praise_hw_bg.dds" : "praise_bg.dds"));
 				this.PreloadPingImage("/UI/Styles/Icons/Artifacts/EyeYellow.dds"); // wards in the statistics window
 			}
 		}
@@ -1436,7 +1471,7 @@
 		// radius of the label centers, texture pixels (wheel radius 244, center circle 58)
 		private static const CHAT_LABEL_RADIUS:Number = 152;
 
-		public static const CHAT_HL_OFFSETS:Array = [null,null,null,null,[-256,-256,0,-256,-256,0,-256,-256],[-256,-256,0,-256,-15,0,-241,0,-256,-256],[-128,-256,0,-231,0,-26,-128,0,-256,-26,-256,-231],[-128,-256,0,-243,0,-80,-36,0,-220,0,-256,-80,-256,-242],[-128,-256,-6,-251,0,-128,-6,-5,-128,0,-251,-5,-256,-128,-251,-251]];
+		public static const CHAT_HL_OFFSETS:Array = [null,null,null,null,[-256,-256,0,-256,-256,0,-256,-256],[-256,-256,0,-256,-15,0,-241,0,-256,-256],[-128,-256,0,-231,0,-26,-128,0,-256,-26,-256,-231],[-128,-256,0,-242,0,-80,-36,0,-220,0,-256,-80,-256,-242],[-128,-256,-7,-250,0,-128,-7,-7,-128,0,-250,-7,-256,-128,-250,-250]];
 
 		private static const CHAT_LABEL_COLOR:uint = 15261109;
 
@@ -1466,7 +1501,9 @@
 				{
 					ld = new Loader();
 					ld.mouseEnabled = false;
-					ld.load(new URLRequest(MainInterface.CHAT_TEX + "chat_wheel_bg_" + n + ".dds"));
+					ld.load(new URLRequest(MainInterface.CHAT_TEX + Skin.WheelPrefix("chat_wheel_") + "bg_" + n + ".dds"));
+					ld.scaleX = MainInterface.WHEEL_TEX_SCALE;
+					ld.scaleY = MainInterface.WHEEL_TEX_SCALE;
 					ld.x = -256;
 					ld.y = -256;
 					ld.visible = false;
@@ -1479,7 +1516,9 @@
 					{
 						ld = new Loader();
 						ld.mouseEnabled = false;
-						ld.load(new URLRequest(MainInterface.CHAT_TEX + "chat_wheel_hl_" + n + "_" + i + ".dds"));
+						ld.load(new URLRequest(MainInterface.CHAT_TEX + Skin.WheelPrefix("chat_wheel_") + "hl_" + n + "_" + i + ".dds"));
+						ld.scaleX = MainInterface.WHEEL_TEX_SCALE;
+						ld.scaleY = MainInterface.WHEEL_TEX_SCALE;
 						ld.x = int(offsets[i * 2]);
 						ld.y = int(offsets[i * 2 + 1]);
 						ld.visible = false;
@@ -1641,7 +1680,7 @@
 				color = MainInterface.CHAT_LABEL_COLOR;
 				if(i == param1)
 				{
-					color = MainInterface.CHAT_LABEL_SELECTED_COLOR;
+					color = Skin.SelectedColor(MainInterface.CHAT_LABEL_SELECTED_COLOR);
 				}
 				row = this.chatWheelLabels[i];
 				j = 0;
@@ -1745,7 +1784,7 @@
 		// alpha <= 0 removes it
 		public function SetPingMarker(param1:int, param2:int, param3:String, param4:uint, param5:Number, param6:Number, param7:Number, param8:Number, param9:Number) : void
 		{
-			var _loc10_:Sprite = this.GetPingLayer();
+			var _loc10_:Sprite = this.GetPingMarkerLayer();
 			var _loc11_:String = String(param1);
 			var _loc12_:Sprite = this.pingMarkers[_loc11_] as Sprite;
 			var _loc13_:Loader = null;
@@ -2281,7 +2320,8 @@
 			_loc10_.mouseChildren = false;
 			_loc11_ = new Loader();
 			_loc11_.mouseEnabled = false;
-			_loc11_.load(new URLRequest(MainInterface.PRAISE_TEX + "praise_bg.dds"));
+			// halloween skin: purple panel with orange rims, no separator (art/halloween/gen_praise_halloween.py)
+			_loc11_.load(new URLRequest(MainInterface.PRAISE_TEX + (Skin.Active ? "praise_hw_bg.dds" : "praise_bg.dds")));
 			_loc11_.scaleX = 0.625;
 			_loc11_.scaleY = 0.625;
 			_loc10_.addChild(_loc11_);

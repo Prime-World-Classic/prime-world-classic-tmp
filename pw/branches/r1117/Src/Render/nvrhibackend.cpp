@@ -3341,7 +3341,29 @@ HRESULT NvrhiBackend::GetSystemInfo(BackendSystemInfo& out)
   // через image view без vendor-форматов. Проверка та же, что для hasD24S:
   // без читаемого depth-аттачмента не работает ни путь карт теней, ни
   // DecodeZ. На D3D9-бэкенде этот бит не выставляется (d3d9backend.cpp).
-  if (features & hasD24S)
+  // PW_VK_NOREADDEPTH=1 — не объявлять hasDepthSRV. Этот бит — единственный
+  // рычаг, который переводит клиента в другой путь глубины: без него
+  // ConfigManager::ReadableDepthEnabled() == false (как на D3D9), клиент не
+  // создаёт pMainDepth, не гоняет DecodeZ-копию в pMainRT1 (R32F) и держит
+  // пин DoDepthOut = TRUE. Замер 2026-10-26 (PWRD-рекорд + PW_VK_TEXGPU):
+  // при hasDepthSRV DepthMap заполнен (линейная глазная глубина 0,5..57),
+  // условие `z > zNear` (FullScreenMaterial.hlsl:246, zNear = PS c21.x =
+  // 0,501) истинно в каждом пикселе, и включается ветка war fog (:248-250):
+  // выборка с карты 205x205, где 84% пикселей = RGB(30,53,96) A=127, т.е.
+  // lerp(scene, navy, 0,498) по всему кадру = affine out = 0,503*raw +
+  // (15,26,48). На D3D9-контуре пелены нет ни при каком bloom; чем именно
+  // заполнен DepthMap на пути DoDepthOut (пусто -> z=0 -> ветка мертва, или
+  // заполнено, но выборка даёт alpha=0) — не измерено: DXVK-капча прохода
+  // поста. Итог: war fog — не дефект рисования seam'а, а функция, которую
+  // seam включает (hasDepthSRV), а D3D9-бэкенд не включает никогда.
+  // Подробный разбор — docs/NVRHI_VULKAN_VS_DXVK_ISSUES.md, «Шестая пачка».
+  static int s_noReadDepth = -1;
+  if (s_noReadDepth < 0)
+  {
+    const char* eNrd = getenv("PW_VK_NOREADDEPTH");
+    s_noReadDepth = (eNrd && *eNrd) ? atoi(eNrd) : 0;
+  }
+  if ((features & hasD24S) && !s_noReadDepth)
     features |= hasDepthSRV;
   out.features = features;
   return S_OK;

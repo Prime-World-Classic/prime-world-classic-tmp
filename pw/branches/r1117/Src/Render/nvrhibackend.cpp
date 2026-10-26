@@ -2318,11 +2318,45 @@ bool NvrhiBackend::Init(NativeWindow window, unsigned width, unsigned height)
     }
   }
 
+  // PW_VK_ZCLAMP=1 — включить VK_EXT_depth_clip_enable. D3D9 всегда ЗАЖИМАЕТ
+  // интерполированную глубину в [0,1] (фрагмент за дальней плоскостью пишется в
+  // 1,0), Vulkan по умолчанию её ОТСЕКАЕТ (такого фрагмента в цели нет вовсе).
+  // NVRHI сам подставляет VkPipelineRasterizationDepthClipStateCreateInfoEXT
+  // (Vendor/NVRHI/src/vulkan/vulkan-graphics.cpp:334), если расширение есть на
+  // устройстве и rasterState.depthClipEnable == false — а false и есть дефолт
+  // NVRHI, значит править пайплайны шва не нужно: достаточно включить
+  // расширение на устройстве. Замер пары капчей 2026-10-26 (abm_dx_frame5292 /
+  // abm_vk_frame777): у DXVK clamp включён (depthClampEnable TRUE в 75/76
+  // пайплайнов либо pNext depth_clip_enable — 150 чанков), у шва — FALSE в 108/108
+  // и pNext нет вовсе.
+  bool zClamp = false;
+  if (getenv("PW_VK_ZCLAMP"))
+  {
+    uint32_t nExt = 0;
+    if (VULKAN_HPP_DEFAULT_DISPATCHER.vkEnumerateDeviceExtensionProperties(
+          d.physical, nullptr, &nExt, nullptr) == VK_SUCCESS && nExt)
+    {
+      std::vector<VkExtensionProperties> props(nExt);
+      if (VULKAN_HPP_DEFAULT_DISPATCHER.vkEnumerateDeviceExtensionProperties(
+            d.physical, nullptr, &nExt, props.data()) == VK_SUCCESS)
+        for (uint32_t i = 0; i < nExt; ++i)
+          if (strcmp(props[i].extensionName, VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME) == 0)
+          { zClamp = true; break; }
+    }
+    VkNote("Device: depth_clip_enable", zClamp, zClamp ? 0 : "расширения нет на устройстве");
+  }
+
   const char* deviceExts[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME,
                                VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
                                VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-                               VK_EXT_VERTEX_ATTRIBUTE_ROBUSTNESS_EXTENSION_NAME };
+                               VK_EXT_VERTEX_ATTRIBUTE_ROBUSTNESS_EXTENSION_NAME,
+                               VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME };
   const uint32_t nDeviceExtsBase = 3;
+  // enabledExtensionCount берёт ПЕРВЫЕ n записей массива, поэтому
+  // необязательные добавляем по счётчику, а не «местами» в массиве.
+  unsigned nDeviceExts = nDeviceExtsBase;
+  if (varRobust) deviceExts[nDeviceExts++] = VK_EXT_VERTEX_ATTRIBUTE_ROBUSTNESS_EXTENSION_NAME;
+  if (zClamp)    deviceExts[nDeviceExts++] = VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME;
   VkPhysicalDeviceVulkan13Features feats13;
   memset(&feats13, 0, sizeof(feats13));
   feats13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
@@ -2334,6 +2368,20 @@ bool NvrhiBackend::Init(NativeWindow window, unsigned width, unsigned height)
   varFeat.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_ROBUSTNESS_FEATURES_EXT;
   varFeat.vertexAttributeRobustness = VK_TRUE;
   if (varRobust) feats13.pNext = &varFeat;
+
+  // Расширение без ФИЧИ бесполезно и вредно: замеры 2026-10-26 — только
+  // VK_EXT_depth_clip_enable в списке расширений даёт vkCreateGraphicsPipelines
+  // отказ (в логе «pipe НЕ создан» на каждом выводе) и клиент падает
+  // 0xC0000005 на экране выбора героя. Фичу chain'им последним звеном.
+  VkPhysicalDeviceDepthClipEnableFeaturesEXT zcFeat;
+  memset(&zcFeat, 0, sizeof(zcFeat));
+  zcFeat.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLIP_ENABLE_FEATURES_EXT;
+  zcFeat.depthClipEnable = VK_TRUE;
+  if (zClamp)
+  {
+    if (varRobust) varFeat.pNext = &zcFeat;
+    else feats13.pNext = &zcFeat;
+  }
 
   VkPhysicalDeviceVulkan12Features feats12;
   memset(&feats12, 0, sizeof(feats12));
@@ -2356,7 +2404,7 @@ bool NvrhiBackend::Init(NativeWindow window, unsigned width, unsigned height)
   dci.pNext = &feats12;
   dci.queueCreateInfoCount = 1;
   dci.pQueueCreateInfos = &qci;
-  dci.enabledExtensionCount = varRobust ? nDeviceExtsBase + 1u : nDeviceExtsBase;
+  dci.enabledExtensionCount = nDeviceExts;
   dci.ppEnabledExtensionNames = deviceExts;
   if (!varRobust)
     VkNote("Device: vertexAttributeRobustness", true, "выключена (с включённой мир чёрный — см. комментарий)");

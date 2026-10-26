@@ -163,6 +163,11 @@ public:
   virtual void PreRender(void);
   virtual bool PostRender(void);
   virtual bool Apply(const SHMatrix& _viewToLightSpace, CVec4 (&_constants)[4], const Texture2DRef& _depthTex);
+  // `setvar shadowtex 1` (PFRenderInterface.cpp:1746 -> ShowShadowTexture) —
+  // показать аппаратную карту в текущей цели. У PCF_DS этого не было вовсе
+  // (базовая версия молча возвращает false), поэтому A/B «что лежит в карте»
+  // на двух контурах снять было нечем.
+  virtual bool ShowTexture(const CTRect<float> &_rect) const;
 
   // from ReallocateHandler
   virtual void OnResourcesRelease()  { pDepthSurface.Attach(0); }
@@ -260,6 +265,18 @@ bool ShadowMapPCF_DS::PostRender(void)
   pStatesManager->SetStateDirect(D3DRS_DEPTHBIAS, 0);
   pStatesManager->SetStateDirect(D3DRS_SLOPESCALEDEPTHBIAS, 0);
   pStatesManager->SetStateDirect(D3DRS_COLORWRITEENABLE, 0x0f);
+  return true;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// DiffuseMap пишет выборку t0 в RGB; для depth-формата карты это .r =
+// нормализованная глубина (0 = ближе к свету, 1 = пусто/дальняя плоскость).
+// Цель и вьюпорт — текущие, т.е. карта ложится в кадр оверлеем (тот же путь,
+// что у ShadowMapPCF::ShowTexture).
+bool ShadowMapPCF_DS::ShowTexture(const CTRect<float> &_rect) const
+{
+  GetRenderer()->SetPixelShaderConstantsVector4(PSHADER_LOCALCONST0, CVec4(1.f, 0.f, 0.f, 0.f));
+  GetImmRenderer()->RenderScreenQuad(_rect, ImmRenderer::Params("DiffuseMap", pDepth));
   return true;
 }
 

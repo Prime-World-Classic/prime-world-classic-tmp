@@ -42516,12 +42516,13 @@ void DriveLinuxBootstrapGameScheduler(
       runtime->worldSteppedSpawnerObjects = world->GetLinuxLastSteppedSpawnerObjectsCount();
       runtime->worldSteppedCreepSpawnerObjects = world->GetLinuxLastSteppedCreepSpawnerObjectsCount();
       runtime->worldSteppedNeutralCreepSpawnerObjects = world->GetLinuxLastSteppedNeutralCreepSpawnerObjectsCount();
-      runtime->worldReadyCreepSpawnerObjects = world->GetLinuxReadyCreepSpawnerObjectsCount();
-      runtime->worldReadyNeutralCreepSpawnerObjects = world->GetLinuxReadyNeutralCreepSpawnerObjectsCount();
-      runtime->worldEnabledCreepSpawnerObjects = world->GetLinuxEnabledCreepSpawnerObjectsCount();
-      runtime->worldEnabledNeutralCreepSpawnerObjects = world->GetLinuxEnabledNeutralCreepSpawnerObjectsCount();
-      runtime->worldContentCreepSpawnerObjects = world->GetLinuxContentCreepSpawnerObjectsCount();
-      runtime->worldContentNeutralCreepSpawnerObjects = world->GetLinuxContentNeutralCreepSpawnerObjectsCount();
+		const NWorld::LinuxCreepDiagnostics creepDiagnostics = world->GetLinuxCreepDiagnostics();
+		runtime->worldReadyCreepSpawnerObjects = creepDiagnostics.readyCreepSpawners;
+		runtime->worldReadyNeutralCreepSpawnerObjects = creepDiagnostics.readyNeutralSpawners;
+		runtime->worldEnabledCreepSpawnerObjects = creepDiagnostics.enabledCreepSpawners;
+		runtime->worldEnabledNeutralCreepSpawnerObjects = creepDiagnostics.enabledNeutralSpawners;
+		runtime->worldContentCreepSpawnerObjects = creepDiagnostics.contentCreepSpawners;
+		runtime->worldContentNeutralCreepSpawnerObjects = creepDiagnostics.contentNeutralSpawners;
       runtime->worldRegisteredCreepObjects = world->GetLinuxRegisteredCreepObjectsCount();
       if (NWorld::PFAIContainer* aiContainer = world->GetAIContainer())
       {
@@ -42534,12 +42535,12 @@ void DriveLinuxBootstrapGameScheduler(
           &runtime->linuxAIRegistryObjectNames,
           &runtime->linuxAIRegistryResources);
       }
-      runtime->worldSpawnedNeutralCreepObjects = world->GetLinuxSpawnedNeutralCreepObjectsCount();
-      runtime->worldMovingCommonCreepObjects = world->GetLinuxMovingCommonCreepObjectsCount();
-      runtime->worldMovedCommonCreepObjects = world->GetLinuxMovedCommonCreepObjectsCount();
-      runtime->worldCommonCreepMovementDistance = world->GetLinuxCommonCreepMovementDistance();
-      runtime->worldCreepSpawnerWaves = world->GetLinuxCreepSpawnerWavesCount();
-      runtime->worldNeutralCreepSpawnerWaves = world->GetLinuxNeutralCreepSpawnerWavesCount();
+		runtime->worldSpawnedNeutralCreepObjects = creepDiagnostics.spawnedNeutralCreeps;
+		runtime->worldMovingCommonCreepObjects = creepDiagnostics.movingCommonCreeps;
+		runtime->worldMovedCommonCreepObjects = creepDiagnostics.movedCommonCreeps;
+		runtime->worldCommonCreepMovementDistance = creepDiagnostics.commonCreepMovementDistance;
+		runtime->worldCreepSpawnerWaves = creepDiagnostics.creepWaves;
+		runtime->worldNeutralCreepSpawnerWaves = creepDiagnostics.neutralWaves;
       runtime->worldStoredDeadUnits = world->GetLinuxStoredDeadUnitsCount();
       runtime->worldCleanedDeadUnits = world->GetLinuxCleanedDeadUnitsCount();
       runtime->worldPendingDeadUnits = world->GetLinuxPendingDeadUnitsCount();
@@ -42580,8 +42581,8 @@ void DriveLinuxBootstrapGameScheduler(
       runtime->worldAICreepSpawnEnabled = world->GetLinuxAICreepSpawnEnabled();
       runtime->worldAINeutralCreepSpawnEnabled = world->GetLinuxAINeutralCreepSpawnEnabled();
       runtime->worldAIMaxCreepsCount = world->GetLinuxAIMaxCreepsCount();
-      runtime->worldMinCreepSpawnerSpawnDelay = world->GetLinuxMinCreepSpawnerSpawnDelay();
-      runtime->worldMinNeutralCreepSpawnerSpawnDelay = world->GetLinuxMinNeutralCreepSpawnerSpawnDelay();
+		runtime->worldMinCreepSpawnerSpawnDelay = creepDiagnostics.minCreepSpawnDelay;
+		runtime->worldMinNeutralCreepSpawnerSpawnDelay = creepDiagnostics.minNeutralSpawnDelay;
       runtime->worldSimpleBuildingObjects = world->GetLinuxLoadedSimpleBuildingObjectsCount();
       runtime->worldUsableBuildingObjects = world->GetLinuxLoadedUsableBuildingObjectsCount();
       runtime->worldShopObjects = world->GetLinuxLoadedShopObjectsCount();
@@ -42748,12 +42749,13 @@ void DriveLinuxBootstrapLoadingRuntime(
         runtime->worldSteppedSpawnerObjects = world->GetLinuxLastSteppedSpawnerObjectsCount();
         runtime->worldSteppedCreepSpawnerObjects = world->GetLinuxLastSteppedCreepSpawnerObjectsCount();
         runtime->worldSteppedNeutralCreepSpawnerObjects = world->GetLinuxLastSteppedNeutralCreepSpawnerObjectsCount();
-        runtime->worldReadyCreepSpawnerObjects = world->GetLinuxReadyCreepSpawnerObjectsCount();
-        runtime->worldReadyNeutralCreepSpawnerObjects = world->GetLinuxReadyNeutralCreepSpawnerObjectsCount();
-        runtime->worldEnabledCreepSpawnerObjects = world->GetLinuxEnabledCreepSpawnerObjectsCount();
-        runtime->worldEnabledNeutralCreepSpawnerObjects = world->GetLinuxEnabledNeutralCreepSpawnerObjectsCount();
-        runtime->worldContentCreepSpawnerObjects = world->GetLinuxContentCreepSpawnerObjectsCount();
-        runtime->worldContentNeutralCreepSpawnerObjects = world->GetLinuxContentNeutralCreepSpawnerObjectsCount();
+		const NWorld::LinuxCreepDiagnostics creepDiagnostics = world->GetLinuxCreepDiagnostics();
+		runtime->worldReadyCreepSpawnerObjects = creepDiagnostics.readyCreepSpawners;
+		runtime->worldReadyNeutralCreepSpawnerObjects = creepDiagnostics.readyNeutralSpawners;
+		runtime->worldEnabledCreepSpawnerObjects = creepDiagnostics.enabledCreepSpawners;
+		runtime->worldEnabledNeutralCreepSpawnerObjects = creepDiagnostics.enabledNeutralSpawners;
+		runtime->worldContentCreepSpawnerObjects = creepDiagnostics.contentCreepSpawners;
+		runtime->worldContentNeutralCreepSpawnerObjects = creepDiagnostics.contentNeutralSpawners;
         runtime->worldRegisteredCreepObjects = world->GetLinuxRegisteredCreepObjectsCount();
         if (NWorld::PFAIContainer* aiContainer = world->GetAIContainer())
         {
@@ -42766,12 +42768,12 @@ void DriveLinuxBootstrapLoadingRuntime(
             &runtime->linuxAIRegistryObjectNames,
             &runtime->linuxAIRegistryResources);
         }
-        runtime->worldSpawnedNeutralCreepObjects = world->GetLinuxSpawnedNeutralCreepObjectsCount();
-        runtime->worldMovingCommonCreepObjects = world->GetLinuxMovingCommonCreepObjectsCount();
-        runtime->worldMovedCommonCreepObjects = world->GetLinuxMovedCommonCreepObjectsCount();
-        runtime->worldCommonCreepMovementDistance = world->GetLinuxCommonCreepMovementDistance();
-        runtime->worldCreepSpawnerWaves = world->GetLinuxCreepSpawnerWavesCount();
-        runtime->worldNeutralCreepSpawnerWaves = world->GetLinuxNeutralCreepSpawnerWavesCount();
+		runtime->worldSpawnedNeutralCreepObjects = creepDiagnostics.spawnedNeutralCreeps;
+		runtime->worldMovingCommonCreepObjects = creepDiagnostics.movingCommonCreeps;
+		runtime->worldMovedCommonCreepObjects = creepDiagnostics.movedCommonCreeps;
+		runtime->worldCommonCreepMovementDistance = creepDiagnostics.commonCreepMovementDistance;
+		runtime->worldCreepSpawnerWaves = creepDiagnostics.creepWaves;
+		runtime->worldNeutralCreepSpawnerWaves = creepDiagnostics.neutralWaves;
         runtime->worldStoredDeadUnits = world->GetLinuxStoredDeadUnitsCount();
         runtime->worldCleanedDeadUnits = world->GetLinuxCleanedDeadUnitsCount();
         runtime->worldPendingDeadUnits = world->GetLinuxPendingDeadUnitsCount();
@@ -42812,8 +42814,8 @@ void DriveLinuxBootstrapLoadingRuntime(
         runtime->worldAICreepSpawnEnabled = world->GetLinuxAICreepSpawnEnabled();
         runtime->worldAINeutralCreepSpawnEnabled = world->GetLinuxAINeutralCreepSpawnEnabled();
         runtime->worldAIMaxCreepsCount = world->GetLinuxAIMaxCreepsCount();
-        runtime->worldMinCreepSpawnerSpawnDelay = world->GetLinuxMinCreepSpawnerSpawnDelay();
-        runtime->worldMinNeutralCreepSpawnerSpawnDelay = world->GetLinuxMinNeutralCreepSpawnerSpawnDelay();
+		runtime->worldMinCreepSpawnerSpawnDelay = creepDiagnostics.minCreepSpawnDelay;
+		runtime->worldMinNeutralCreepSpawnerSpawnDelay = creepDiagnostics.minNeutralSpawnDelay;
         runtime->worldSimpleBuildingObjects = world->GetLinuxLoadedSimpleBuildingObjectsCount();
         runtime->worldUsableBuildingObjects = world->GetLinuxLoadedUsableBuildingObjectsCount();
         runtime->worldShopObjects = world->GetLinuxLoadedShopObjectsCount();

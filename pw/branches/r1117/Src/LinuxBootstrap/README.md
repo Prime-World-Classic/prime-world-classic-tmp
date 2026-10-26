@@ -119,6 +119,27 @@ range 14, a 70-mana deduction, continued world stepping and replay consistency.
 The [offline evidence validator](ruffle_eval/gameplay_gate.py) rejects incomplete
 or duplicated final records; wait for the process to exit before validating logs.
 
+## Diagnostic Cost
+
+The native scheduler and loading reports collect creep/spawner counters in one
+world-registry traversal. Snapshots are detached values, freshly sampled whenever
+the report is refreshed; they do not cache across world changes or alter simulation
+ticks. Disabled and empty spawners still contribute signed minimum delays, dead
+registered creeps still contribute movement, and the original float summation
+order is retained. The independent legacy getters remain the regression oracle.
+
+For an optional CPU-only comparison on the engine test world:
+
+```sh
+PW_BENCH_CREEP_DIAGNOSTICS=1 "$BUILD/PrimeWorldLinuxClient" \
+	--bootstrap-applicator-formula-probe --bootstrap-nature-data "$ROOT/pw/branches/r1117/Data/"
+```
+
+This adds three 1,000-sample comparisons to the full engine probe. Timing is
+informational, not a test threshold or a measurement of desktop/GPU frame rate.
+The ordinary `LinuxApplicatorFormula` CTest includes the correctness checks
+without the benchmark overhead.
+
 ## Remaining Boundaries
 
 The local native view now shares the immutable authored baked terrain between

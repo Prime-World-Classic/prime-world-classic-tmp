@@ -16,6 +16,8 @@
 #include "../PF_GameLogic/PFGlyph.h"
 #include "../PF_GameLogic/PFCreep.h"
 #include "../PF_GameLogic/PFCommonCreep.h"
+#include "../PF_GameLogic/PFNeutralCreep.h"
+#include "../PF_GameLogic/LinuxCreepDiagnostics.h"
 #include "../PF_GameLogic/CollisionResolver.h"
 #include "../PF_GameLogic/PFState.h"
 #include "../PF_GameLogic/PFHeroStates.h"
@@ -38,6 +40,8 @@
 #include "../libdb/DbResourceCache.h"
 #include "../libdb/XMLReader.h"
 #include <cstdio>
+#include <chrono>
+#include <cstdlib>
 #include <limits>
 #include <memory>
 #include <type_traits>
@@ -1457,6 +1461,7 @@ static void BaseAttackExecution(Checks& check, PFWorld* world)
 #include "dynamic_presentation_b13_tests.inc"
 #include "demonologist_startup_b13_tests.inc"
 #include "diagnostic_actions_b13_tests.inc"
+#include "creep_diagnostics_b13_tests.inc"
 
 bool RunPrimeWorldLinuxApplicatorFormulaProbe(const char* dataRoot, bool mapClocksOnly, bool summonsOnly,
 	bool targetedTalentsOnly, bool worldPickingOnly, bool dynamicPresentationOnly)
@@ -1564,6 +1569,7 @@ bool RunPrimeWorldLinuxApplicatorFormulaProbe(const char* dataRoot, bool mapCloc
 		return check.failed == 0;
 	}
 	DiagnosticActionsB13(check);
+	CreepDiagnosticsB13(check);
 	ResourceCacheOwnershipB13(check);
 	if (dataRoot && *dataRoot) ResourceCacheAuthoredB13(check, dataRoot);
 	if (dataRoot && *dataRoot) PlaneRocketAuthoredB13(check, dataRoot);
@@ -1836,6 +1842,8 @@ bool RunPrimeWorldLinuxApplicatorFormulaProbe(const char* dataRoot, bool mapCloc
 			ShopApiEligibilityB12(check, world);
 			CommonCreepRouteB11(check, world);
 			CommonCreepRegistrationB11(check, world);
+			CheckCreepDiagnosticsB13(check, world);
+			BenchmarkCreepDiagnosticsB13(world);
 			CreepPowerLevelsB12(check, world);
 			CreepPowerMultipliersB12(check, world);
 			CreepPowerGuardsB12(check, world);

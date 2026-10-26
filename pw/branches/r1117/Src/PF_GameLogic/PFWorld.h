@@ -21,6 +21,7 @@
 #include "LinuxAbilityPresentation.h"
 #include "LinuxDeathPresentation.h"
 #include "LinuxAbilityAnimationTiming.h"
+#include "LinuxCreepDiagnostics.h"
 #endif
 
 
@@ -543,6 +544,8 @@ public:
 	void SetLinuxDiagnosticActionsEnabled(bool enabled) { linuxDiagnosticActionsEnabled = enabled; }
 	bool IsLinuxDiagnosticActionsEnabled() const { return linuxDiagnosticActionsEnabled; }
   int GetLinuxRegisteredCreepObjectsCount() const { return GetRegisteredCreepsCount(); }
+	/** Read all creep/spawner diagnostics in one traversal; no world state is retained. */
+	LinuxCreepDiagnostics GetLinuxCreepDiagnostics();
   int GetLinuxSpawnedNeutralCreepObjectsCount();
   int GetLinuxMovingCommonCreepObjectsCount();
   int GetLinuxMovedCommonCreepObjectsCount();

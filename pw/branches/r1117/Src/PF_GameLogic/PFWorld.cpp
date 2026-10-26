@@ -769,6 +769,48 @@ void PFWorld::RegisterLinuxBootstrapRuntimeCommand(int clientId, int token, floa
   linuxLastBootstrapRuntimeCommandToken = token;
   linuxLastBootstrapRuntimeCommandValue = value;
 }
+LinuxCreepDiagnostics PFWorld::GetLinuxCreepDiagnostics()
+{
+	LinuxCreepDiagnostics result;
+	bool foundCreepSpawner = false, foundNeutralSpawner = false;
+	TObjects& objects = GetObjects();
+	for (TObjects::iterator it = objects.begin(), end = objects.end(); it != end; ++it)
+	{
+		auto* object = it->second.GetPtr();
+		if (auto* creep = dynamic_cast<PFCommonCreep*>(object))
+		{
+			if (creep->IsMoving()) ++result.movingCommonCreeps;
+			const float distance = creep->GetLinuxDistanceFromInitial();
+			if (distance > 0.5f) ++result.movedCommonCreeps;
+			result.commonCreepMovementDistance += distance;
+		}
+		if (auto* spawner = dynamic_cast<PFCreepSpawner*>(object))
+		{
+			result.creepWaves += spawner->GetLastWave();
+			if (spawner->CanSpawnLinuxBootstrapWave()) ++result.readyCreepSpawners;
+			if (spawner->IsLinuxBootstrapEnabled()) ++result.enabledCreepSpawners;
+			const auto* desc = dynamic_cast<const NDb::AdvMapCreepSpawner*>(spawner->GetDBDesc());
+			if (desc && !desc->creeps.empty()) ++result.contentCreepSpawners;
+			const float delay = spawner->GetLinuxSpawnDelay();
+			if (!foundCreepSpawner || delay < result.minCreepSpawnDelay) result.minCreepSpawnDelay = delay;
+			foundCreepSpawner = true;
+		}
+		if (auto* spawner = dynamic_cast<PFNeutralCreepSpawner*>(object))
+		{
+			result.spawnedNeutralCreeps += spawner->GetSpawnedCreepsCount();
+			result.neutralWaves += spawner->GetLastWave();
+			if (spawner->CanSpawnLinuxBootstrapWave()) ++result.readyNeutralSpawners;
+			if (spawner->IsLinuxBootstrapEnabled()) ++result.enabledNeutralSpawners;
+			const auto* desc = dynamic_cast<const NDb::AdvMapNeutralCreepSpawner*>(spawner->GetDBDesc());
+			if (desc && !desc->groups.empty()) ++result.contentNeutralSpawners;
+			const float delay = spawner->GetLinuxSpawnDelay();
+			if (!foundNeutralSpawner || delay < result.minNeutralSpawnDelay) result.minNeutralSpawnDelay = delay;
+			foundNeutralSpawner = true;
+		}
+	}
+	return result;
+}
+
 int PFWorld::GetLinuxSpawnedNeutralCreepObjectsCount()
 {
   int count = 0;

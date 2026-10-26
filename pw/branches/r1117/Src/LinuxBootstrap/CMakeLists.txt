@@ -1053,6 +1053,8 @@ set_tests_properties(LinuxSessionStartup PROPERTIES TIMEOUT 60
 add_test(NAME LinuxMenuSessionEvidence COMMAND "${PW_LINUX_PYTHON3}" -B
 	"${CMAKE_CURRENT_SOURCE_DIR}/ruffle_eval/test_native_menu_probe.py")
 set_tests_properties(LinuxMenuSessionEvidence PROPERTIES TIMEOUT 30)
+add_test(NAME LinuxLobbyAdmission COMMAND PrimeWorldLinuxClient --bootstrap-lobby-admission-probe)
+set_tests_properties(LinuxLobbyAdmission PROPERTIES TIMEOUT 30)
 add_test(NAME LinuxAbilityAnimationTiming COMMAND PrimeWorldLinuxClient --bootstrap-ability-timing-probe
 	--root "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 set_tests_properties(LinuxAbilityAnimationTiming PROPERTIES TIMEOUT 60

@@ -119,6 +119,34 @@ range 14, a 70-mana deduction, continued world stepping and replay consistency.
 The [offline evidence validator](ruffle_eval/gameplay_gate.py) rejects incomplete
 or duplicated final records; wait for the process to exit before validating logs.
 
+## Menu Admission
+
+The native local Create callback resolves the requested map through the existing
+`IMapCollection::CreateMapLoader` boundary before entering hero selection. Empty
+or unavailable maps, nonpositive player counts and invalid authored team capacity
+leave the current session untouched. Valid player counts are capped to twice the
+map's authored team capacity, as in the original `LocalGameContext`. Late Create
+callbacks cannot replace an accepted session or its transition action.
+
+The shipped XDB/Lua screen is unchanged. Select a map before Create; there is no
+new automatic selection or silent fallback. Rejections are counted separately
+from callback attempts. `LinuxLobbyAdmission` covers admission and retry with mock
+map providers, without a graphics display. For the real rejection/retry workflow:
+
+```sh
+python3 -B "$PORT/ruffle_eval/native_menu_probe.py" \
+	--binary "$BUILD/PrimeWorldLinuxClient" --bin-dir "$ROOT/pw/branches/r1117/Bin" \
+	--output /tmp/pw-native-menu-retry.log --seconds 120 --reject-empty-first
+```
+
+This first clicks Create with no selection, requires rejection, then selects MOBA,
+clicks Create and Ready, and verifies one successful transition, nine live bots and
+replay accounting. It requires the same isolated/foreground X11 conditions as the
+controls driver. The unchanged ordinary workflow omits `--reject-empty-first`.
+The longer 150-second retry run exposed a timing-sensitive AI-sent/replay-count
+mismatch during shutdown. Its strict gate remains failing evidence, not a passed
+full-session test; see C117 in the port plan for the retained logs and follow-up.
+
 ## Diagnostic Cost
 
 The native scheduler and loading reports collect creep/spawner counters in one

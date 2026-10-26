@@ -23,7 +23,7 @@ bootstrapLegacySessionOverlay=no
 finalBootstrapInputScript=0/0/0.00
 finalGameReplayInputPath=inactive
 finalProductionLobbyCreatedGame=Maps/Multiplayer/MOBA/_.ADMPDSCR.xdb/10
-finalProductionLobbyCallbacks=create:1 createMulti:1 createSingle:0 join:0 spectate:0 reconnect:0 lastAction:create-multiplayer
+finalProductionLobbyCallbacks=create:1 createMulti:1 createSingle:0 createRejected:0 join:0 spectate:0 reconnect:0 lastAction:create-multiplayer
 finalProductionHeroCallbacks=ready:1 lastAction:ready
 finalProductionLobbyTransition=1/create-multiplayer hero:yes active:no
 finalProductionHeroLoadingTransition=1/ready loading:yes
@@ -43,6 +43,40 @@ class NativeMenuTests(unittest.TestCase):
 	def test_manual_session(self):
 		result = probe.validate_menu(*evidence())
 		self.assertEqual((result['bots'], result['ai_commands'], result['replay_commands']), (9, 9, 10))
+
+	def test_empty_map_rejection_then_retry(self):
+		stdout, client = evidence()
+		stdout += 'Native lobby create rejected: empty-map\n'
+		client = client.replace('create:1', 'create:2').replace('createMulti:1', 'createMulti:2').replace('createRejected:0', 'createRejected:1')
+		self.assertEqual(probe.validate_menu(stdout, client, True)['bots'], 9)
+		for bad_stdout, bad_client in (
+			(stdout.replace('empty-map', 'invalid-capacity'), client),
+			(stdout + 'Native lobby create rejected: empty-map\n', client),
+			(stdout, client.replace('createRejected:1', 'createRejected:0')),
+			(stdout, client.replace('create:2', 'create:1')),
+			(stdout, client.replace('1/create-multiplayer hero', '2/create-multiplayer hero')),
+			(stdout, client.replace('_.ADMPDSCR.xdb/10', 'missing/10'))):
+			with self.subTest(client=bad_client), self.assertRaises(probe.EvidenceError):
+				probe.validate_menu(bad_stdout, bad_client, True)
+		with self.assertRaises(probe.EvidenceError):
+			probe.validate_menu(stdout, client)
+
+	def test_failed_rejection_never_retries_and_reaps(self):
+		with tempfile.TemporaryDirectory() as directory:
+			process = Mock()
+			process.poll.return_value = None
+			process.wait.return_value = 0
+			with patch.object(probe.subprocess, 'Popen', return_value=process), \
+				patch.object(probe, 'wait_for_window'), patch.object(probe, 'pause'), \
+				patch.object(probe, 'owned_window', return_value='42'), patch.object(probe, 'click') as click, \
+				patch.object(probe, 'drive') as drive, \
+				patch.object(probe, 'wait_for', side_effect=[None, probe.EvidenceError('not rejected')]):
+				with self.assertRaisesRegex(probe.EvidenceError, 'not rejected'):
+					probe.run(Path('/client'), Path('/bin'), Path(directory) / 'out.log', reject_empty_first=True)
+				self.assertEqual(click.call_args.args[:3], ('42', 551, 618))
+				drive.assert_not_called()
+				process.terminate.assert_called_once()
+				process.wait.assert_called_once()
 
 	def test_missing_and_duplicate_records(self):
 		stdout, client = evidence()

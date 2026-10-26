@@ -3768,7 +3768,8 @@ class LinuxBootstrapGameContextUi : public Game::IGameContextUiInterface, public
   NI_DECLARE_REFCOUNT_CLASS_2(LinuxBootstrapGameContextUi, Game::IGameContextUiInterface, BaseObjectMT);
 
 public:
-  LinuxBootstrapGameContextUi()
+	/** An injected map provider supports headless admission tests; normal startup scans game data. */
+	explicit LinuxBootstrapGameContextUi(NWorld::IMapCollection* suppliedMaps = nullptr)
     : developerSex(lobby::ESex::Male),
       readyState(lobby::EGameMemberReadiness::NotReady),
       developerParty(0),
@@ -3780,6 +3781,7 @@ public:
       setDeveloperSexCalls(0),
       refreshGamesListCalls(0),
       createGameCalls(0),
+		createGameRejectedCalls(0),
       singlePlayerCreateCalls(0),
       multiplayerCreateCalls(0),
       joinGameCalls(0),
@@ -3796,6 +3798,11 @@ public:
       lastLobbyAction("none"),
       lastHeroAction("none")
   {
+		if (suppliedMaps)
+		{
+			mapCollection = suppliedMaps;
+			return;
+		}
     StrongMT<NWorld::PWMapCollection> maps = new NWorld::PWMapCollection;
     maps->ScanForMaps();
     mapCollection = maps;
@@ -3987,15 +3994,27 @@ public:
     if (_maxPlayers == 1)
     {
       ++singlePlayerCreateCalls;
-      lastLobbyAction = "create-single";
     }
     else
     {
       ++multiplayerCreateCalls;
-      lastLobbyAction = "create-multiplayer";
     }
-    createdMapId = mapId ? mapId : "";
-    maxPlayers = _maxPlayers;
+		// Match LocalGameContext: resolve the map before committing a lobby transition.
+		if (lobbyStatus != lobby::EClientStatus::Connected)
+			return RejectCreateGame("not-in-lobby");
+		if (!mapId || !*mapId)
+			return RejectCreateGame("empty-map");
+		if (_maxPlayers <= 0)
+			return RejectCreateGame("player-count");
+		StrongMT<NWorld::IMapLoader> loader = IsValid(mapCollection) ? mapCollection->CreateMapLoader(mapId) : nullptr;
+		if (!loader)
+			return RejectCreateGame("map-unavailable");
+		const int teamCapacity = loader->GetMaxPlayersPerTeam();
+		if (teamCapacity <= 0 || teamCapacity > std::numeric_limits<int>::max() / 2)
+			return RejectCreateGame("invalid-capacity");
+		createdMapId = mapId;
+		maxPlayers = std::min(_maxPlayers, 2 * teamCapacity);
+		lastLobbyAction = _maxPlayers == 1 ? "create-single" : "create-multiplayer";
     lobbyStatus = lobby::EClientStatus::InCustomLobby;
     lastLobbyOperationResult = lobby::EOperationResult::Ok;
   }
@@ -4116,6 +4135,7 @@ public:
   size_t GetSetDeveloperSexCalls() const { return setDeveloperSexCalls; }
   size_t GetRefreshGamesListCalls() const { return refreshGamesListCalls; }
   size_t GetCreateGameCalls() const { return createGameCalls; }
+	size_t GetCreateGameRejectedCalls() const { return createGameRejectedCalls; }
   size_t GetSinglePlayerCreateCalls() const { return singlePlayerCreateCalls; }
   size_t GetMultiplayerCreateCalls() const { return multiplayerCreateCalls; }
   size_t GetJoinGameCalls() const { return joinGameCalls; }
@@ -4133,6 +4153,13 @@ public:
   const string& GetLastHeroAction() const { return lastHeroAction; }
 
 private:
+	/** A rejected local request leaves the accepted map, lineup and lobby state untouched. */
+	void RejectCreateGame(const char* reason)
+	{
+		++createGameRejectedCalls;
+		fprintf(stdout, "Native lobby create rejected: %s\n", reason);
+	}
+
   StrongMT<NWorld::IMapCollection> mapCollection;
   lobby::TDevGamesList devGamesList;
   lobby::TDevGamesList visibleGamesList;
@@ -4147,6 +4174,7 @@ private:
   size_t setDeveloperSexCalls;
   size_t refreshGamesListCalls;
   size_t createGameCalls;
+	size_t createGameRejectedCalls;
   size_t singlePlayerCreateCalls;
   size_t multiplayerCreateCalls;
   size_t joinGameCalls;
@@ -4165,6 +4193,8 @@ private:
   string createdMapId;
   string selectedHeroId;
 };
+
+#include "LinuxBootstrap/lobby_admission_probe.inc"
 
 struct LinuxLiveUnitHudState
 {
@@ -68549,6 +68579,7 @@ void AppendRuntimeInputLog(
             << "sex:" << screenRuntime.gameContext->GetSetDeveloperSexCalls()
             << " refresh:" << screenRuntime.gameContext->GetRefreshGamesListCalls()
             << " create:" << screenRuntime.gameContext->GetCreateGameCalls()
+			<< " createRejected:" << screenRuntime.gameContext->GetCreateGameRejectedCalls()
             << " createSingle:" << screenRuntime.gameContext->GetSinglePlayerCreateCalls()
             << " createMulti:" << screenRuntime.gameContext->GetMultiplayerCreateCalls()
             << " join:" << screenRuntime.gameContext->GetJoinGameCalls()
@@ -71707,6 +71738,8 @@ const char* SelectWindowTitle(const LinuxClientEnvironment& environment)
 int main(int argc, char** argv)
 {
   InitializeCmdLine(argc, argv);
+	if (CmdLineLite::Instance().IsKeyDefined("--bootstrap-lobby-admission-probe"))
+		return RunLinuxLobbyAdmissionProbe() ? 0 : 1;
 	const bool sessionStartupProbe = CmdLineLite::Instance().IsKeyDefined("--bootstrap-session-startup-probe");
 	if (sessionStartupProbe)
 	{

@@ -9,6 +9,7 @@ size_t DrawLinuxHeroRendererStaticMeshPayloads(LinuxWindowOverlay*, const LinuxS
 #include "baked_engine_probe.inc"
 #include "scene_window_engine_probe.inc"
 #include "skeletal_indices_engine_probe.inc"
+#include "preview_vertex_reuse_engine_probe.inc"
 #include "preview_sampler_engine_probe.inc"
 #include "preview_opaque_engine_probe.inc"
 #include "dds_preview_engine_probe.inc"
@@ -316,6 +317,7 @@ bool RunLinuxBasicFxEngineProbe(const std::string& capturePath, const LinuxClien
 	passed = RunLinuxBakedEngineProbe(capturePath, environment, *authored) && passed;
 	passed = RunLinuxSceneWindowEngineProbe(environment) && passed;
 	passed = RunLinuxSkeletalIndicesEngineProbe() && passed;
+	passed = RunLinuxPreviewVertexReuseEngineProbe() && passed;
 	passed = RunLinuxPreviewSamplerEngineProbe() && passed;
 	passed = RunLinuxPreviewOpaqueEngineProbe() && passed;
 	passed = RunLinuxDdsPreviewEngineProbe(environment) && passed;

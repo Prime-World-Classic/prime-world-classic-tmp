@@ -16,6 +16,7 @@
 #include "LinuxBasicFx.h"
 #include "LinuxPreviewSampler.h"
 #include "LinuxPreviewOpaque.h"
+#include <array>
 #endif
 
 namespace
@@ -72,6 +73,8 @@ namespace
   float g_openGLPreviewMinZ = 0.0f;
   float g_openGLPreviewScale = 1.0f;
   Render::SmartRenderer::OpenGLTextureBindStats g_openGLTextureBindStats;
+	Render::SmartRenderer::OpenGLVertexWorkStats g_openGLVertexWorkStats;
+	bool g_openGLVertexReuseEnabled = true;
 
   float ClampFloat(float value, float minValue, float maxValue)
   {
@@ -411,6 +414,21 @@ namespace
 	if (!sampling.Ok()) return;
 	Render::LinuxPreviewOpaque::Scope opaque(Render::LinuxPreviewOpaque::Current());
 	if (!opaque.Ok()) return;
+	++g_openGLVertexWorkStats.draws;
+	// Results live for one draw only: buffers, pose, material and preview transforms
+	// may change before the next call. Oversized or inaccurate ranges retain the old path.
+	struct VertexResult
+	{
+		CVec3 position = CVec3(0, 0, 0), normal = CVec3(0, 0, 1);
+		float u = 0, v = 0;
+		unsigned int index = 0;
+		bool normalValid = false, texCoordValid = false, built = false, valid = false;
+	};
+	// A direct-mapped post-transform cache bounds scratch independently of mesh size.
+	// Collisions recompute the original value; the index tag prevents stale substitution.
+	std::array<VertexResult, 256> vertices;
+	const bool reuse = g_openGLVertexReuseEnabled && descr.numVertices <= 65536 &&
+		descr.numVertices <= g_boundVertexBuffer->storage.size() / g_boundVertexStride;
     glBegin(GL_TRIANGLES);
     for (unsigned int triangleIndex = 0; triangleIndex < descr.primitiveCount; ++triangleIndex)
     {
@@ -427,39 +445,31 @@ namespace
           continue;
         }
 
-        const int effectiveVertexIndex =
-          descr.baseVertexIndex + static_cast<int>(indexValue);
-        CVec3 position(0.0f, 0.0f, 0.0f);
-        CVec3 normal(0.0f, 0.0f, 1.0f);
-        bool normalValid = false;
-        float u = 0.0f;
-        float v = 0.0f;
-        bool texCoordValid = false;
-        if (!BuildOpenGLImmediateMeshVertex(
-              effectiveVertexIndex,
-              positionElement,
-              normalElement,
-              texCoordElement,
-              blendWeightElement,
-              blendIndicesElement,
-              &position,
-              &normal,
-              &normalValid,
-              &u,
-              &v,
-              &texCoordValid))
-        {
-          continue;
-        }
+				const long long effective = static_cast<long long>(descr.baseVertexIndex) + indexValue;
+				if (effective < 0 || effective > INT_MAX) continue;
+				VertexResult scratch;
+				auto& vertex = reuse && indexValue >= descr.minIndex && indexValue - descr.minIndex < descr.numVertices
+					? vertices[(indexValue - descr.minIndex) % vertices.size()] : scratch;
+				if (!vertex.built || vertex.index != indexValue) {
+					vertex = VertexResult{};
+					vertex.index = indexValue;
+					vertex.built = true;
+					++g_openGLVertexWorkStats.transformed;
+					vertex.valid = BuildOpenGLImmediateMeshVertex(static_cast<int>(effective),
+						positionElement, normalElement, texCoordElement, blendWeightElement, blendIndicesElement,
+						&vertex.position, &vertex.normal, &vertex.normalValid, &vertex.u, &vertex.v, &vertex.texCoordValid);
+				} else ++g_openGLVertexWorkStats.reused;
+				if (!vertex.valid) continue;
 
-        EmitOpenGLImmediateMeshColor(normal, normalValid, textureEnabled && texCoordValid, opaque.TextureAlpha());
-        if (textureEnabled && texCoordValid)
-          glTexCoord2f(u, v);
+        EmitOpenGLImmediateMeshColor(vertex.normal, vertex.normalValid, textureEnabled && vertex.texCoordValid, opaque.TextureAlpha());
+				++g_openGLVertexWorkStats.corners;
+        if (textureEnabled && vertex.texCoordValid)
+          glTexCoord2f(vertex.u, vertex.v);
 
         float x = 0.0f;
         float y = 0.0f;
         float z = 0.0f;
-        ApplyOpenGLPreviewTransform(position, &x, &y, &z);
+        ApplyOpenGLPreviewTransform(vertex.position, &x, &y, &z);
         glVertex3f(x, y, z);
       }
     }
@@ -522,6 +532,10 @@ void SetOpenGLImmediateSkeletalMatrices(const Matrix43* matrices, unsigned int m
   g_openGLImmediateSkeletalMatrices = matrices;
   g_openGLImmediateSkeletalMatrixCount = matrixCount;
 }
+
+OpenGLVertexWorkStats GetOpenGLVertexWorkStats() { return g_openGLVertexWorkStats; }
+void ResetOpenGLVertexWorkStats() { g_openGLVertexWorkStats = {}; }
+void SetOpenGLVertexReuseEnabled(bool enabled) { g_openGLVertexReuseEnabled = enabled; }
 #endif
 
 void AddRect(float l, float t, float r, float b, int R, int G, int B)

@@ -66,6 +66,15 @@ void SetOpenGLImmediateObjectMatrix(const Matrix43* matrix);
 void SetOpenGLImmediateSkeletalMatrices(const Matrix43* matrices, unsigned int matrixCount);
 OpenGLTextureBindStats GetOpenGLTextureBindStats();
 void ResetOpenGLTextureBindStats();
+/** Fallback vertex work, separate from authored shader draws and GPU timing. */
+struct OpenGLVertexWorkStats
+{
+	unsigned long long draws = 0, corners = 0, transformed = 0, reused = 0;
+};
+OpenGLVertexWorkStats GetOpenGLVertexWorkStats();
+void ResetOpenGLVertexWorkStats();
+/** Disable only per-draw reuse for regression pixel/timing comparisons. */
+void SetOpenGLVertexReuseEnabled(bool enabled);
 #endif
 
 void AddRect(float l, float t, float r, float b, int R, int G, int B);

@@ -275,6 +275,21 @@ complete Plane skin decoding and original-mesh framebuffer comparisons with an
 independently pre-skinned reference. This verifies index association, not original
 skeletal material, lighting, animation-state or GPU-skinning parity.
 
+The immediate fallback reuses transformed vertices within a single indexed draw.
+Its fixed 256-entry scratch cache recomputes on index collisions; missing,
+oversized (over 65,536 vertices) or out-of-range metadata falls back to per-corner
+work. Nothing persists across draws, so changed
+poses, CPU buffers, materials and preview transforms need no cache invalidation.
+Authored shader draws are unchanged. `finalNativeVertexWork` reports fallback
+draws, emitted corners, transform attempts and reused results separately from
+the existing CPU submission/wait stage timings.
+
+The renderer gate compares cached/uncached pixels for textured and untextured
+static/skinned draws, index formats, offsets, changing data and bounded fallback.
+Add `--bootstrap-vertex-reuse-benchmark` to `--bootstrap-flash-renderer-probe` for
+an opt-in alternating indexed-grid benchmark. Its timing is not an overall game
+FPS result or a desktop-GPU benchmark.
+
 Eligible single-skeleton live hero/creep previews now use the original
 `DiAnimGraph`, `AnimGraphBlender` and `AnimGraphApplicator`, including authored
 default nodes, dispatchers and transition blending. Idle/move aliases come from

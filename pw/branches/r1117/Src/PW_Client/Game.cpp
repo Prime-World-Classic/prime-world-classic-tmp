@@ -69397,6 +69397,11 @@ void AppendRuntimeInputLog(
 	logFile << "  finalLocalMapCamera=active:" << screenRuntime.localMapCamera
 		<< " follow:" << screenRuntime.localMapFollow << " updates:" << screenRuntime.localMapFocusUpdates
 		<< " focusHeight:" << screenRuntime.localMapFocusHeight << "\n";
+#if defined(PW_LINUX_OPENGL_BOOTSTRAP)
+	const auto vertexWork = Render::SmartRenderer::GetOpenGLVertexWorkStats();
+	logFile << "  finalNativeVertexWork=draws:" << vertexWork.draws << " corners:" << vertexWork.corners
+		<< " transformed:" << vertexWork.transformed << " reused:" << vertexWork.reused << "\n";
+#endif
 	logFile << "  finalProductionLoadingPresentationFrames=" << screenRuntime.productionLoadingPresentationFrames << "\n";
 	logFile << "  finalSceneWindow=revision:" << selectedMapPreview.sceneWindow.Revision()
 		<< " builds:" << selectedMapPreview.sceneWindowBuilds

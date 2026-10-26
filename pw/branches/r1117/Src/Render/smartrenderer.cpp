@@ -709,6 +709,66 @@ static unsigned ScanTarget(IDirect3DDevice9* dev, IDirect3DSurface9* rt, const c
 
 static void NoteDipTrace(const DipDescriptor& _descr, bool _indexed)
 {
+  // PW_D3D_TRACETEX=1 — дамп привязок текстур и состояний сэмплеров (слоты 0..15)
+  // для Dip'ов FullScreenMaterial: на стороне шва те же привязки видно из капчи
+  // (Internal::Initial Contents дескрипторных сетов), на D3D9-стороне их взять
+  // было неоткуда — DXVK-капча отдаёт descriptor buffer непрозрачными байтами.
+  // Ключ - по имени материала, чтобы не тонуть в UI.
+  {
+    static int s_tt = -1;
+    if (s_tt < 0)
+    {
+      char bt[8]; bt[0] = 0;
+      s_tt = (GetEnvironmentVariableA("PW_D3D_TRACETEX", bt, sizeof(bt) - 1) > 0 && bt[0]) ? atoi(bt) : 0;
+    }
+    const char* mn = ::GetLastDipMaterial();
+    if (s_tt && mn && strstr(mn, "FullScreen"))
+    {
+      IDirect3DDevice9* devT = GetDevice();
+      if (devT)
+      {
+        for (unsigned sl = 0u; sl < 16u; ++sl)
+        {
+          IDirect3DBaseTexture9* tx = 0;
+          HRESULT hrT = devT->GetTexture(sl, &tx);
+          if (SUCCEEDED(hrT) && tx)
+          {
+            D3DSURFACE_DESC ds = {};
+            unsigned fmt = 0u, w = 0u, h = 0u, mips = 0u;
+            const D3DRESOURCETYPE rt = tx->GetType();
+            if (rt == D3DRTYPE_TEXTURE)
+            {
+              IDirect3DTexture9* t2 = static_cast<IDirect3DTexture9*>(tx);
+              if (SUCCEEDED(t2->GetLevelDesc(0, &ds)))
+              {
+                fmt = (unsigned)ds.Format; w = ds.Width; h = ds.Height;
+              }
+            }
+            mips = tx->GetLevelCount();
+            DWORD aU = 0, aV = 0, mf = 0, mipF = 0, mml = 0;
+            devT->GetSamplerState(sl, D3DSAMP_ADDRESSU, &aU);
+            devT->GetSamplerState(sl, D3DSAMP_ADDRESSV, &aV);
+            devT->GetSamplerState(sl, D3DSAMP_MINFILTER, &mf);
+            devT->GetSamplerState(sl, D3DSAMP_MIPFILTER, &mipF);
+            devT->GetSamplerState(sl, D3DSAMP_MAXMIPLEVEL, &mml);
+            char tb[200];
+            snprintf(tb, sizeof(tb), "nv=%u prim=%u slot=%u type=%u tex=%ux%u mips=%u fmt=%u aU=%u aV=%u minF=%u mipF=%u maxMip=%u",
+                     _descr.numVertices, _descr.primitiveCount, sl, (unsigned)rt, w, h, mips, fmt, aU, aV, mf, mipF, mml);
+            DebugTrace("D3dTex: %s", tb);
+            tx->Release();
+          }
+          else
+          {
+            char tb[80];
+            snprintf(tb, sizeof(tb), "nv=%u prim=%u slot=%u hr=%08X",
+                     _descr.numVertices, _descr.primitiveCount, sl, (unsigned)hrT);
+            DebugTrace("D3dTex: %s", tb);
+          }
+        }
+      }
+    }
+  }
+
   // PW_D3D_TRACEDRAW=мин,макс[,задержка_сек] — дамп WORLD (c0..c3) и VIEW
   // (c4..c7) для Dip'ов, у которых ЧИСЛО ВЕРШИН ИЛИ ЧИСЛО ПРИМИТИВОВ попало в
   // диапазон. Диапазон по обоим полям потому, что число вершин двух сторон не

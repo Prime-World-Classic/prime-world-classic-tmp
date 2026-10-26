@@ -2318,11 +2318,45 @@ bool NvrhiBackend::Init(NativeWindow window, unsigned width, unsigned height)
     }
   }
 
+  // PW_VK_ZCLAMP=1 — включить VK_EXT_depth_clip_enable. D3D9 всегда ЗАЖИМАЕТ
+  // интерполированную глубину в [0,1] (фрагмент за дальней плоскостью пишется в
+  // 1,0), Vulkan по умолчанию её ОТСЕКАЕТ (такого фрагмента в цели нет вовсе).
+  // NVRHI сам подставляет VkPipelineRasterizationDepthClipStateCreateInfoEXT
+  // (Vendor/NVRHI/src/vulkan/vulkan-graphics.cpp:334), если расширение есть на
+  // устройстве и rasterState.depthClipEnable == false — а false и есть дефолт
+  // NVRHI, значит править пайплайны шва не нужно: достаточно включить
+  // расширение на устройстве. Замер пары капчей 2026-10-26 (abm_dx_frame5292 /
+  // abm_vk_frame777): у DXVK clamp включён (depthClampEnable TRUE в 75/76
+  // пайплайнов либо pNext depth_clip_enable — 150 чанков), у шва — FALSE в 108/108
+  // и pNext нет вовсе.
+  bool zClamp = false;
+  if (getenv("PW_VK_ZCLAMP"))
+  {
+    uint32_t nExt = 0;
+    if (VULKAN_HPP_DEFAULT_DISPATCHER.vkEnumerateDeviceExtensionProperties(
+          d.physical, nullptr, &nExt, nullptr) == VK_SUCCESS && nExt)
+    {
+      std::vector<VkExtensionProperties> props(nExt);
+      if (VULKAN_HPP_DEFAULT_DISPATCHER.vkEnumerateDeviceExtensionProperties(
+            d.physical, nullptr, &nExt, props.data()) == VK_SUCCESS)
+        for (uint32_t i = 0; i < nExt; ++i)
+          if (strcmp(props[i].extensionName, VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME) == 0)
+          { zClamp = true; break; }
+    }
+    VkNote("Device: depth_clip_enable", zClamp, zClamp ? 0 : "расширения нет на устройстве");
+  }
+
   const char* deviceExts[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME,
                                VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
                                VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-                               VK_EXT_VERTEX_ATTRIBUTE_ROBUSTNESS_EXTENSION_NAME };
+                               VK_EXT_VERTEX_ATTRIBUTE_ROBUSTNESS_EXTENSION_NAME,
+                               VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME };
   const uint32_t nDeviceExtsBase = 3;
+  // enabledExtensionCount берёт ПЕРВЫЕ n записей массива, поэтому
+  // необязательные добавляем по счётчику, а не «местами» в массиве.
+  unsigned nDeviceExts = nDeviceExtsBase;
+  if (varRobust) deviceExts[nDeviceExts++] = VK_EXT_VERTEX_ATTRIBUTE_ROBUSTNESS_EXTENSION_NAME;
+  if (zClamp)    deviceExts[nDeviceExts++] = VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME;
   VkPhysicalDeviceVulkan13Features feats13;
   memset(&feats13, 0, sizeof(feats13));
   feats13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
@@ -2334,6 +2368,20 @@ bool NvrhiBackend::Init(NativeWindow window, unsigned width, unsigned height)
   varFeat.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_ROBUSTNESS_FEATURES_EXT;
   varFeat.vertexAttributeRobustness = VK_TRUE;
   if (varRobust) feats13.pNext = &varFeat;
+
+  // Расширение без ФИЧИ бесполезно и вредно: замеры 2026-10-26 — только
+  // VK_EXT_depth_clip_enable в списке расширений даёт vkCreateGraphicsPipelines
+  // отказ (в логе «pipe НЕ создан» на каждом выводе) и клиент падает
+  // 0xC0000005 на экране выбора героя. Фичу chain'им последним звеном.
+  VkPhysicalDeviceDepthClipEnableFeaturesEXT zcFeat;
+  memset(&zcFeat, 0, sizeof(zcFeat));
+  zcFeat.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLIP_ENABLE_FEATURES_EXT;
+  zcFeat.depthClipEnable = VK_TRUE;
+  if (zClamp)
+  {
+    if (varRobust) varFeat.pNext = &zcFeat;
+    else feats13.pNext = &zcFeat;
+  }
 
   VkPhysicalDeviceVulkan12Features feats12;
   memset(&feats12, 0, sizeof(feats12));
@@ -2356,7 +2404,7 @@ bool NvrhiBackend::Init(NativeWindow window, unsigned width, unsigned height)
   dci.pNext = &feats12;
   dci.queueCreateInfoCount = 1;
   dci.pQueueCreateInfos = &qci;
-  dci.enabledExtensionCount = varRobust ? nDeviceExtsBase + 1u : nDeviceExtsBase;
+  dci.enabledExtensionCount = nDeviceExts;
   dci.ppEnabledExtensionNames = deviceExts;
   if (!varRobust)
     VkNote("Device: vertexAttributeRobustness", true, "выключена (с включённой мир чёрный — см. комментарий)");
@@ -3341,7 +3389,29 @@ HRESULT NvrhiBackend::GetSystemInfo(BackendSystemInfo& out)
   // через image view без vendor-форматов. Проверка та же, что для hasD24S:
   // без читаемого depth-аттачмента не работает ни путь карт теней, ни
   // DecodeZ. На D3D9-бэкенде этот бит не выставляется (d3d9backend.cpp).
-  if (features & hasD24S)
+  // PW_VK_NOREADDEPTH=1 — не объявлять hasDepthSRV. Этот бит — единственный
+  // рычаг, который переводит клиента в другой путь глубины: без него
+  // ConfigManager::ReadableDepthEnabled() == false (как на D3D9), клиент не
+  // создаёт pMainDepth, не гоняет DecodeZ-копию в pMainRT1 (R32F) и держит
+  // пин DoDepthOut = TRUE. Замер 2026-10-26 (PWRD-рекорд + PW_VK_TEXGPU):
+  // при hasDepthSRV DepthMap заполнен (линейная глазная глубина 0,5..57),
+  // условие `z > zNear` (FullScreenMaterial.hlsl:246, zNear = PS c21.x =
+  // 0,501) истинно в каждом пикселе, и включается ветка war fog (:248-250):
+  // выборка с карты 205x205, где 84% пикселей = RGB(30,53,96) A=127, т.е.
+  // lerp(scene, navy, 0,498) по всему кадру = affine out = 0,503*raw +
+  // (15,26,48). На D3D9-контуре пелены нет ни при каком bloom; чем именно
+  // заполнен DepthMap на пути DoDepthOut (пусто -> z=0 -> ветка мертва, или
+  // заполнено, но выборка даёт alpha=0) — не измерено: DXVK-капча прохода
+  // поста. Итог: war fog — не дефект рисования seam'а, а функция, которую
+  // seam включает (hasDepthSRV), а D3D9-бэкенд не включает никогда.
+  // Подробный разбор — docs/NVRHI_VULKAN_VS_DXVK_ISSUES.md, «Шестая пачка».
+  static int s_noReadDepth = -1;
+  if (s_noReadDepth < 0)
+  {
+    const char* eNrd = getenv("PW_VK_NOREADDEPTH");
+    s_noReadDepth = (eNrd && *eNrd) ? atoi(eNrd) : 0;
+  }
+  if ((features & hasD24S) && !s_noReadDepth)
     features |= hasDepthSRV;
   out.features = features;
   return S_OK;
@@ -6115,13 +6185,45 @@ static nvrhi::SamplerAddressMode AddressOf(NvrhiBackendImpl& d, unsigned d3dAddr
 }
 
 // подпись одного сэмплера (для кэша объектов сэмплеров)
-static unsigned long long SamplerKeyOf(const BackendSamplerState& s)
+// PW_VK_SHCMP=1 — сэмплер СРАВНЕНИЯ (Dref) для слотов, куда привязана
+// depth-текстура. D3D9/DXVK читает аппаратную карту теней сравнением
+// (в DXVK-капче: сэмплер #13177 compareEnable=1, compareOp=LESS_OR_EQUAL, его
+// дескриптор ci=84825 в одном кластере с view карты #13180 ci=84827), а DXC по
+// обычному `sampler` собирает выборку без Dref — шов получает сырую глубину
+// карты (mean 0.676 по дампу PW_VK_TEXGPU) и ровную пелену α~0.08 вместо
+// силуэта. Разбор — pw-render-ab/references/shadow-chain.md.
+static bool SamplerCmpEnabled()
+{
+  static int v = -1;
+  if (v < 0)
+  {
+    // по умолчанию ВКЛ: сайдкары ShadowPassPCFDST* в контенте уже собираются
+    // с Dref-выборкой (tools/spirv_probe/shim.py), и без comparison-сэмплера
+    // такая выборка невалидна (замер: драйвер возвращает сырую глубину,
+    // т.е. картина откатывается к прежней пелене, но пара «шейдер/сэмплер»
+    // рассинхронизирована). PW_VK_SHCMP=0 — только для A/B со старыми блобами.
+    const char* e = getenv("PW_VK_SHCMP");
+    v = (e && *e) ? atoi(e) : 1;
+  }
+  return v != 0;
+}
+
+static bool DepthBoundAtSlot(NvrhiBackendImpl& d, unsigned slot)
+{
+  if (slot >= kMaxSamplerSlots) return false;
+  const unsigned t = d.texBound[slot];
+  if (t == kNoRes || t >= d.textures.size()) return false;
+  const EBackendFormat f = d.textures[t].seamFormat;
+  return f == bfD16 || f == bfD24S8;
+}
+
+static unsigned long long SamplerKeyOf(const BackendSamplerState& s, bool cmp = false)
 {
   unsigned long long h = 1469598103934665603ull;
   const unsigned vals[] = { s.minFilter, s.magFilter, s.mipFilter, s.addressU,
                             s.addressV, s.addressW, s.borderColor, s.maxAnisotropy,
                             (unsigned)s.maxMipLevel, (unsigned)s.lodBias,
-                            s.set ? 1u : 0u };
+                            s.set ? 1u : 0u, cmp ? 1u : 0u };
   for (size_t i = 0; i < sizeof(vals) / sizeof(vals[0]); ++i)
   {
     h ^= vals[i];
@@ -6182,7 +6284,8 @@ static nvrhi::SamplerHandle FindOrCreateSampler(NvrhiBackendImpl& d, unsigned sl
   }
   const BackendSamplerState& s = d.model.sampler[useSlot];
   if (!s.set) return d.defSampler;      // этого слота модель не касалась
-  unsigned long long key = SamplerKeyOf(s);
+  const bool cmpSmp = SamplerCmpEnabled() && DepthBoundAtSlot(d, useSlot);
+  unsigned long long key = SamplerKeyOf(s, cmpSmp);
   if (forceAddr >= 0) key ^= 0x9e3779b97f4a7c15ull * (unsigned long long)(forceAddr + 1);
   for (size_t i = 0; i < d.samplerCache.size(); ++i)
     if (d.samplerCache[i].first == key) return d.samplerCache[i].second;
@@ -6194,6 +6297,13 @@ static nvrhi::SamplerHandle FindOrCreateSampler(NvrhiBackendImpl& d, unsigned sl
     .setAddressU(AddressOf(d, s.addressU))
     .setAddressV(AddressOf(d, s.addressV))
     .setAddressW(AddressOf(d, s.addressW));
+  if (cmpSmp)
+  {
+    // reductionType==Comparison включает compareEnable у VkSampler; оператор —
+    // LESS_OR_EQUAL, как у DXVK (вендорский дефолт был eLess).
+    sd.reductionType = nvrhi::SamplerReductionType::Comparison;
+    sd.setComparison(nvrhi::ComparisonFunc::LessOrEqual);
+  }
   if (forceAddr >= 0)
   {
     const nvrhi::SamplerAddressMode m = (forceAddr == 3)
@@ -6267,7 +6377,9 @@ static unsigned long long SamplerSetSignature(NvrhiBackendImpl& d, const NvrhiBa
     {
       const unsigned slot = it.binding + e;
       unsigned long long sk = 0;
-      if (slot < kMaxSamplerSlots) sk = SamplerKeyOf(d.model.sampler[slot]);
+      if (slot < kMaxSamplerSlots)
+        sk = SamplerKeyOf(d.model.sampler[slot],
+                          SamplerCmpEnabled() && DepthBoundAtSlot(d, slot));
       h ^= sk;
       h *= 1099511628211ull;
       h ^= slot;
@@ -7727,6 +7839,70 @@ HRESULT NvrhiBackend::DrawImpl(ERenderPrimitiveType type, bool indexed, unsigned
     m_constShadow[csPixel][21 * 4] = s_znear;
     if (d.traceConstLogged < 3u)
       DebugTrace("VkTraceC: ps=%u zNear := %.6g", d.curPs, s_znear);
+  }
+  // PW_VK_ZNEAR_FOG=<float> — то же правка PS c21.x (zNear), но без привязки к
+  // seam-индексу PS: он нестабилен между прогонами (замер 2026-10-26: в одном
+  // прогоне пост-проход — ps=65, в другом ps=65 — это геометрия с vtx=2406).
+  // Вывод опознаётся по признаку самой war fog-ветки: пиксельный шейдер
+  // ОБРАЩАЕТСЯ к binding 10 = WARFOGSAMPLERINDEX (GlobalMasks.h) — список
+  // ресурсов пары даёт это точно. Первый вариант предиката «слот 10 занят»
+  // (d.texBound[10]) годился плохо: привязка остаётся от предыдущего вывода, и
+  // zNear=1e9 уезжал в c21 материалов, где c21 — строка INSTANCE_DATA
+  // (GlobalMasks.h:96): прогон abS_vk_fogOFF дал яркость 134,8 против 68,5 и
+  // B-R −185,75, т.е. вместо «туман выключен» получилась порча констант сцены.
+  // 1e9 -> ветка `z > zNear` (FullScreenMaterial.hlsl:246) не выполняется
+  // нигде: war fog выключен, весь остальной пост (sharp/colorcorrect/bloom)
+  // работает, вариант шейдера не меняется; -1 -> выполняется везде. Это чистый
+  // контроль «туман включён/выключен» внутри одного контура: в отличие от
+  // `warfogDisable` (снимает пин WarFog -> другой вариант -> у SPIR-V-цели такой
+  // комбинации нет -> пропускается весь проход) и от `PW_VK_NOREADDEPTH` (меняет
+  // пины всех сценовых материалов и роняет сцену в черноту).
+  static float s_znearFog = 1e30f;
+  static bool s_znearFogRead = false;
+  if (!s_znearFogRead)
+  {
+    s_znearFogRead = true;
+    char bz2[64]; bz2[0] = 0;
+    if (GetEnvironmentVariableA("PW_VK_ZNEAR_FOG", bz2, sizeof(bz2) - 1) > 0)
+      s_znearFog = (float)atof(bz2);
+  }
+  // PW_VK_SHARPZERO_FOG=1 — обнулить VS c28 (`g_sharpPixelSize`) и c29
+  // (`g_sharpCoef`) у того же вывода, что читает binding 10 (т.е. у поста
+  // FullScreenMaterial): sharpCoef=0 и sharpPixelSize=0 -> `DoSharp`
+  // становится чистым копированием (Coeffs=(1,0), все 4 отсчёта в center).
+  // Отличие от PW_VK_SHARPZERO=<ps>: не нужен seam-индекс PS (он нестабилен).
+  // Нужен, чтобы проверить, не является ли избыточная ВЧ-энергия vulkan-контура
+  // следствием sharp-фильтра (замер обзора: |x-blur| 8,13 d3d9 против 18,13 vk
+  // без тумана; |laplacian| медиана 9,3 против 55,2).
+  static int s_sharpZeroFog = -1;
+  if (s_sharpZeroFog < 0)
+  {
+    const char* eSz = getenv("PW_VK_SHARPZERO_FOG");
+    s_sharpZeroFog = (eSz && *eSz) ? atoi(eSz) : 0;
+  }
+  if (s_znearFog < 1e29f || s_sharpZeroFog)
+  {
+    const int rmFog = FindOrCreateResMap(d);
+    bool fogSampler = false;
+    if (rmFog >= 0 && rmFog < (int)d.resMaps.size())
+    {
+      const std::vector<NvrhiBackendImpl::ResItem>& items = d.resMaps[rmFog].items;
+      for (size_t k = 0u; k < items.size(); ++k)
+        if (items[k].binding == 10u) { fogSampler = true; break; }
+    }
+    if (fogSampler)
+    {
+      if (s_znearFog < 1e29f) m_constShadow[csPixel][21 * 4] = s_znearFog;
+      if (s_sharpZeroFog) memset(m_constShadow[csVertex] + 28 * 4, 0, 8 * 16);   // c28, c29
+      if (s_znearFog < 1e29f || s_sharpZeroFog)
+        MarkConstDirty(d, csVertex, 28u, 2u);
+      if (d.traceConstLogged < 3u)
+      {
+        DebugTrace("VkTraceC: ps=%u warfog (binding 10) zNear := %.6g sharpZero=%u",
+                   d.curPs, s_znearFog, (unsigned)s_sharpZeroFog);
+        ++d.traceConstLogged;
+      }
+    }
   }
   if (d.curPs == s_traceConst && d.traceConstLogged < 24u && d.model.colorWriteEnable)
   {

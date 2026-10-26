@@ -1343,6 +1343,11 @@ namespace nvrhi
         SamplerAddressMode addressV = SamplerAddressMode::Clamp;
         SamplerAddressMode addressW = SamplerAddressMode::Clamp;
         SamplerReductionType reductionType = SamplerReductionType::Standard;
+        // Оператор сравнения для reductionType == Comparison. До этой правки
+        // createSampler жёстко ставил eLess; дефолт сохранён, чтобы поведение
+        // существующих потребителей не менялось. Нужен LessOrEqual: D3D9/DXVK
+        // читает карту теней сравнением LESS_OR_EQUAL (замер DXVK-капчи).
+        ComparisonFunc comparison = ComparisonFunc::Less;
 
         SamplerDesc& setBorderColor(const Color& color) { borderColor = color; return *this; }
         SamplerDesc& setMaxAnisotropy(float value) { maxAnisotropy = value; return *this; }
@@ -1356,6 +1361,7 @@ namespace nvrhi
         SamplerDesc& setAddressW(SamplerAddressMode mode) { addressW = mode; return *this; }
         SamplerDesc& setAllAddressModes(SamplerAddressMode mode) { addressU = addressV = addressW = mode; return *this; }
         SamplerDesc& setReductionType(SamplerReductionType type) { reductionType = type; return *this; }
+        SamplerDesc& setComparison(ComparisonFunc value) { comparison = value; return *this; }
     };
 
     class ISampler : public IResource

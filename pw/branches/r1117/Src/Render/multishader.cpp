@@ -51,6 +51,17 @@ namespace Render
 		REGISTER_VAR( "shader_target", s_shaderTarget, STORAGE_NONE );
 		static hash_set<UINT64, PairKeyHash> s_seenTargetPairs;
 
+		// Шаг 13.4e: учёт живых пар (материал, индекс пинов), для которых секция
+		// цели .shd v2 не даёт блобов: на бэкенде с ненулевым тегом цели их
+		// рисунки пропускаются, и без счётчика пропавший проход неотличим от
+		// нормы (см. GetShaderPairByIndex). Отдельно учитывается запрос индекса
+		// за пределами таблицы пинов — там берется default_shader, это другой
+		// шейдер, а не пропуск.
+		static hash_set<UINT64, PairKeyHash> s_targetMissPairs;
+		static unsigned s_targetMissHits = 0;
+		static hash_set<UINT64, PairKeyHash> s_badIndexPairs;
+		static unsigned s_badIndexHits = 0;
+
 		static ShaderPair defaultShaderPair;
 
 		void MultiShader::InitializeDefaultShaderPair()
@@ -61,6 +72,15 @@ namespace Render
 
 		void MultiShader::ReleaseDefaultShaderPair()
 		{
+			// Итог прогона: сколько живых комбинаций не легли в секцию цели (их
+			// рисунки пропущены) и сколько запросов вышло за пределы таблицы
+			// пинов. Счётчики не сбрасываются: при перегрузке шейдеров строка
+			// показывает накопленное с запуска.
+			if ( s_targetMissHits || s_badIndexHits )
+				DebugTrace( "ShaderTarget: итог — пар без комбинации в цели %u "
+					"(попыток %u), индексов вне таблицы %u",
+					(unsigned)s_targetMissPairs.size(), s_targetMissHits,
+					(unsigned)s_badIndexPairs.size() );
 			defaultShaderPair.pVertexShader = NULL;
 			defaultShaderPair.pPixelShader  = NULL;
 		}
@@ -156,7 +176,21 @@ namespace Render
 			g_lastDipMaterial = fileName.c_str();
 			g_lastDipIndex = index;
 			if ( !(0 <= index && (int)index < pairs.size()) )
+			{
+				// Индекс вне таблицы пинов. Молча подставить default_shader
+				// нельзя: геометрия рисуется другим шейдером, и «белая плашка»
+				// в кадре неотличима от нормы. Печатается один раз на пару.
+				++s_badIndexHits;
+				const UINT64 key = FileNameKey( fileName.c_str() ) ^
+					( (UINT64)index * 0x9e3779b97f4a7c15ull ) ^ 1ull;
+				const size_t before = s_badIndexPairs.size();
+				s_badIndexPairs.insert( key );
+				if ( s_badIndexPairs.size() != before )
+					DebugTrace( "ShaderIndex: %s #%u — индекс вне таблицы (%u), "
+					"взят default_shader", fileName.c_str(), index,
+					(unsigned)pairs.size() );
 				return defaultShaderPair;
+			}
 			if ( s_dumpShaderIndex )
 			{
 				const UINT64 key = FileNameKey( fileName.c_str() ) ^
@@ -182,14 +216,23 @@ namespace Render
 				{
 					s_seenTargetPairs.insert( key );
 					if ( s_seenTargetPairs.size() != before )
-						DebugTrace( "ShaderTarget: %s #%u — блоб цели %u+%u / %u+%u Б, "
-							"бэкенд цель ещё не умеет (шаг 12), беру SM3", fileName.c_str(), index,
+						// Формулировка «бэкенд цель ещё не умеет (шаг 12), беру SM3»
+						// устарела: шаг 12/13 сделан, реальная ветка ниже берёт блоб
+						// цели и создаёт его с длиной. Строка — только диагностика
+						// dev-var'ом `shader_target`, и она обязана говорить то же,
+						// что делает продукт, иначе по логу судят о мёртвой ветке.
+						DebugTrace( "ShaderTarget: %s #%u — в цели %u есть блоб VS %u+%u / "
+							"PS %u+%u Б (реальная ветка берёт его)", fileName.c_str(), index,
+							(unsigned)s_shaderTarget,
 							vsOff, vsSz, psOff, psSz );
 				}
 				else if ( HasShaderTarget( (unsigned)s_shaderTarget ) )
 				{
 					// секция есть, но этой комбинации в ней нет — нужен рантайм-
-					// компилятор (шаг 12/13); пока это не ошибка: SM3-таблица плотная
+					// компилятор (шаг 12/13). Для бэкенда с нулевым тегом цели (D3D9)
+					// это не ошибка: плотная SM3-таблица. Для SPIR-V-бэкенда — ошибка,
+					// и её печатает реальная ветка ниже (шаг 13.4e); здесь — только
+					// диагностика dev-var'ом `shader_target`.
 					s_seenTargetPairs.insert( key );
 					if ( s_seenTargetPairs.size() != before )
 						DebugTrace( "ShaderTarget: %s #%u — комбинации нет в цели, нужен "
@@ -222,6 +265,37 @@ namespace Render
 							fileName.c_str(), index, tag, vsSz, psSz );
 						pairs[index].pVertexShader = 0;
 						pairs[index].pPixelShader = 0;
+					}
+					else
+					{
+						// Комбинации нет в секции цели (или секции нет вовсе).
+						// Прежний код молча уходил в SM3-таблицу, и для бэкенда с
+						// ненулевым тегом цели это заведомо неудачная попытка:
+						// одноаргументный CreateVertexShader передаёт длину 0
+						// (renderer.cpp:703), а CreateShaderImpl на нулевой длине
+						// отвечает D3DERR_INVALIDCALL. За бой это 5 577 одинаковых
+						// «Creating vertex shader error!» (лог 2026.10.25-22.17.18)
+						// и ни одной строки о том, какой материал и какая комбинация
+						// просят рантайм-компилятор: пропущенный рисунок (при
+						// bloomEnable 0 — целый пост-проход FullScreenMaterial,
+						// 2 502 пропуска за бой) выглядел как «так и должно быть».
+						// Исход тот же — пара остается пустой, рисунок пропускается,
+						// — но теперь он назван, и один раз на пару.
+						++s_targetMissHits;
+						const UINT64 key = FileNameKey( fileName.c_str() ) ^
+							( (UINT64)index * 0x9e3779b97f4a7c15ull ) ^ ((UINT64)tag << 1);
+						const size_t before = s_targetMissPairs.size();
+						s_targetMissPairs.insert( key );
+						if ( s_targetMissPairs.size() != before )
+							DebugTrace( "ShaderTarget: %s #%u (of %u) — %s цели %u; "
+								"SM3-слой этим бэкендом не читается, рисунок будет "
+								"пропущен — пар %u, попыток %u",
+								fileName.c_str(), index, (unsigned)pairs.size(),
+								HasShaderTarget( tag ) ? "комбинации нет в секции"
+													   : "у контейнера нет секции",
+								tag, (unsigned)s_targetMissPairs.size(),
+								s_targetMissHits );
+						return pairs[index];
 					}
 				}
 				pairs[index].pVertexShader = Render::GetRenderer()->CreateVertexShader( pBegin + pInfo[index].vsOffset );

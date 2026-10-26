@@ -32,6 +32,7 @@
 	import Utils.GameTimeGlobalUtils;
 	import VoiceChat.VoiceTeamOverlay;
 	import ReplayControls.ReplayControlsPanel;
+	import Training.TrainingPanel;
 	import Controllers.SoundController;
 	import EscMenu.ShortcutItem;
 	import EscMenu.OptionsWindow;
@@ -113,7 +114,8 @@
 		private var _shortheroname: SetPlayerShortName;
 		private var voiceTeamOverlay:VoiceTeamOverlay;
 		private var replayControlsPanel:ReplayControlsPanel;
-	
+		private var trainingPanel:TrainingPanel;
+
 		public function MainInterface(_main:Main)
 		{	
 			mainWindow = _main
@@ -125,6 +127,7 @@
 				function(heroId:int):MateInfoBase { return friendlyTeamController.DoesHeroExist(heroId) ? friendlyTeamController.GetMateInfo(heroId) : null; },
 				function():int { return ourID; });
 			replayControlsPanel = new ReplayControlsPanel(mainWindow, GetActionBarTop, GetActionBarCenterX);
+			trainingPanel = new TrainingPanel(mainWindow);
 		//	var Test:MainInterfaceTest = new MainInterfaceTest(this, mainWindow);
 		//	var Test2:MyFullTest = new MyFullTest(this, mainWindow);
 		}
@@ -2846,6 +2849,56 @@
 		public function SetReplayState(time:int, total:int, target:int, speed:int, paused:Boolean, ended:Boolean):void
 		{
 			replayControlsPanel.SetState(time, total, target, speed, paused, ended);
+		}
+
+		// Управление другим героем (панель тренировки): панель умений, инвентарь, магазин и билд очищаются
+		// перед заполнением для нового героя — как при SetOurHeroIdententity, но без сброса команд
+		// keepWindows — окна (билд) не закрываются: талант заменён из библиотеки прямо в открытом билде
+		public function ResetHeroControls(keepWindows:Boolean = false):void
+		{
+			if (!keepWindows)
+			{
+				mainWindow.ResetData();
+				return;
+			}
+			mainWindow.actionBarContainer.actionBar_mc.ResetActionBar();
+			mainWindow.inventoriesBar_mc.ResetInventory();
+			mainWindow.shopBar_mc.ResetShopItems();
+			mainWindow.talentsBar_mc.ResetTalentBar();
+		}
+
+		// Панель тренировки (PF_GameLogic/TrainingPanelController.cpp, сборки с читами)
+		public function ShowTrainingPanel(show:Boolean, collapsed:Boolean):void
+		{
+			try { trainingPanel.Show(show, collapsed); } catch (e:Error) { FSCommands.Send(TrainingPanel.COMMAND, "dbg Show: " + e.message); }
+		}
+
+		// heroes: индексы героев для hero_change, имена и пути текстур портретов
+		public function SetTrainingHeroes(ids:Array, names:Array, icons:Array):void
+		{
+			try { trainingPanel.SetHeroes(ids, names, icons); } catch (e:Error) { FSCommands.Send(TrainingPanel.COMMAND, "dbg SetHeroes: " + e.message); }
+		}
+
+		public function SetTrainingState(heroIndex:int, learned:int, total:int, available:int, modes:int,
+			skinIds:Array, skinNames:Array, skinIcons:Array, currentSkin:int):void
+		{
+			try { trainingPanel.SetState(heroIndex, learned, total, available, modes, skinIds, skinNames, skinIcons, currentSkin); }
+			catch (e:Error) { FSCommands.Send(TrainingPanel.COMMAND, "dbg SetState: " + e.message); }
+		}
+
+		// библиотека талантов для слота билда (правый клик по таланту): id, имена, иконки, редкость, текущий талант
+		public function ShowTrainingLibrary(level:int, slot:int, ids:Array, names:Array, icons:Array, rarities:Array, current:String):void
+		{
+			try { trainingPanel.ShowLibrary(level, slot, ids, names, icons, rarities, current); }
+			catch (e:Error) { FSCommands.Send(TrainingPanel.COMMAND, "dbg ShowLibrary: " + e.message); }
+		}
+
+		// выбранный юнит (можно ли удалить) и мишень: урон серии, DPS, последний удар, число ударов
+		public function SetTrainingUnits(selectedName:String, canRemove:Boolean, hasDummy:Boolean, total:int, dps:int, last:int, hits:int,
+			canControl:Boolean, controlling:Boolean):void
+		{
+			try { trainingPanel.SetUnits(selectedName, canRemove, hasDummy, total, dps, last, hits, canControl, controlling); }
+			catch (e:Error) { FSCommands.Send(TrainingPanel.COMMAND, "dbg SetUnits: " + e.message); }
 		}
 
 		// Верх панели активных талантов вместе с полосками и баффами над ней, в координатах экрана

@@ -980,6 +980,22 @@
 					RelativePath=".\ReplayControlsController.h"
 					>
 				</File>
+				<File
+					RelativePath=".\TrainingPanelController.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\TrainingPanelController.h"
+					>
+				</File>
+				<File
+					RelativePath=".\PFTraining.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\PFTraining.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="AdventureScreenFacets"

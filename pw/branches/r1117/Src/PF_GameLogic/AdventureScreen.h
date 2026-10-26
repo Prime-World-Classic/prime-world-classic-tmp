@@ -804,6 +804,18 @@ struct GSClientSettings
     NWorld::PFBaseHero*       GetHeroById(int heroId) const;
     NWorld::PFPlayer*         GetPlayer()  { return pWorld ? pWorld->GetPlayer(playerId) : NULL; } 
     NWorld::PFPlayer const *  GetPlayer() const { return pWorld ? pWorld->GetPlayer(playerId) : NULL; } 
+
+    // Training panel (PFTraining.cpp): the hero the player controls instead of its own one (0 - its own one).
+    // GetHero() returns it; the own hero is GetOwnHero()
+    void                      SetControlledHero( NWorld::PFBaseHero * pHero );
+    // the controls of the current hero filled again, the windows (build) stay open: a talent replaced in battle
+    void                      RefreshHeroControls();
+    NWorld::PFBaseHero*       GetOwnHero() const { return GetHeroById( playerId ); }
+    bool                      IsControllingOtherHero() const { return IsValid( controlledHero ); }
+  private:
+    CPtr<NWorld::PFBaseHero>  controlledHero;
+    bool                      controlledHeroSet;
+  public:
     NWorld::PFAbilityData *   GetAbilityData(Command cmd, int index);
     const wstring&            GetPlayerName(int playerId) const;
     virtual NWorld::PFWorld*  GetWorld() { return pWorld; }

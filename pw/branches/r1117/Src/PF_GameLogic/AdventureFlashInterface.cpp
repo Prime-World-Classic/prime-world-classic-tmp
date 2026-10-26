@@ -52,6 +52,11 @@ void AdventureFlashInterface::SetOurHeroIdententity( int heroID, NDb::EFaction f
   CallMethod( "SetOurHeroIdententity", heroID, faction, (int)damageType, leaguePlaces, leagueIndex, ownLeaguePlace);
 }
 
+void AdventureFlashInterface::ResetHeroControls( bool keepWindows )
+{
+  CallMethod( "ResetHeroControls", keepWindows );
+}
+
 void AdventureFlashInterface::SetHeroIdentity( 
                      const wstring& heroName, 
                      const wstring& heroClass, 

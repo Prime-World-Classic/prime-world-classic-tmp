@@ -12,6 +12,7 @@
 #include "PFChest.h"
 #include "PFFlagpole.h"
 #include "PFHero.h"
+#include "PFTraining.h"
 #include "PFHeroStates.h"
 #include "PFLogicDebug.h"
 #include "PFEaselPlayer.h"
@@ -48,6 +49,10 @@ namespace
       if (const NWorld::PFPlayer * pPlayer = pHero->GetPlayer())
         if (pPlayer->GetUserID() == userId || !pPlayer->IsPlaying() || pPlayer->IsBot())
           return true;
+
+    // a hero added by the training panel (no player): the only human of the training controls it (PFTraining.cpp)
+    if (pHero && NGameX::Training::IsControllableUnit(pHero, userId))
+      return true;
 
     DebugTrace("Wrong hero received in command (uid=%d)", userId);
     return false;

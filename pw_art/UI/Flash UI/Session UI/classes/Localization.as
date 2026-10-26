@@ -48,6 +48,53 @@
 		public static var ReplayControls_Slower:String = "Медленнее (стрелка вниз)";
 		public static var ReplayControls_Faster:String = "Быстрее (стрелка вверх)";
 		public static var ReplayControls_Timeline:String = "Нажмите, чтобы перейти к этому моменту";
+		// Панель тренировки (Training/TrainingPanel.as); переводы — Combat.xdb props 241–258
+		public static var Training_Title:String = "Тренировка";
+		public static var Training_ChangeHero:String = "Сменить героя";
+		public static var Training_ChangeSkin:String = "Сменить скин";
+		public static var Training_Talents:String = "Таланты";
+		public static var Training_RandomTalent:String = "Случайный";
+		public static var Training_AllTalents:String = "Все таланты";
+		public static var Training_Modes:String = "Режимы";
+		public static var Training_NoDamage:String = "Неуязвимость";
+		public static var Training_NoCooldown:String = "Без перезарядки";
+		public static var Training_NoMana:String = "Бесконечная энергия";
+		public static var Training_Refresh:String = "Восстановить";
+		public static var Training_RefreshTooltip:String = "Полное здоровье и энергия, сброс перезарядки. Павший герой воскресает на месте";
+		public static var Training_ChooseHero:String = "Выберите героя";
+		public static var Training_ChooseSkin:String = "Выберите скин";
+		public static var Training_Search:String = "Поиск";
+		public static var Training_Collapse:String = "Свернуть панель тренировки";
+		public static var Training_Expand:String = "Развернуть панель тренировки";
+		public static var Training_RandomTalentTooltip:String = "Изучить случайный доступный талант";
+		// юниты и мишень — Combat.xdb props 259–277
+		public static var Training_Units:String = "Юниты";
+		public static var Training_AddAlly:String = "+Союзник";
+		public static var Training_AddEnemy:String = "+Враг";
+		public static var Training_AddDummy:String = "+Мишень";
+		public static var Training_AddAllyTooltip:String = "Добавить союзного героя без ИИ перед вашим героем";
+		public static var Training_AddEnemyTooltip:String = "Добавить вражеского героя без ИИ перед вашим героем";
+		public static var Training_AddDummyTooltip:String = "Добавить мишень: получает урон, но не теряет здоровье. Урон считается в блоке «Мишень»";
+		public static var Training_AddAllyTitle:String = "Выберите союзника";
+		public static var Training_AddEnemyTitle:String = "Выберите врага";
+		public static var Training_AddDummyTitle:String = "Выберите героя для мишени";
+		public static var Training_Selected:String = "Выбран:";
+		public static var Training_NoSelection:String = "никто";
+		public static var Training_Remove:String = "Удалить";
+		public static var Training_RemoveTooltip:String = "Удалить выбранного героя, добавленного тренировкой";
+		public static var Training_Dummy:String = "Мишень";
+		public static var Training_DummyReset:String = "Сброс";
+		public static var Training_DummyDamage:String = "Урон серии";
+		public static var Training_DummyDps:String = "Урон в секунду";
+		public static var Training_DummyLast:String = "Последний удар";
+		// управление — Combat.xdb props 278–281
+		public static var Training_Control:String = "Управлять";
+		public static var Training_ControlTooltip:String = "Управлять выбранным героем: перемещение, атака, умения и билд. У бота отключается ИИ";
+		public static var Training_Release:String = "Свой герой";
+		public static var Training_ReleaseTooltip:String = "Вернуть управление своему герою";
+		// библиотека талантов — Combat.xdb props 282–283
+		public static var Training_LibraryTitle:String = "Библиотека талантов — ряд {0}";
+		public static var Training_LibraryHint:String = "ПКМ по таланту в билде — сменить талант";
 
 		//InventoryBar
 		public static var InventoryBar_HeaderText:String = "Инвентарь";

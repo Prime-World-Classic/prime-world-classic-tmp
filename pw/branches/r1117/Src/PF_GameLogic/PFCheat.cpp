@@ -35,6 +35,7 @@
 
 #include "PFStatistics.h"
 #include "PFCheat.h"
+#include "PFTraining.h"
 
 #include "SessionEventType.h"
 #include "HeroRankCalculator.h"
@@ -395,14 +396,15 @@ static bool HeroChange( const char *name, const vector<wstring> &params, const C
     {
       if( NWorld::PFPlayer* pPlayer = pWorld->GetPlayer(playerID) )
       {
+        // in place of the hero, on its side, the UI follows (shared with the training panel)
+        if ( NWorld::PFBaseHero* pHero = pPlayer->GetHero() )
+          return NGameX::Training::ChangeHero( pWorld, pHero, pHeroes->heroes[heroTypeID] ) != 0;
+
         NWorld::PFBaseHero::SpawnInfo info;
         info.pHero     = pHeroes->heroes[heroTypeID];
         info.playerId  = static_cast<NDb::EPlayerID>(playerID);
         info.placement = Placement(data.pickedPosition, QNULL, CVec3(1.0f, 1.0f, 1.0f) );
 				info.isClone   = false;
-
-        if ( NWorld::PFBaseHero* pHero = pPlayer->GetHero() )
-          pHero->DebugDie();
 
         pPlayer->DetachHero();
         NWorld::CreateHero(pWorld, info);      
@@ -952,7 +954,8 @@ static bool SetSkin( const char *name, const vector<wstring> &params, const Chea
   string skinId = NStr::ToMBCS(NGlobal::VariantValue( params[0] ).GetString());
   bool isAnimatedAvatar = NGlobal::VariantValue( params[1] ).GetInt64() != 0;
 
-  bool res = pHero->SetSkin(skinId, true);
+  // no asserts on files of a skin that was not preloaded, the portraits follow (shared with the training panel)
+  bool res = NGameX::Training::SetSkin(pHero, skinId);
   pHero->SetAnimatedAvatar(isAnimatedAvatar);
 
   if (res)

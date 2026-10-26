@@ -37,6 +37,7 @@
 	import DragAndDrop.TallentDragOBject;
 	import flash.utils.getDefinitionByName;
 	import Strokes.*;
+	import Training.TrainingPanel;
 	import flash.filters.ColorMatrixFilter;
 	
 	public class Talent extends MovieClip
@@ -373,6 +374,9 @@
 		}
 		private function OnDown(e:MouseEvent):void
 		{
+			// панель тренировки: правый клик открывает библиотеку талантов (по отпусканию, см. onUp)
+			if (e.type == MouseRightEvents.MOUSE_RIGHT_DOWN && TrainingPanel.LibraryEnabled) return;
+
 			if (disabled) return;
 			
 			timerToDrug.stop();
@@ -393,6 +397,13 @@
 		}
 		private function onUp(e:Event):void
 		{
+			// панель тренировки: правый клик по таланту билда — библиотека талантов для этого слота
+			if (e.type == MouseRightEvents.MOUSE_RIGHT_UP && TrainingPanel.LibraryEnabled)
+			{
+				try { TrainingPanel.OpenLibrary(column, raw); } catch (err:Error) {}
+				return;
+			}
+
 			if (disabled) return;
 			
 			if (!onDown) return;

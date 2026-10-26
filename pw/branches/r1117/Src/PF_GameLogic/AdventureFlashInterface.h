@@ -153,6 +153,8 @@ public:
   //team info
   void SetForceColorTable(const vector<int> & forceTable,const vector<uint> & colorTable);
   void SetOurHeroIdententity( int heroID, NDb::EFaction faction, NDb::EApplicatorDamageType damageType, int leagueIndex, int ownLeaguePlace, const vector<int>& leaguePlaces);
+  // action bar, inventory, shop and talents emptied before they are filled for another hero (training panel)
+  void ResetHeroControls( bool keepWindows );
  
   void SetHeroIdentity( 
     const wstring& heroName, 

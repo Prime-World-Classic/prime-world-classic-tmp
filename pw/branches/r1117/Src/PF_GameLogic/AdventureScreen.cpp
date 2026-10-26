@@ -858,6 +858,7 @@ AdventureScreen::AdventureScreen()
 , exitingGame(false)
 {
   ::memset(m_commandArguments, 0, sizeof(int) * CMD_LAST);
+  controlledHeroSet = false;
 
   NMainFrame::SetCloseHandler( this );
 
@@ -997,6 +998,7 @@ void AdventureScreen::Construct( NGameX::ChatUiController * _chatController, NGa
 
 
   ::memset(m_commandArguments, 0, sizeof(int) * CMD_LAST);
+  controlledHeroSet = false;
   m_commandArguments[CMD_STOP]        = 0;
   m_commandArguments[CMD_HOLD]        = 0;
   m_commandArguments[CMD_MOVE]        = NDb::SPELLTARGET_LAND | NDb::SPELLTARGET_SHOP;
@@ -1411,8 +1413,8 @@ bool AdventureScreen::SetCommandTarget( const CVec3 & pos, PF_Core::WorldObjectB
   if ( m_canExecuted )
     return false;
 
-  NWorld::PFPlayer * pPlayer = pWorld->GetPlayer( playerId );
-  NWorld::PFBaseHero * pHero = pPlayer ? pPlayer->GetHero() : 0;
+  // GetHero: the hero the player controls (its own one or one given by the training panel)
+  NWorld::PFBaseHero * pHero = GetHero();
   NI_ASSERT( pHero, "" );
 
   m_targetObject = 0;
@@ -1613,8 +1615,8 @@ void AdventureScreen::ExecuteCommand(Command cmd, int nParam /*= 0*/)
 
 void AdventureScreen::ExecuteCommand(Command cmd, CVec3 const &worldPos, PF_Core::WorldObjectBase *pObj, bool bAddToQueue /*=false*/, const NDb::AlternativeTarget * altTarget /*=0*/ )
 {
-  NWorld::PFPlayer* pPlayer = pWorld->GetPlayer(playerId);
-  NWorld::PFBaseHero* pHero = pPlayer ? pPlayer->GetHero() : NULL;
+  // GetHero: the hero the player controls (its own one or one given by the training panel)
+  NWorld::PFBaseHero* pHero = GetHero();
 
   if (!pHero)
     return;
@@ -2378,6 +2380,10 @@ void AdventureScreen::SetFreeCameraController( bool flag )
 void AdventureScreen::Step( bool bAppActive )
 {
   NI_PROFILE_FUNCTION
+
+  // the controlled hero is gone (removed by the training panel): the control comes back to the own hero
+  if ( controlledHeroSet && !IsValid( controlledHero ) )
+    SetControlledHero( 0 );
 
   {
     NI_PROFILE_BLOCK( "UI::Logic->DoCustomEvents" );
@@ -5107,6 +5113,9 @@ AdventureScreen::CursorType AdventureScreen::GetCurrentCursor() const
 
 NWorld::PFBaseHero * AdventureScreen::GetHero()
 {
+  // the training panel may give the control of another hero (PFTraining.cpp)
+  if ( IsValid( controlledHero ) )
+    return controlledHero;
   return GetHeroById( playerId );
 }
 
@@ -5114,7 +5123,37 @@ NWorld::PFBaseHero * AdventureScreen::GetHero()
 
 const NWorld::PFBaseHero * AdventureScreen::GetHero() const
 {
+  if ( IsValid( controlledHero ) )
+    return controlledHero;
   return GetHeroById( playerId );
+}
+
+
+
+// Training panel: the controls of the current hero filled again without closing the windows (a talent replaced)
+void AdventureScreen::RefreshHeroControls()
+{
+  if ( NWorld::PFBaseHero * pHero = GetHero() )
+    if ( pLogic )
+      pLogic->SetControlledHero( pHero, true );
+}
+
+// Training panel: control another hero (0 - the own one). The controls of the UI follow it, the camera moves to it
+void AdventureScreen::SetControlledHero( NWorld::PFBaseHero * pHero )
+{
+  NWorld::PFBaseHero * pOwn = GetHeroById( playerId );
+  if ( pHero == pOwn || !IsValid( pHero ) )
+    pHero = 0;
+
+  controlledHero = pHero;
+  controlledHeroSet = pHero != 0;
+
+  NWorld::PFBaseHero * pActive = pHero ? pHero : pOwn;
+  if ( !IsValid( pActive ) || !pLogic )
+    return;
+
+  pLogic->SetControlledHero( pActive );
+  MoveCameraTo( pActive, false );
 }
 
 

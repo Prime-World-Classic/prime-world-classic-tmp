@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "PFTraining.h"
 #include "PFAbilityData.h"
 #include "../Core/Transceiver.h"
 
@@ -147,6 +148,13 @@ void PFAbilityData::Update(float dt, bool fullUpdate)
         UnitMaskingPredicate( pOwner->GetOppositeFactionFlags(), NDb::SPELLTARGET_HEROMALE | NDb::SPELLTARGET_HEROFEMALE, pOwner ) );
       cooldownSpeed += perHero * counter.count;
     }
+  }
+  // training mode NoCooldown (PFTraining.cpp)
+  if ( ( cooldown[0] > 0.0f || cooldown[EAbilityState::_Count - 1] > 0.0f ) && IsValid( pOwner )
+    && NGameX::Training::HasMode( pOwner, NGameX::Training::VAR_NO_COOLDOWN ) )
+  {
+    for (int i = 0; i < EAbilityState::_Count; ++i)
+      cooldown[i] = 0.0f;
   }
   for (int i = 0; i < EAbilityState::_Count && !cooldownFrozen; ++i)
   {
@@ -370,6 +378,10 @@ bool PFAbilityData::IsEnoughMana() const
   if ( !IsValid( pOwner ) )
     return false;
 
+  // training mode NoMana (PFTraining.cpp)
+  if ( NGameX::Training::HasMode( pOwner, NGameX::Training::VAR_NO_MANA ) )
+    return true;
+
   if ( DoesSpendLifeInsteadEnergy() )
     return GetManaCost() <= pOwner->GetLife();
 
@@ -379,6 +391,8 @@ bool PFAbilityData::IsEnoughMana() const
 void PFAbilityData::SpendMana() const
 {
   if ( !IsValid( pOwner ) )
+    return;
+  if ( NGameX::Training::HasMode( pOwner, NGameX::Training::VAR_NO_MANA ) )
     return;
 
   if ( DoesSpendLifeInsteadEnergy() )

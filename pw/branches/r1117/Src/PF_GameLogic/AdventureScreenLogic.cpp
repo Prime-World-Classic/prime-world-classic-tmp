@@ -70,6 +70,7 @@
 #include "VotingForSurrenderController.h"
 #include "VoiceOverlayController.h"
 #include "ReplayControlsController.h"
+#include "TrainingPanelController.h"
 #include "IgnoreListController.h"
 #include "IgnoreListStorage.h"
 #include "DBGameLogic.h"
@@ -402,6 +403,11 @@ void AdventureScreenLogic::SetOwner( NGameX::AdventureScreen * owner, const NDb:
   }
 
   voiceOverlayController = new VoiceOverlayController( flashWnd, "mainInterface" );
+  // training panel (PFTraining.cpp): builds with cheats - any battle, shipping - the training map with one human
+  // player; not in replays and not for spectators
+  if ( !owner->IsInReplayMode() && !owner->IsSpectator() && owner->GetPlayer()
+    && TrainingPanelController::IsAvailable( owner->GetWorld(), owner->GetPlayer()->GetUserID() ) )
+    trainingPanelController = new TrainingPanelController( flashWnd, "mainInterface", owner );
 
   InitErrorMessages(flashInterface, uiData);
 
@@ -532,6 +538,31 @@ void AdventureScreenLogic::SetHero(NWorld::PFBaseHero const *pHero)
 
 }
 
+// Training panel (PFTraining.cpp): the player controls another hero - the action bar, talents, shop, inventory, buffs
+// and stats follow it; the team bar, friends and awards stay the player's own (an added hero has no player)
+void AdventureScreenLogic::SetControlledHero( NWorld::PFBaseHero const * pHero, bool keepWindows )
+{
+  if ( !IsValid( flashWnd ) || !pHero )
+    return;
+
+  NWorld::PFBaseMaleHero * pMale = (NWorld::PFBaseMaleHero *) pHero;
+
+  actionBarController = 0;
+  shopController = 0;
+  inventoryController = 0;
+
+  // the flash keeps the slots of the previous hero (the full binding empties them through SetOurHeroIdententity)
+  flashInterface->ResetHeroControls( keepWindows );
+
+  actionBarController = new ActionBarController( uiData, flashWnd, flashInterface, m_owner, pMale, actionBarTooltip );
+  shopController = new ShopController( uiData, flashWnd, generalTooltip, flashInterface, m_owner, pMale );
+  inventoryController = new InventoryController( flashWnd, generalTooltip, flashInterface, m_owner, pHero );
+
+  ourHeroBuffs->SetUnit( pHero );
+  talentPanel->SetHero( pMale );
+  charInfoContainer->SetOurHero( pHero );
+}
+
 void AdventureScreenLogic::OnMapLoaded( const NDb::AdvMapDescription * advMapDescription, const NDb::AdvMapSettings * settings,bool isCustomGame)
 {
   mapType = advMapDescription->mapType;
@@ -644,6 +675,8 @@ void AdventureScreenLogic::DoCustomEvents( float deltaTime )
   votingForSurrenderController->Update(deltaTime);
   if ( voiceOverlayController )
     voiceOverlayController->Update( deltaTime );
+  if ( trainingPanelController )
+    trainingPanelController->Update( deltaTime );
   dialogController->Update( deltaTime );
 
   if (cteController)

@@ -344,6 +344,56 @@ void PFTalentsSet::LoadSet( CPtr<PFBaseMaleHero> const& pOwner_, SetInfo const& 
   CreatePacks();
 }
 
+bool PFTalentsSet::ReplaceTalent( int level, int slot, NDb::Ptr<NDb::Talent> const& pTalentDesc )
+{
+  if ( !IsValid( pOwner ) || !pTalentDesc || level < 0 || level >= LEVELS_COUNT || slot < 0 || slot >= SLOTS_COUNT )
+    return false;
+
+  CObj<PFTalent> & pSlot = talents[level][slot];
+
+  // a talent taken on start (the native passive of the hero) stays; a talent is in the set once
+  if ( IsValid( pSlot ) && pSlot->GetTalentDesc() && pSlot->GetTalentDesc()->isTakenOnStart )
+    return false;
+  if ( pTalentDesc->isTakenOnStart )
+    return false;
+  for ( int l = 0; l < LEVELS_COUNT; ++l )
+    for ( int s = 0; s < SLOTS_COUNT; ++s )
+      if ( ( l != level || s != slot ) && IsValid( talents[l][s] ) && talents[l][s]->GetTalentDesc() == pTalentDesc )
+        return false;
+
+  const bool wasActivated = IsValid( pSlot ) && pSlot->IsActivated();
+  int actionBarIndex = IsValid( pSlot ) ? pSlot->GetActionBarIndex() : -1;
+  const int refineRate = IsValid( pSlot ) ? pSlot->GetRefineRate() : 0;
+
+  // as CleanSet drops a talent
+  if ( IsValid( pSlot ) )
+  {
+    if ( wasActivated )
+      devPoints -= pSlot->GetDevPoints();
+    pSlot->CancelAbility();
+    pSlot->ApplyPassivePart( false );
+  }
+
+  // a passive talent has no place on the action bar; an active one takes the place of the old one or any free one
+  const bool isActive = pTalentDesc->type == NDb::ABILITYTYPE_ACTIVE || pTalentDesc->type == NDb::ABILITYTYPE_MULTIACTIVE ||
+    pTalentDesc->type == NDb::ABILITYTYPE_CHANNELLING || pTalentDesc->type == NDb::ABILITYTYPE_SWITCHABLE;
+  if ( !isActive )
+    actionBarIndex = -1;
+
+  pSlot = new PFTalent( pOwner, pTalentDesc, refineRate, 0, actionBarIndex, ( pTalentDesc->flags & NDb::ABILITYFLAGS_INSTACAST ) != 0 );
+
+  CreateGroups();
+  CreateKits();
+  CreatePacks();
+
+  if ( wasActivated && pSlot->Activate() )
+  {
+    devPoints += pSlot->GetDevPoints();
+    pSlot->ApplyPassivePart( true );
+  }
+  return true;
+}
+
 void PFTalentsSet::Reset()
 {
   // True heroes already have their sets with created groups, kits and packs

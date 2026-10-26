@@ -10,12 +10,13 @@ import native_menu_probe as probe
 from test_gameplay_gate import fixture
 
 
-def evidence():
+def evidence(expected_moves=0):
 	'''Extend the ordinary-session fixture with a manual ten-player lobby and nine bots.'''
-	stdout, client = fixture('default')
+	stdout, client = fixture('default', expected_moves=expected_moves)
 	# Nine AI commands are separate from the single startup keepalive.
-	stdout = stdout.replace('commands=1 ', 'commands=10 ').replace('replayCommands=1 ', 'replayCommands=10 ')
-	stdout = stdout.replace('commandBlocks=1/1', 'commandBlocks=10/10').replace('commands=1/1', 'commands=10/10')
+	before, after = 1 + expected_moves, 10 + expected_moves
+	stdout = stdout.replace(f'commands={before} ', f'commands={after} ').replace(f'replayCommands={before} ', f'replayCommands={after} ')
+	stdout = stdout.replace(f'commandBlocks={before}/{before}', f'commandBlocks={after}/{after}').replace(f'commands={before}/{before}', f'commands={after}/{after}')
 	client += '''bootstrapCreateGame=no
 bootstrapLegacyLobbyOverlay=no
 bootstrapLegacyHeroOverlay=no
@@ -43,6 +44,73 @@ class NativeMenuTests(unittest.TestCase):
 	def test_manual_session(self):
 		result = probe.validate_menu(*evidence())
 		self.assertEqual((result['bots'], result['ai_commands'], result['replay_commands']), (9, 9, 10))
+
+	def prime_evidence(self):
+		'''Bind natural death income to the ordinary session's actual local identity.'''
+		stdout, client = evidence(1)
+		stdout += 'Final live minimap commands: surface=yes proof=no input=1 move=1 attack=0 signal=0 select=0 projection=yes screen=200,600 action=live-minimap-move\n'
+		stdout += 'Native nonhero prime: step=900 victim=8010 killer=8002 hero=7489 player=2 user=1984 source=presence amount=11 gold=100->111\n'
+		client += '''finalLiveHeroObjectId=7489
+finalLiveHeroPlayerId=2
+finalLiveHeroUserId=1984
+finalGameWorldAwardKillersCalls=1
+finalGameWorldAwardKillersApplied=1
+'''
+		return stdout, client
+
+	def test_natural_prime_receipt(self):
+		result = probe.validate_menu(*self.prime_evidence(), require_prime_awards=True)
+		self.assertEqual((result['prime_awards'], result['human_prime_receipts']), (1, 1))
+
+	def test_prime_lane_input(self):
+		with patch.object(probe, 'tool', return_value='42') as tool:
+			probe.drive_prime_lane('42', 100)
+			self.assertEqual([call.args for call in tool.call_args_list],
+				[('getwindowfocus',), ('mousemove', '--window', '42', 200, 600), ('click', '--window', '42', 3)])
+		with patch.object(probe, 'tool', return_value='99') as tool:
+			with self.assertRaises(probe.EvidenceError):
+				probe.drive_prime_lane('42', 100)
+			self.assertEqual(tool.call_count, 1)
+
+	def test_prime_requires_one_real_lane_move(self):
+		stdout, client = self.prime_evidence()
+		for old, new in (('input=1 move=1', 'input=0 move=0'), ('attack=0', 'attack=1'),
+			('screen=200,600', 'screen=0,0'), ('proof=no', 'proof=yes'), ('projection=yes', 'projection=no')):
+			with self.subTest(old=old), self.assertRaises(probe.EvidenceError):
+				probe.validate_menu(stdout.replace(old, new), client, require_prime_awards=True)
+
+	def test_prime_requires_paid_human_identity(self):
+		stdout, client = self.prime_evidence()
+		for old, new in (('hero=7489', 'hero=7490'), ('player=2', 'player=3'),
+			('user=1984', 'user=-1'), ('source=presence', 'source=salary'),
+			('amount=11', 'amount=nan'), ('amount=11', 'amount=0'),
+			('gold=100->111', 'gold=100->100'), ('gold=100->111', 'gold=100->99'),
+			('step=900', 'step=1001'), ('victim=8010', 'victim=-1')):
+			with self.subTest(old=old), self.assertRaises(probe.EvidenceError):
+				probe.validate_menu(stdout.replace(old, new), client, require_prime_awards=True)
+		for invalid in ('', stdout + stdout.splitlines()[-1] + '\n'):
+			with self.assertRaises(probe.EvidenceError):
+				probe.validate_menu(invalid, client, require_prime_awards=True)
+
+	def test_prime_counters_and_missing_records(self):
+		stdout, client = self.prime_evidence()
+		for line in client.splitlines():
+			if line.startswith(('finalLiveHero', 'finalGameWorldAwardKillers')):
+				for invalid in (client.replace(line + '\n', ''), client + line + '\n'):
+					with self.subTest(line=line), self.assertRaises(probe.EvidenceError):
+						probe.validate_menu(stdout, invalid, require_prime_awards=True)
+		for old, new in (('KillersApplied=1', 'KillersApplied=0'),
+			('KillersApplied=1', 'KillersApplied=2'), ('KillersCalls=1', 'KillersCalls=0')):
+			with self.subTest(old=old), self.assertRaises(probe.EvidenceError):
+				probe.validate_menu(stdout, client.replace(old, new), require_prime_awards=True)
+
+	def test_bot_receipts_do_not_substitute_for_human(self):
+		stdout, client = self.prime_evidence()
+		bot = stdout.splitlines()[-1].replace('hero=7489 player=2 user=1984', 'hero=7490 player=3 user=-3')
+		result = probe.validate_menu(stdout + bot + '\n', client, require_prime_awards=True)
+		self.assertEqual(result['human_prime_receipts'], 1)
+		with self.assertRaises(probe.EvidenceError):
+			probe.validate_menu(stdout.replace(stdout.splitlines()[-1], bot), client, require_prime_awards=True)
 
 	def test_empty_map_rejection_then_retry(self):
 		stdout, client = evidence()

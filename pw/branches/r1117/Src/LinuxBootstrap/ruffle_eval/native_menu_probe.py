@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 import time
 
-from gameplay_gate import EvidenceError, fields, integer, pair, record, require, validate
+from gameplay_gate import EvidenceError, fields, integer, number, pair, record, require, validate
 from native_controls_probe import owned_window, pause, tool, wait_for, wait_for_window
 
 
@@ -18,14 +18,55 @@ def command(binary, capture, seconds):
 		'--bootstrap-frame-capture', str(capture), '--bootstrap-frame-capture-after', str(seconds - 15)]
 
 
-def validate_menu(stdout, client_log, reject_empty_first=False):
+def validate_prime(stdout, client_log, world_step):
+	'''Require nonhero kill income for the local human, not salary or bot-only payouts.
+
+	Receipts attest actual integer balance changes during AwardForKill. They do not
+	prove complete reward parity, hero kills, respawn or a completed match.
+	'''
+	move = fields(record(stdout, 'Final live minimap commands', ': '), '=')
+	for key, expected in (('input', 1), ('move', 1), ('attack', 0), ('signal', 0), ('select', 0)):
+		require(integer(move.get(key, '')) == expected, f'Unexpected lane input: {key}')
+	require(move.get('surface') == move.get('projection') == 'yes' and move.get('proof') == 'no' and
+		move.get('action') == 'live-minimap-move' and pair(move.get('screen', ''), ',') == (200, 600),
+		'Missing actual minimap lane order')
+	identity = tuple(integer(record(client_log, 'finalLiveHero' + key, '='))
+		for key in ('ObjectId', 'PlayerId', 'UserId'))
+	calls = integer(record(client_log, 'finalGameWorldAwardKillersCalls', '='))
+	applied = integer(record(client_log, 'finalGameWorldAwardKillersApplied', '='))
+	require(0 < applied <= calls, 'No successful death reward distribution')
+	seen, victims, human = set(), set(), 0
+	prefix = 'Native nonhero prime: '
+	for line in stdout.splitlines():
+		if not line.startswith('Native nonhero prime'):
+			continue
+		require(line.startswith(prefix), 'Malformed prime receipt')
+		values = fields(line[len(prefix):], '=', 'step victim killer hero player user source amount gold')
+		require(integer(values['step']) <= world_step, 'Prime receipt outside world timeline')
+		victim, killer, hero, player = (integer(values[key]) for key in ('victim', 'killer', 'hero', 'player'))
+		user = integer(values['user'], signed=True)
+		source = values['source']
+		require(source in ('kill', 'spectator', 'team', 'presence'), 'Unexpected prime source')
+		before, after = pair(values['gold'], '->')
+		require(number(values['amount']) > 0 and after > before, 'Prime receipt did not increase balance')
+		key = (victim, hero, source)
+		require(key not in seen, 'Duplicate death reward receipt')
+		seen.add(key)
+		victims.add(victim)
+		human += int((hero, player, user) == identity)
+	require(human > 0 and len(victims) <= applied, 'Missing human prime income or inconsistent reward counter')
+	return {'prime_awards': applied, 'human_prime_receipts': human}
+
+
+def validate_menu(stdout, client_log, reject_empty_first=False, require_prime_awards=False):
 	'''Require actual Lua callbacks, live AI and queued commands, not a static menu capture.
 
 	The existing gameplay gate checks ordinary startup, world progress and complete
-	replay accounting. This driver submits no player gameplay commands: every replay
-	command beyond the single keepalive must come from the real AI sender.
+	replay accounting. The optional prime check sends one real minimap lane order;
+	all other commands beyond the keepalive must come from the real AI sender.
 	'''
-	result = validate(stdout, client_log, 'default', session_mode='ordinary')
+	expected_moves = int(require_prime_awards)
+	result = validate(stdout, client_log, 'default', session_mode='ordinary', expected_moves=expected_moves)
 	for key in ('bootstrapCreateGame', 'bootstrapLegacyLobbyOverlay', 'bootstrapLegacyHeroOverlay',
 		'bootstrapLegacySessionOverlay'):
 		require(record(client_log, key, '=') == 'no', f'{key}: automated/legacy startup is not menu evidence')
@@ -64,7 +105,9 @@ def validate_menu(stdout, client_log, reject_empty_first=False):
 	require(attempted == sent and sent > 0, 'AI commands were not sent through the transceiver')
 	require(integer(ai.get('fallback', '')) == 0, 'AI mutated the world without the command sender')
 	require(integer(ai.get('combat', '')) > 0, 'Bots did not issue lane orders')
-	require(result['replay_commands'] == sent + 1, 'Replay must contain AI commands plus one keepalive')
+	require(result['replay_commands'] == sent + 1 + expected_moves, 'Replay must contain AI commands, keepalive and expected lane input')
+	if require_prime_awards:
+		result.update(validate_prime(stdout, client_log, result['world_step']))
 	return dict(result, bots=9, ai_commands=sent)
 
 
@@ -82,7 +125,14 @@ def drive(window, deadline):
 		pause(delay, deadline)
 
 
-def run(binary, bin_dir, output, seconds=120, reject_empty_first=False):
+def drive_prime_lane(window, deadline):
+	'''Walk toward the authored middle lane through the real 1280x720 minimap.'''
+	require(tool('getwindowfocus', deadline=deadline) == window, 'Game lost focus')
+	tool('mousemove', '--window', window, 200, 600, deadline=deadline)
+	tool('click', '--window', window, 3, deadline=deadline)
+
+
+def run(binary, bin_dir, output, seconds=120, reject_empty_first=False, require_prime_awards=False):
 	'''Own and reap one client; keep screenshots and logs even when the regression fails.'''
 	capture = output.with_suffix('.png')
 	args = command(binary, capture, seconds)
@@ -101,6 +151,10 @@ def run(binary, bin_dir, output, seconds=120, reject_empty_first=False):
 					min(deadline, time.monotonic() + 15))
 				pause(1, deadline)
 			drive(window, deadline)
+			if require_prime_awards:
+				wait_for(process, output, 'Native terrain nature:', 1, deadline)
+				pause(2, deadline)
+				drive_prime_lane(window, deadline)
 			require(process.wait(timeout=max(1, deadline - time.monotonic())) == 0, 'Native client failed')
 		finally:
 			if process.poll() is None:
@@ -112,7 +166,7 @@ def run(binary, bin_dir, output, seconds=120, reject_empty_first=False):
 					process.wait(timeout=10)
 	stdout = output.read_text(encoding='utf-8')
 	client_log = Path(record(stdout, 'Logs', ': ')) / 'linux-client-shell.log'
-	return validate_menu(stdout, client_log.read_text(encoding='utf-8'), reject_empty_first), client_log
+	return validate_menu(stdout, client_log.read_text(encoding='utf-8'), reject_empty_first, require_prime_awards), client_log
 
 
 def main():
@@ -123,10 +177,11 @@ def main():
 	parser.add_argument('--output', type=Path, required=True)
 	parser.add_argument('--seconds', type=int, default=120)
 	parser.add_argument('--reject-empty-first', action='store_true')
+	parser.add_argument('--require-prime-awards', action='store_true')
 	args = parser.parse_args()
 	try:
 		result, client_log = run(args.binary.resolve(strict=True), args.bin_dir.resolve(strict=True),
-			args.output.absolute(), args.seconds, args.reject_empty_first)
+			args.output.absolute(), args.seconds, args.reject_empty_first, args.require_prime_awards)
 	except (OSError, ValueError, subprocess.SubprocessError) as error:
 		parser.exit(1, f'Native menu FAILED: {error}\n')
 	print(f'Native menu PASSED: {result}\nClient log: {client_log}')

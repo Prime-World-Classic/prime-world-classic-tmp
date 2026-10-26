@@ -476,6 +476,20 @@ not yet ported. Unsupported graph assets retain the previous mesh-yaw policy.
 	strong orders with its own idle/queue policy and help-scream cooldown. Behavior
 	disable clears orders, targets, screams and attack-memory victims. Tower help,
 	complete mounted endpoints and allied-recipient behavior remain unfinished.
+- Nonhero kills now distribute the original last-hit, nearby spectator, whole-team
+	and active-team-presence prime through real player ownership and spatial queries.
+	Shares retain authored party/recipient multipliers, fractional balances and
+	behaviour overrides; nonhero rewards do not use hero-only map overrides or
+	invent a payout when the authored value is zero. Native per-recipient receipts
+	distinguish kill/spectator/team/presence income from salary. Hero-kill formula
+	awards, assists/statistics and special neutral level modifiers remain unfinished.
+	The five nonhero reward stats evaluate bounded global-constant expressions with
+	the existing parser; unrelated stat initialization is unchanged. The opt-in
+	`ruffle_eval/native_menu_probe.py --require-prime-awards` gate additionally
+	requires actual local-human reward income during an ordinary menu-started match.
+	It sends one real minimap lane order, accounts for it separately from AI commands,
+	and never injects damage or rewards. Use `--seconds 360` to allow natural lane
+	deaths; this is not a full-match gate.
 - Clone construction, full death rewards/projectile timing,
 	complete casting/movement, remaining HUD actions, online integration
 	and a complete local match are still outstanding.

@@ -459,6 +459,19 @@ static void LinuxLoadStatsContainerForUnit(
 
     float value = it->value(0, 0, &params);
     float increment = it->increment(0, 0, &params);
+		// Nonhero kill income uses authored global-constant expressions; keep
+		// every unrelated stat and hero formula on the existing initializer.
+		const bool rewardStat = !unit->IsHero() && (it->statId == NDb::STAT_NAFTAFORKILL ||
+			it->statId == NDb::STAT_NAFTAFORASSIST || it->statId == NDb::STAT_NAFTASPECFORKILL ||
+			it->statId == NDb::STAT_TEAMNAFTAFORKILL || it->statId == NDb::STAT_TEAMNAFTAFORPRESENCE);
+		if (rewardStat) {
+			auto evaluate = [&](const ExecutableFloatString& expression) {
+				const auto result = LinuxBootstrap::EvaluateGlobalConstantNumericFormula(expression.sString.c_str(), constants);
+				return result.Succeeded() && double(result.value) >= std::numeric_limits<int>::min() &&
+					double(result.value) <= std::numeric_limits<int>::max() ? result.value : 0.f;
+			};
+			value = evaluate(it->value); increment = evaluate(it->increment);
+		}
 
     if (statsEnhancers != 0)
     {

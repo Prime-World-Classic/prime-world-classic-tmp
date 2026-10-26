@@ -1426,6 +1426,7 @@ static void BaseAttackExecution(Checks& check, PFWorld* world)
 #include "glyph_spawn_b13_tests.inc"
 #include "nafta_b13_tests.inc"
 #include "hero_salary_b13_tests.inc"
+#include "nonhero_rewards_b13_tests.inc"
 #include "resurrection_b13_tests.inc"
 #include "resurrect_effect_b13_tests.inc"
 #include "parent_target_b13_tests.inc"
@@ -1800,6 +1801,10 @@ bool RunPrimeWorldLinuxApplicatorFormulaProbe(const char* dataRoot, bool mapCloc
 	HeroSalaryTimingB13(check);
 	HeroSalaryDeathB13(check);
 	HeroSalaryNumericB13(check);
+	NonheroRewardsB13(check);
+	NonheroRewardBoundariesB13(check);
+	NonheroRewardFormulasB13(check);
+	if (dataRoot && *dataRoot) NonheroRewardsAuthoredB13(check, dataRoot);
 	if (dataRoot && *dataRoot) HeroSalaryAuthoredB13(check, dataRoot);
 	ResurrectionEventsB13(check);
 	ResurrectionTalentsB13(check);

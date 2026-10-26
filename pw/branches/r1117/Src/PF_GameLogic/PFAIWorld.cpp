@@ -14,6 +14,7 @@
 #include "PFWorld.h"
 #include "PFWorldNatureMap.h"
 #include "PFApplInstant.h"
+#include "PFPlayer.h"
 #include "../LinuxBootstrap/kill_damage_totals.h"
 #include <algorithm>
 #include <cmath>
@@ -640,6 +641,8 @@ void PFAIWorld::GetAssistants(CPtr<PFBaseUnit> pVictim, CPtr<PFBaseUnit> pAggres
   assistants.clear();
 }
 
+#include "../LinuxBootstrap/nonhero_rewards.inc"
+
 void PFAIWorld::AwardKillers(CPtr<PFBaseUnit> pVictim, CPtr<PFBaseUnit> pKiller) const
 {
   ++linuxAwardKillersCalls;
@@ -666,6 +669,12 @@ void PFAIWorld::AwardKillers(CPtr<PFBaseUnit> pVictim, CPtr<PFBaseUnit> pKiller)
     linuxLastAwardRejectCode = 2;
     return;
   }
+
+	if (!pVictim->IsTrueHero())
+	{
+		AwardLinuxNonheroKill(pVictim, pKiller);
+		return;
+	}
 
   PFBaseHero* killerHero = dynamic_cast<PFBaseHero*>(pKiller.GetPtr());
   if (!killerHero && IsValid(pKiller->GetMasterUnit()))

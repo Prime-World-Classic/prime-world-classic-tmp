@@ -564,6 +564,7 @@ struct Context
 	unsigned expressions = 0;
 	std::vector<std::string> active;
 	std::map<std::string, float> constants;
+	const NDb::UnitConstantsContainer* globalConstants = nullptr;
 
 	NumericFormulaResult Evaluate(const std::string& expression)
 	{
@@ -884,10 +885,12 @@ struct Context
 		}
 		if (name.size() > 1 && name[0] == 'c')
 		{
-			if (!ability || active.size() >= 16 || std::find(active.begin(), active.end(), name) != active.end()) return false;
+			if ((!ability && !globalConstants) || active.size() >= 16 || std::find(active.begin(), active.end(), name) != active.end()) return false;
 			const auto cached = constants.find(name);
 			if (cached != constants.end()) { value = cached->second; return true; }
-			const auto* constant = ability->GetConstant(name.c_str() + 1);
+			const NDb::UnitConstant* constant = ability ? ability->GetConstant(name.c_str() + 1) : nullptr;
+			if (!ability && globalConstants) for (const auto& entry : globalConstants->vars)
+				if (entry && entry->name == name.c_str() + 1) { constant = entry; break; }
 			if (!constant) return false;
 			active.push_back(name);
 			const auto result = Evaluate(constant->var.sString.c_str());
@@ -935,6 +938,14 @@ NumericFormulaResult EvaluateUnitNumericFormula(const std::string& expression,
 	const NWorld::PFAbilityData* ability)
 {
 	Context context{sender, target, ability};
+	return context.Evaluate(expression);
+}
+
+NumericFormulaResult EvaluateGlobalConstantNumericFormula(const std::string& expression,
+	const NDb::UnitConstantsContainer* constants)
+{
+	Context context{nullptr, nullptr, nullptr};
+	context.globalConstants = constants;
 	return context.Evaluate(expression);
 }
 

@@ -6,9 +6,17 @@ struct IUnitFormulaPars;
 struct ICustomFormulaPars;
 struct IMiscFormulaPars;
 namespace NWorld { class PFAbilityData; class PFBaseApplicator; }
+namespace NDb { struct UnitConstantsContainer; }
 
 namespace LinuxBootstrap
 {
+/** Evaluate constant-only stat expressions using the existing parser and recursive cName lookup.
+ * No unit, ability or RNG is supplied. Global descriptors are borrowed for this call;
+ * existing recursion/expression budgets and unknown/nonfinite failure semantics apply.
+ */
+NumericFormulaResult EvaluateGlobalConstantNumericFormula(const std::string& expression,
+	const NDb::UnitConstantsContainer* constants);
+
 /** Resolve the supported s/t/r unit properties through existing live engine getters.
  * An authored expression may end with one semicolon and an optional final // line
  * annotation. The original source-length bound includes that suffix. Quoted talent

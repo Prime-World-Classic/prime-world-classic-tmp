@@ -286,6 +286,8 @@ private:
   NDb::Ptr<NDb::Talent> portalTalent; // no need to serialize it
 
 #if defined( PW_LINUX_NULL_RENDER )
+	/** Original nonhero last-hit, spectator and team roles with callback-stable ownership. */
+	void AwardLinuxNonheroKill(CPtr<PFBaseUnit> victim, CPtr<PFBaseUnit> killer) const;
   mutable int linuxAwardKillersCalls;
   mutable int linuxAwardKillersRejected;
   mutable int linuxAwardKillersApplied;

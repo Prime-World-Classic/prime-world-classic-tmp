@@ -86,7 +86,7 @@ class GhostCorridorScope : public NonCopyable
 {
 public:
   explicit GhostCorridorScope( MovingUnit & unit )
-    : pMap( 0 ), pPrevious( 0 ), active( false )
+    : pMap( 0 ), pPrevious( 0 ), active( false ), extended( 0 )
   {
     if ( ( unit.GetGhostMode() & GHOSTMOVE_CORRIDOR_FLAG ) == 0 || !IsValid( unit.pMap ) || !IsValid( unit.pOwner ) )
       return;
@@ -97,7 +97,7 @@ public:
 
     vector<CVec2> points;
     float radius = 0.0f;
-    unit.pOwner->CollectGhostCorridor( points, radius );
+    extended = unit.pOwner->CollectGhostCorridor( points, radius );
     if ( points.empty() || radius <= 0.0f )
       return;
 
@@ -141,11 +141,15 @@ public:
       pMap->SetPassOverride( pPrevious );
   }
 
+  // grows when the corridor appears and when it is extended to the end of a flight (see MovingUnit::MovingUnitStep)
+  int GetSignature() const { return active ? 1 + 2 * extended : 0; }
+
 private:
   TileMap *                pMap;
   TilePassOverride const * pPrevious;
   TilePassOverride         corridor;
   bool                     active;
+  int                      extended;
 };
 
 static bool g_lockMove = false;							// debug: disable movement of WORLD unit (for asynchronous tests)
@@ -212,6 +216,7 @@ MovingUnit::MovingUnit(const CVec3 &pos, const CVec2 & direction, TileMap *pTile
 , isFollowingForced(false)
 , ignoreCollision(false)
 , directMove(false)
+, ghostCorridorSignature(0)
 , vDirectTarget(VNULL2)
 {
 	splinePoint.resize(NUM_SPLINE_POINTS);
@@ -1753,9 +1758,16 @@ void MovingUnit::MovingUnitStep(float timeDelta)
 {
   GhostCorridorScope corridorScope( *this );
   NI_PROFILE_FUNCTION
-  
+
 	if (moveState == MOVE_STATE_DEAD)
 		return;
+
+  // the ghost corridor appeared or reached the end of the flight laying it (the jellyfish trail): take the path along it
+  // at once instead of the path around the obstacles taken before
+  const int corridorSignature = corridorScope.GetSignature();
+  if ( corridorSignature > ghostCorridorSignature )
+    RepathForGhostCorridor();
+  ghostCorridorSignature = corridorSignature;
 
 	if (timeDelta <= 0.001f)		// skip zero timeDelta
 		return;
@@ -1947,6 +1959,23 @@ bool MovingUnit::FindRoadPlace( CVec2 const& position, float radius, CVec2& foun
     }
   }
   return false;
+}
+
+// The ghost corridor appeared or got longer while the unit moves: build the path to the same target again, so that it goes
+// along the corridor (see GhostCorridorScope)
+void MovingUnit::RepathForGhostCorridor()
+{
+  if ( moveState == MOVE_STATE_IDLE || moveState == MOVE_STATE_DEAD || moveState == MOVE_STATE_SPECIAL_MOVE || moveState == MOVE_STATE_MOUNTED )
+    return;
+
+  const CVec2 lastTarget = vLastMoveTarget;
+  const CVec2 target     = directMove ? vDirectTarget : GetCenter( lastTarget );
+  const float distance   = stopDistance;
+  // the range checking made by MoveToInternal for stopDistance is made again there; an external one is kept
+  IPointChecking * pExternalChecking = ( distance == 0.0f ) ? pChecking.GetPtr() : 0;
+
+  vLastMoveTarget = CVec2( -1.0e6f, -1.0e6f );   // MoveToInternal rejects the same target
+  MoveToInternal( target, distance, pExternalChecking );
 }
 
 bool MovingUnit::CanOccupyPosition( CVec2 const& position )

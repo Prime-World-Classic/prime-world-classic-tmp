@@ -1677,6 +1677,14 @@ namespace NWorld
         break;
       }
     }
+    corridorLength = 0.0f;
+    if ( HasCorridor() )
+    {
+      string lengthName = "GhostCorridorLength_";
+      lengthName += corridorMark;
+      if ( pData->GetConstant( lengthName.c_str() ) )
+        corridorLength = pData->CalcParam( lengthName.c_str(), pOwner.GetPtr(), pOwner.GetPtr(), pData );
+    }
 
     const int ghostMode = GetDB().collisionFlags | ( HasCorridor() ? GHOSTMOVE_CORRIDOR_FLAG : 0 );
     ghostMoveIndex = pMovingUnit->SetGhostMode( ghostMode, false );
@@ -1729,10 +1737,20 @@ namespace NWorld
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  void PFBaseUnit::CollectGhostCorridor( vector<CVec2> & points, float & radius ) const
+  int PFBaseUnit::CollectGhostCorridor( vector<CVec2> & points, float & radius ) const
   {
     points.clear();
     radius = 0.0f;
+
+    // a trail laid while something flies (the jellyfish): the applicator laying it is aimed at the flier's current position
+    struct FlyingTrail
+    {
+      PFBaseApplicator const * pLayer;
+      CVec2 flier;          // current position of the flier
+      CVec2 start;          // the trail point farthest from the flier: the start of the flight
+      float length;         // length of the whole flight
+    };
+    vector<FlyingTrail> flyingTrails;
 
     for ( ring::Range<PFBaseApplicator::AppliedRing> it( appliedApplicators ); it; ++it )
     {
@@ -1758,14 +1776,56 @@ namespace NWorld
         for ( int depth = 0; pAncestor && depth < 4; ++depth )
         {
           if ( pAncestor->GetTarget().IsPosition() )
-          {
-            points.push_back( pAncestor->GetTarget().GetPosition().AsVec2D() );
             break;
-          }
           pAncestor = IsValid( pAncestor->GetParentAppl() ) ? pAncestor->GetParentAppl().GetPtr() : 0;
         }
+        if ( !pAncestor || !pAncestor->GetTarget().IsPosition() )
+          continue;
+        const CVec2 point = pAncestor->GetTarget().GetPosition().AsVec2D();
+        points.push_back( point );
+
+        // the trail is still being laid: remember the flier (the parent of the trail point, aimed at its position)
+        PFBaseApplicator const * pLayer = IsValid( pAncestor->GetParentAppl() ) ? pAncestor->GetParentAppl().GetPtr() : 0;
+        if ( ghost.GetCorridorLength() <= 0.0f || !pLayer || !pLayer->IsAlive() || !pLayer->GetTarget().IsPosition() )
+          continue;
+        int t = 0;
+        while ( t < flyingTrails.size() && flyingTrails[t].pLayer != pLayer )
+          ++t;
+        if ( t == flyingTrails.size() )
+        {
+          FlyingTrail trail;
+          trail.pLayer = pLayer;
+          trail.flier  = pLayer->GetTarget().GetPosition().AsVec2D();
+          trail.start  = point;
+          trail.length = ghost.GetCorridorLength();
+          flyingTrails.push_back( trail );
+        }
+        else if ( fabs2( point - flyingTrails[t].flier ) > fabs2( flyingTrails[t].start - flyingTrails[t].flier ) )
+          flyingTrails[t].start = point;
       }
     }
+
+    // the flier goes by a straight line: the corridor goes from it to the end of the flight at once
+    int extended = 0;
+    const float step = radius * 0.5f;
+    for ( int t = 0; t < flyingTrails.size() && step > 0.0f; ++t )
+    {
+      const FlyingTrail & trail = flyingTrails[t];
+      CVec2 dir = trail.flier - trail.start;
+      const float flown = fabs( dir );
+      if ( flown < 0.5f || flown >= trail.length )
+        continue;                                   // the direction is not known yet, or the flight is over
+      dir *= 1.0f / flown;
+      for ( float d = flown + step; ; d += step )
+      {
+        const float clamped = ( d < trail.length ) ? d : trail.length;
+        points.push_back( trail.start + dir * clamped );
+        if ( clamped >= trail.length )
+          break;
+      }
+      ++extended;
+    }
+    return extended;
   }
 
 }

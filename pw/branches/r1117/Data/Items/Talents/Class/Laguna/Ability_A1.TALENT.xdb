@@ -1657,6 +1657,16 @@
 						</var>
 					</UnitConstant>
 				</Item>
+				<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="FAEA3A32-5771-493E-8006-D549ACD2CA21">
+					<UnitConstant>
+						<name>GhostCorridorLength_Laguna_A1_TrailNear</name>
+						<var>
+							<compiledString>FQYAAAABAAAAEgAAAFJhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+							<returnType>float</returnType>
+							<sString>cRange</sString>
+						</var>
+					</UnitConstant>
+				</Item>
 				<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="14F516AE-EFFE-4C1D-B117-0C0AC726AE45">
 					<UnitConstant>
 						<name>A1_TrailNearRadius</name>

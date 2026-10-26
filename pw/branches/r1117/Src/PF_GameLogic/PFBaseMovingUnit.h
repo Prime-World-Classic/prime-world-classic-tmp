@@ -233,9 +233,10 @@ protected:
   // obstacle is in the way, instead of following tile-by-tile path. Falls back to the normal path on collision.
   bool                    directMove;
   CVec2                   vDirectTarget;
+  int                     ghostCorridorSignature;   // see MovingUnitStep: the ghost corridor appeared or got longer
 
 public:
-	ZEND int operator&( IBinSaver &f ) { f.Add(2,&origin); f.Add(3,&moveState); f.Add(4,&moveFlags); f.Add(5,&stateTime); f.Add(6,&stateTimeout); f.Add(7,&timeStanding); f.Add(8,&speedScale); f.Add(9,&speed); f.Add(10,&ghostMode); f.Add(11,&ghostModeIndex); f.Add(12,&curGhostMode); f.Add(13,&vShortTarget); f.Add(14,&vFarTarget); f.Add(15,&vLastMoveTarget); f.Add(16,&pUnitTarget);  if(!f.IsChecksum()){ f.Add(17,&pStaticPath); f.Add(18,&pPath); f.Add(19,&pChecking); f.Add(20,&spline); f.Add(21,&splineIter); f.Add(22,&splinePoint); f.Add(23,&splineDir0); f.Add(24,&splineDir1); f.Add(25,&splineSegmentLen); f.Add(26,&splineTiles); f.Add(27,&numSplineTiles); f.Add(28,&numIncrementalUpdates); f.Add(29,&bSplineRequiresExtraPoint); f.Add(30,&pBlocker); f.Add(31,&pOwner); f.Add(32,&mapMode); f.Add(33,&mapModeStatic); f.Add(34,&mapModeAll);  } f.Add(35,&stopDistance);  if(!f.IsChecksum()){ f.Add(36,&isMarkedOnMap);  } f.Add(37,&moveDir); f.Add(38,&pAttached); f.Add(39,&followDistance); f.Add(40,&pFollowed); f.Add(41,&isFollowing); f.Add(42,&holdingPosition); f.Add(43,&pathFindingSteps); f.Add(44,&evading); f.Add(45,&chasing); f.Add(46,&isFollowingForced); f.Add(47,&ignoreCollision); f.Add(48,&directMove); f.Add(49,&vDirectTarget); return 0; }
+	ZEND int operator&( IBinSaver &f ) { f.Add(2,&origin); f.Add(3,&moveState); f.Add(4,&moveFlags); f.Add(5,&stateTime); f.Add(6,&stateTimeout); f.Add(7,&timeStanding); f.Add(8,&speedScale); f.Add(9,&speed); f.Add(10,&ghostMode); f.Add(11,&ghostModeIndex); f.Add(12,&curGhostMode); f.Add(13,&vShortTarget); f.Add(14,&vFarTarget); f.Add(15,&vLastMoveTarget); f.Add(16,&pUnitTarget);  if(!f.IsChecksum()){ f.Add(17,&pStaticPath); f.Add(18,&pPath); f.Add(19,&pChecking); f.Add(20,&spline); f.Add(21,&splineIter); f.Add(22,&splinePoint); f.Add(23,&splineDir0); f.Add(24,&splineDir1); f.Add(25,&splineSegmentLen); f.Add(26,&splineTiles); f.Add(27,&numSplineTiles); f.Add(28,&numIncrementalUpdates); f.Add(29,&bSplineRequiresExtraPoint); f.Add(30,&pBlocker); f.Add(31,&pOwner); f.Add(32,&mapMode); f.Add(33,&mapModeStatic); f.Add(34,&mapModeAll);  } f.Add(35,&stopDistance);  if(!f.IsChecksum()){ f.Add(36,&isMarkedOnMap);  } f.Add(37,&moveDir); f.Add(38,&pAttached); f.Add(39,&followDistance); f.Add(40,&pFollowed); f.Add(41,&isFollowing); f.Add(42,&holdingPosition); f.Add(43,&pathFindingSteps); f.Add(44,&evading); f.Add(45,&chasing); f.Add(46,&isFollowingForced); f.Add(47,&ignoreCollision); f.Add(48,&directMove); f.Add(49,&vDirectTarget); f.Add(50,&ghostCorridorSignature); return 0; }
 
 protected:
   void RecryptImpl()
@@ -306,6 +307,7 @@ private:
   bool FindFreePlace2(CVec2 const& newPosition,  CVec2 const &attractPoint, float radius, CVec2& foundPosition, bool ignoreUnits, bool nativeTerrainOnly, float size = -1.0f, int mapModeFlags = 0, bool checkLineOfSight = false);
   bool CanOccupyPosition( CVec2 const& position );
   bool FindRoadPlace( CVec2 const& position, float radius, CVec2& foundPosition );
+  void RepathForGhostCorridor();
 
 	// client notifications
 	bool IsClientUnit() const;

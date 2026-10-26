@@ -1204,7 +1204,9 @@ void Renderer::RecoverFromDeviceLost( D3DPRESENT_PARAMETERS& pp )
         exit(D3DERR_DEVICENOTRESET);
       }
       
-      NotifyResourcesReallocate();
+      // ResetDevice() has reallocated the resources already (release -> Reset() -> reallocate): one more
+      // NotifyResourcesReallocate() created them again over the live ones (transparent units after a window
+      // mode change)
     }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

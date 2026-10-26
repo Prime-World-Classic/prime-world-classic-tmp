@@ -584,9 +584,17 @@ bool PFWorld::LoadMap( const NDb::AdvMapDescription * _advMapDescription, const 
   return true;
 }
 
+namespace
+{
+  const NDb::Ptr<NDb::Ability> & LeaverBonusAbility();
+}
+
 void PFWorld::LoadPrecachedResources(const NDb::AdvMapDescription * advMapDescription)
 {
   MAP_LOADING_SCOPE(mapLoadingController);
+
+  // "Closed Ranks" status (UpdateLeaverBonus): loaded now, not in battle
+  LeaverBonusAbility();
 
   const int precacheDepth = 20;
   NDb::Ptr<NDb::SessionRoot> pRoot = NDb::SessionRoot::GetRoot();
@@ -1354,6 +1362,25 @@ namespace
 {
   const char * const LEAVER_BONUS_ABILITY = "Heroes/DefaultStatus/LeaverBonus.ABLT.xdb";
 
+  // Loaded with the map (LoadPrecachedResources) and kept for the whole session: held only while UpdateLeaverBonus
+  // runs, the ability (with its status and icon) was freed between stacks and loaded again in battle. Never
+  // destroyed: no order of static destructors against the DB cache at exit.
+  const NDb::Ptr<NDb::Ability> & LeaverBonusAbility()
+  {
+    static NDb::Ptr<NDb::Ability> * ability = new NDb::Ptr<NDb::Ability>();
+    if ( !IsValid( *ability ) )
+    {
+      *ability = NDb::Get<NDb::Ability>( NDb::DBID( LEAVER_BONUS_ABILITY ) );
+      // its status and the status icon now too (held by the ability). Not NDb::Precache: a deep full read reads again
+      // resources the units on the map already use, and they stop being drawn
+      if ( IsValid( *ability ) )
+        for ( int i = 0; i < (*ability)->applicators.size(); ++i )
+          if ( const NDb::StatusApplicator * pStatus = dynamic_cast<const NDb::StatusApplicator *>( (*ability)->applicators[i].GetPtr() ) )
+            pStatus->image.GetPtr();
+    }
+    return *ability;
+  }
+
   struct LeaverBonusCollector : public NonCopyable
   {
     NDb::DBID statusId;
@@ -1373,7 +1400,7 @@ void PFWorld::UpdateLeaverBonus()
 {
   NI_PROFILE_FUNCTION
 
-  const NDb::Ptr<NDb::Ability> pAbility = NDb::Get<NDb::Ability>( NDb::DBID( LEAVER_BONUS_ABILITY ) );
+  const NDb::Ptr<NDb::Ability> & pAbility = LeaverBonusAbility();
   if ( !IsValid( pAbility ) || pAbility->applicators.empty() || !IsValid( pAbility->applicators[0] ) )
     return;
 

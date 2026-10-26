@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <EffectSwitcher>
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A2.TALENT" Count="1" />
 	<deathType>Manual</deathType>
 	<effectOnInvisible href="/Summons/Laguna/Dolphin/Effects/_Hit_Red.EFFT" />
 	<effectOnVisible href="/Summons/Laguna/Dolphin/Effects/_Hit.EFFT" />

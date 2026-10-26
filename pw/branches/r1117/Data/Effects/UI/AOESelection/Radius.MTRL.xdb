@@ -117,6 +117,9 @@
 	<BackLink DBID="/Items/Talents/Class/IronKnight/Ability_A4_2.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Katana/Ability_A2.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Katana/Ability_A4_2.TALENT" Count="1" />
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A3.TALENT" Count="1" />
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A4_1.TALENT" Count="1" />
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A4_2.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Mage/Ability1.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Mage/Ability2.TALENT" Count="2" />
 	<BackLink DBID="/Items/Talents/Class/Mage/Ability3.TALENT" Count="1" />

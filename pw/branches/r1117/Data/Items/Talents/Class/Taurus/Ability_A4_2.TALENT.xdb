@@ -435,53 +435,6 @@
 											<useListAs>ListAsRule</useListAs>
 										</FlagsApplicator>
 									</Item>
-									<Item href="/Items/Talents/Class/Taurus/Ability_A4_2.TALENT" id="2504C5AA-6405-4501-862F-698B29F84564">
-										<StatModApplicator>
-											<applyTarget>ApplicatorTarget</applyTarget>
-											<behaviorFlags>0</behaviorFlags>
-											<caption>заряд: неуязвимость к контролю (TaurusJumpI2C)</caption>
-											<constraint>None</constraint>
-											<dontUpdate>false</dontUpdate>
-											<effect>
-												<Item href="" />
-												<Item href="" />
-											</effect>
-											<enabled>
-												<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
-												<returnType>bool</returnType>
-												<sString>true</sString>
-											</enabled>
-											<formulaName></formulaName>
-											<lifeTime>
-												<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
-												<returnType>float</returnType>
-												<sString>-1.0</sString>
-											</lifeTime>
-											<LoggingEvent>-1</LoggingEvent>
-											<modifier>
-												<addValue>
-													<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
-													<returnType>float</returnType>
-													<sString>1.0f</sString>
-												</addValue>
-												<multValue>
-													<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
-													<returnType>float</returnType>
-													<sString>1.0f</sString>
-												</multValue>
-												<stat>Life</stat>
-												<topModifier>false</topModifier>
-												<variable>TaurusJumpI2C</variable>
-											</modifier>
-											<providerName></providerName>
-											<startCondition>
-												<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
-												<returnType>bool</returnType>
-												<sString>true</sString>
-											</startCondition>
-											<statModName></statModName>
-										</StatModApplicator>
-									</Item>
 								</applicatorsOnSelf>
 								<applyTarget>AbilityOwner</applyTarget>
 								<behaviorFlags>1</behaviorFlags>
@@ -510,7 +463,7 @@
 									<returnType>bool</returnType>
 									<sString>mIsAbilityOn</sString>
 								</enabled>
-								<formulaName></formulaName>
+								<formulaName>TaurusJmpCharge</formulaName>
 								<interruptEvents>2626015</interruptEvents>
 								<lifeTime>
 									<compiledString>FREAAAABAAAAHQAAAEE0XzJfUHJlcGFyZVRpbWUAVYvsi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9Jdww==</compiledString>
@@ -1051,6 +1004,113 @@
 																																				<sString>cA4_2_Radius</sString>
 																																			</range>
 																																			<targetFilter>538771519</targetFilter>
+																																			<targetSelector href="" />
+																																		</AreaTargetSelector>
+																																	</targetSelector>
+																																</ConditionTargetSelector>
+																															</targetSelector>
+																														</SpellPeriodicallyApplicator>
+																													</Item>
+																													<Item href="/Items/Talents/Class/Taurus/Ability_A4_2.TALENT" id="B608EE25-56E4-449E-B0E6-B7730DB7B07D">
+																														<SpellPeriodicallyApplicator>
+																															<applyTarget>AbilityOwner</applyTarget>
+																															<behaviorFlags>0</behaviorFlags>
+																															<caption>удар при приземлении: снос деревьев в радиусе удара</caption>
+																															<effect>
+																																<Item href="" />
+																																<Item href="" />
+																															</effect>
+																															<enabled>
+																																<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																																<returnType>bool</returnType>
+																																<sString>true</sString>
+																															</enabled>
+																															<formulaName></formulaName>
+																															<lifeTime>
+																																<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DzczMPQ==</compiledString>
+																																<returnType>float</returnType>
+																																<sString>0.1f</sString>
+																															</lifeTime>
+																															<LoggingEvent>-1</LoggingEvent>
+																															<period>
+																																<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAAB6RA==</compiledString>
+																																<returnType>float</returnType>
+																																<sString>1000.0f</sString>
+																															</period>
+																															<providerName></providerName>
+																															<scaleMode>ScaleIsTime</scaleMode>
+																															<spell href="/Items/Talents/Class/Taurus/Ability_A4_2.TALENT" id="1A4DEBCA-EBC8-4C42-A0E5-8B14180295C4">
+																																<Spell>
+																																	<applicators>
+																																		<Item href="/Items/Talents/Class/Taurus/Ability_A4_2.TALENT" id="D654D04D-734C-42BA-8E9E-EC054877D18F">
+																																			<DropTreeApplicator>
+																																				<applyTarget>ApplicatorTarget</applyTarget>
+																																				<caption>Роняем деревья</caption>
+																																				<enabled>
+																																					<compiledString></compiledString>
+																																					<returnType>bool</returnType>
+																																					<sString>true</sString>
+																																				</enabled>
+																																				<formulaName></formulaName>
+																																				<LoggingEvent>-1</LoggingEvent>
+																																				<providerName></providerName>
+																																			</DropTreeApplicator>
+																																		</Item>
+																																	</applicators>
+																																	<dispatch href="/Items/Talents/Class/Taurus/Ability_A4_2.TALENT" id="C76D0055-A673-4C4B-8F8E-AF7C689963CA">
+																																		<DispatchImmediate>
+																																			<alwaysApply>false</alwaysApply>
+																																			<applyEffect>
+																																				<Item href="" />
+																																				<Item href="" />
+																																			</applyEffect>
+																																			<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
+																																			<applyEffectOrientation>Default</applyEffectOrientation>
+																																			<applyEffectRandomAnglePoints>0</applyEffectRandomAnglePoints>
+																																			<dieAfterApply>true</dieAfterApply>
+																																			<dispatchEffect>
+																																				<Item href="" />
+																																				<Item href="" />
+																																			</dispatchEffect>
+																																			<flags>1</flags>
+																																			<instantApply>false</instantApply>
+																																		</DispatchImmediate>
+																																	</dispatch>
+																																</Spell>
+																															</spell>
+																															<startCondition>
+																																<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																																<returnType>bool</returnType>
+																																<sString>true</sString>
+																															</startCondition>
+																															<startOffset>
+																																<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+																																<returnType>float</returnType>
+																																<sString>0.0f</sString>
+																															</startOffset>
+																															<targetSelector href="/Items/Talents/Class/Taurus/Ability_A4_2.TALENT" id="79C0E074-6255-478B-A531-257BD60D7218">
+																																<ConditionTargetSelector>
+																																	<condition>
+																																		<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																																		<returnType>bool</returnType>
+																																		<sString>true</sString>
+																																	</condition>
+																																	<flags>0</flags>
+																																	<mode>Normal</mode>
+																																	<targetSelector href="/Items/Talents/Class/Taurus/Ability_A4_2.TALENT" id="5AD8444A-B717-4AFC-A91C-E26A75BA720A">
+																																		<AreaTargetSelector>
+																																			<absolutePosition>
+																																				<x>0</x>
+																																				<y>0</y>
+																																			</absolutePosition>
+																																			<flags>0</flags>
+																																			<mode>Normal</mode>
+																																			<range>
+																																				<compiledString>FQwAAAABAAAAGAAAAEE0XzJfUmFkaXVzAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+																																				<returnType>float</returnType>
+																																				<sString>cA4_2_Radius</sString>
+																																			</range>
+																																			<targetFilter>536871936</targetFilter>
 																																			<targetSelector href="" />
 																																		</AreaTargetSelector>
 																																	</targetSelector>
@@ -1774,9 +1834,9 @@
 		<percent>0</percent>
 	</consumptionBonus>
 	<cooldownTime>
-		<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
+		<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAAC0Qg==</compiledString>
 		<returnType>float</returnType>
-		<sString>1</sString>
+		<sString>90</sString>
 	</cooldownTime>
 	<cooldownTimeSecondState>
 		<compiledString></compiledString>

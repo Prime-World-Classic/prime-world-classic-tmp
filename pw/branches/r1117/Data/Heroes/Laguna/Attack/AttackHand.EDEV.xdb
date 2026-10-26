@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <EnableDisableSCEvents>
+	<BackLink DBID="/Heroes/Laguna/_.SOBJ" Count="1" />
 	<disableEvents />
 	<enableEvents>
 		<Item href="/Heroes/Laguna/Attack/AttackHand.EDEV" id="CECBF91B-5174-4C2C-BE3B-4EB5F8C99B20">

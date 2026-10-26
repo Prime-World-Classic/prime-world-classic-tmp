@@ -15,8 +15,8 @@
 	<aoePassabilityCheckMode>0</aoePassabilityCheckMode>
 	<aoeSize>
 		<compiledString>FQoAAAABAAAAFgAAAEEyX1JhZGl1cwBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
-<returnType>float</returnType>
-<sString>cA2_Radius</sString>
+		<returnType>float</returnType>
+		<sString>cA2_Radius</sString>
 	</aoeSize>
 	<aoeType>Disk</aoeType>
 	<applicators>
@@ -30,8 +30,8 @@
 								<caption>Лужа</caption>
 								<enabled>
 									<compiledString>FRgAAAACAAAAHwAAADgAAABMYWd1bmFfQTJ1MgBMYWd1bmFfQTJ1MgBVi+yD7AhoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaAwAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AA+2Rfv32BvAg8ABi+Vdww==</compiledString>
-<returnType>bool</returnType>
-<sString>tal("Laguna_A2u2") == false</sString>
+									<returnType>bool</returnType>
+									<sString>tal("Laguna_A2u2") == false</sString>
 								</enabled>
 								<formulaName></formulaName>
 								<LoggingEvent>-1</LoggingEvent>
@@ -58,55 +58,55 @@
 												<flags>0</flags>
 												<lifeTime>
 													<compiledString>FRwAAAACAAAAKwAAAEUAAABBMl9EZWxheQAAAABBMl9QdWRkbGVMaW5nZXIAVYvsg+wMi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9KLRQxQi00IUWgMAAAAi1UQiwKLTRCLUFDdXfj/0txF+Nld9NlF9IvlXcM=</compiledString>
-<returnType>float</returnType>
-<sString>cA2_Delay + cA2_PuddleLinger</sString>
+													<returnType>float</returnType>
+													<sString>cA2_Delay + cA2_PuddleLinger</sString>
 												</lifeTime>
 												<persistentApplicators>
-														<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="0A5221AC-F7B6-4160-91EB-3607E7852858">
-															<AuraApplicator>
-																<applicators>
-																	<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="FDB3E0FC-DF21-434C-88B8-C89EE3B48196">
-																		<StatusApplicator parent="/Heroes/DefaultStatus/_SLOW_MOVE.APLR">
-																			<caption>(A2u) замедление в зоне подготовки</caption>
-																		</StatusApplicator>
-																	</Item>
-																</applicators>
-																<applyTarget>ApplicatorTarget</applyTarget>
-																<behaviorFlags>147</behaviorFlags>
-																<caption>(A2u) аура замедления лужи</caption>
-																<effect>
-																	<Item href="" />
-																	<Item href="" />
-																</effect>
-																<enabled>
-<compiledString>FRcAAAACAAAAHgAAADcAAABMYWd1bmFfQTJ1AABMYWd1bmFfQTJ1AFWL7IPsCGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoDAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAikX7i+Vdww==</compiledString>
-<returnType>bool</returnType>
-<sString>tal("Laguna_A2u")</sString>
-																</enabled>
-																<formulaName></formulaName>
-																<lifeTime>
-																	<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
-																	<returnType>float</returnType>
-																	<sString>-1.0</sString>
-																</lifeTime>
-																<LoggingEvent>-1</LoggingEvent>
-																<providerName></providerName>
-																<range>
-																	<compiledString>FQoAAAABAAAAFgAAAEEyX1JhZGl1cwBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
-																	<returnType>float</returnType>
-																	<sString>cA2_Radius</sString>
-																</range>
-																<startCondition>
-																	<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
-																	<returnType>bool</returnType>
-																	<sString>true</sString>
-																</startCondition>
-																<targets>547160127</targets>
-																<targetSelector href="" />
-																<type>None</type>
-															</AuraApplicator>
-														</Item>
-													</persistentApplicators>
+													<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="0A5221AC-F7B6-4160-91EB-3607E7852858">
+														<AuraApplicator>
+															<applicators>
+																<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="FDB3E0FC-DF21-434C-88B8-C89EE3B48196">
+																	<StatusApplicator parent="/Heroes/DefaultStatus/_SLOW_MOVE.APLR">
+																		<caption>(A2u) замедление в зоне подготовки</caption>
+																	</StatusApplicator>
+																</Item>
+															</applicators>
+															<applyTarget>ApplicatorTarget</applyTarget>
+															<behaviorFlags>147</behaviorFlags>
+															<caption>(A2u) аура замедления лужи</caption>
+															<effect>
+																<Item href="" />
+																<Item href="" />
+															</effect>
+															<enabled>
+																<compiledString>FRcAAAACAAAAHgAAADcAAABMYWd1bmFfQTJ1AABMYWd1bmFfQTJ1AFWL7IPsCGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoDAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAikX7i+Vdww==</compiledString>
+																<returnType>bool</returnType>
+																<sString>tal("Laguna_A2u")</sString>
+															</enabled>
+															<formulaName></formulaName>
+															<lifeTime>
+																<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+																<returnType>float</returnType>
+																<sString>-1.0</sString>
+															</lifeTime>
+															<LoggingEvent>-1</LoggingEvent>
+															<providerName></providerName>
+															<range>
+																<compiledString>FQoAAAABAAAAFgAAAEEyX1JhZGl1cwBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+																<returnType>float</returnType>
+																<sString>cA2_Radius</sString>
+															</range>
+															<startCondition>
+																<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																<returnType>bool</returnType>
+																<sString>true</sString>
+															</startCondition>
+															<targets>547160127</targets>
+															<targetSelector href="" />
+															<type>None</type>
+														</AuraApplicator>
+													</Item>
+												</persistentApplicators>
 											</DispatchByTime>
 										</dispatch>
 									</Spell>
@@ -124,14 +124,14 @@
 						</applicator>
 						<continueCondition>
 							<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
-<returnType>bool</returnType>
-<sString>1</sString>
+							<returnType>bool</returnType>
+							<sString>1</sString>
 						</continueCondition>
 						<continueEvents>0</continueEvents>
 						<delay>
 							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
-<returnType>float</returnType>
-<sString>-1.0</sString>
+							<returnType>float</returnType>
+							<sString>-1.0</sString>
 						</delay>
 						<stopCondition>
 							<compiledString>FQAAAAAAAAAAVYvsMsBdww==</compiledString>
@@ -147,8 +147,8 @@
 								<caption>(A2u2) Лужа: больше и с немотой</caption>
 								<enabled>
 									<compiledString>FRgAAAACAAAAHwAAADgAAABMYWd1bmFfQTJ1MgBMYWd1bmFfQTJ1MgBVi+yD7AhoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaAwAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AIpF+4vlXcM=</compiledString>
-<returnType>bool</returnType>
-<sString>tal("Laguna_A2u2")</sString>
+									<returnType>bool</returnType>
+									<sString>tal("Laguna_A2u2")</sString>
 								</enabled>
 								<formulaName></formulaName>
 								<LoggingEvent>-1</LoggingEvent>
@@ -175,99 +175,99 @@
 												<flags>0</flags>
 												<lifeTime>
 													<compiledString>FRwAAAACAAAAKwAAAEUAAABBMl9EZWxheQAAAABBMl9QdWRkbGVMaW5nZXIAVYvsg+wMi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9KLRQxQi00IUWgMAAAAi1UQiwKLTRCLUFDdXfj/0txF+Nld9NlF9IvlXcM=</compiledString>
-<returnType>float</returnType>
-<sString>cA2_Delay + cA2_PuddleLinger</sString>
+													<returnType>float</returnType>
+													<sString>cA2_Delay + cA2_PuddleLinger</sString>
 												</lifeTime>
 												<persistentApplicators>
-														<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="A586BC62-138C-4813-B875-EB7920030DA3">
-															<AuraApplicator>
-																<applicators>
-																	<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="CCEFC94C-B444-431D-A5F2-8A2D9A994BF9">
-																		<StatusApplicator parent="/Heroes/DefaultStatus/_SLOW_MOVE.APLR">
-																			<caption>(A2u) замедление в зоне подготовки</caption>
-																		</StatusApplicator>
-																	</Item>
-																</applicators>
-																<applyTarget>ApplicatorTarget</applyTarget>
-																<behaviorFlags>147</behaviorFlags>
-																<caption>(A2u) аура замедления лужи</caption>
-																<effect>
-																	<Item href="" />
-																	<Item href="" />
-																</effect>
-																<enabled>
-<compiledString>FRcAAAACAAAAHgAAADcAAABMYWd1bmFfQTJ1AABMYWd1bmFfQTJ1AFWL7IPsCGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoDAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAikX7i+Vdww==</compiledString>
-<returnType>bool</returnType>
-<sString>tal("Laguna_A2u")</sString>
-																</enabled>
-																<formulaName></formulaName>
-																<lifeTime>
-																	<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
-																	<returnType>float</returnType>
-																	<sString>-1.0</sString>
-																</lifeTime>
-																<LoggingEvent>-1</LoggingEvent>
-																<providerName></providerName>
-																<range>
-																	<compiledString>FQoAAAABAAAAFgAAAEEyX1JhZGl1cwBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
-																	<returnType>float</returnType>
-																	<sString>cA2_Radius</sString>
-																</range>
-																<startCondition>
-																	<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
-																	<returnType>bool</returnType>
-																	<sString>true</sString>
-																</startCondition>
-																<targets>547160127</targets>
-																<targetSelector href="" />
-																<type>None</type>
-															</AuraApplicator>
-														</Item>
-														<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="4857C368-6DFF-42CA-87AD-2BD404F31A83">
-															<AuraApplicator>
-																<applicators>
-																	<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="FEB4CEC2-F574-4D2F-835A-8982F39B846B">
-																		<StatusApplicator parent="/Heroes/DefaultStatus/_SILENCE_Status.APLR">
-																			<caption>(A2u2) немота в зоне подготовки</caption>
-																		</StatusApplicator>
-																	</Item>
-																</applicators>
-																<applyTarget>ApplicatorTarget</applyTarget>
-																<behaviorFlags>147</behaviorFlags>
-																<caption>(A2u2) аура немоты лужи</caption>
-																<effect>
-																	<Item href="" />
-																	<Item href="" />
-																</effect>
-																<enabled>
-																	<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
-																	<returnType>bool</returnType>
-																	<sString>true</sString>
-																</enabled>
-																<formulaName></formulaName>
-																<lifeTime>
-																	<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
-																	<returnType>float</returnType>
-																	<sString>-1.0</sString>
-																</lifeTime>
-																<LoggingEvent>-1</LoggingEvent>
-																<providerName></providerName>
-																<range>
-																	<compiledString>FQoAAAABAAAAFgAAAEEyX1JhZGl1cwBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
-																	<returnType>float</returnType>
-																	<sString>cA2_Radius</sString>
-																</range>
-																<startCondition>
-																	<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
-																	<returnType>bool</returnType>
-																	<sString>true</sString>
-																</startCondition>
-																<targets>547160127</targets>
-																<targetSelector href="" />
-																<type>None</type>
-															</AuraApplicator>
-														</Item>
-													</persistentApplicators>
+													<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="A586BC62-138C-4813-B875-EB7920030DA3">
+														<AuraApplicator>
+															<applicators>
+																<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="CCEFC94C-B444-431D-A5F2-8A2D9A994BF9">
+																	<StatusApplicator parent="/Heroes/DefaultStatus/_SLOW_MOVE.APLR">
+																		<caption>(A2u) замедление в зоне подготовки</caption>
+																	</StatusApplicator>
+																</Item>
+															</applicators>
+															<applyTarget>ApplicatorTarget</applyTarget>
+															<behaviorFlags>147</behaviorFlags>
+															<caption>(A2u) аура замедления лужи</caption>
+															<effect>
+																<Item href="" />
+																<Item href="" />
+															</effect>
+															<enabled>
+																<compiledString>FRcAAAACAAAAHgAAADcAAABMYWd1bmFfQTJ1AABMYWd1bmFfQTJ1AFWL7IPsCGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoDAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAikX7i+Vdww==</compiledString>
+																<returnType>bool</returnType>
+																<sString>tal("Laguna_A2u")</sString>
+															</enabled>
+															<formulaName></formulaName>
+															<lifeTime>
+																<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+																<returnType>float</returnType>
+																<sString>-1.0</sString>
+															</lifeTime>
+															<LoggingEvent>-1</LoggingEvent>
+															<providerName></providerName>
+															<range>
+																<compiledString>FQoAAAABAAAAFgAAAEEyX1JhZGl1cwBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+																<returnType>float</returnType>
+																<sString>cA2_Radius</sString>
+															</range>
+															<startCondition>
+																<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																<returnType>bool</returnType>
+																<sString>true</sString>
+															</startCondition>
+															<targets>547160127</targets>
+															<targetSelector href="" />
+															<type>None</type>
+														</AuraApplicator>
+													</Item>
+													<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="4857C368-6DFF-42CA-87AD-2BD404F31A83">
+														<AuraApplicator>
+															<applicators>
+																<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="FEB4CEC2-F574-4D2F-835A-8982F39B846B">
+																	<StatusApplicator parent="/Heroes/DefaultStatus/_SILENCE_Status.APLR">
+																		<caption>(A2u2) немота в зоне подготовки</caption>
+																	</StatusApplicator>
+																</Item>
+															</applicators>
+															<applyTarget>ApplicatorTarget</applyTarget>
+															<behaviorFlags>147</behaviorFlags>
+															<caption>(A2u2) аура немоты лужи</caption>
+															<effect>
+																<Item href="" />
+																<Item href="" />
+															</effect>
+															<enabled>
+																<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																<returnType>bool</returnType>
+																<sString>true</sString>
+															</enabled>
+															<formulaName></formulaName>
+															<lifeTime>
+																<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+																<returnType>float</returnType>
+																<sString>-1.0</sString>
+															</lifeTime>
+															<LoggingEvent>-1</LoggingEvent>
+															<providerName></providerName>
+															<range>
+																<compiledString>FQoAAAABAAAAFgAAAEEyX1JhZGl1cwBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+																<returnType>float</returnType>
+																<sString>cA2_Radius</sString>
+															</range>
+															<startCondition>
+																<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																<returnType>bool</returnType>
+																<sString>true</sString>
+															</startCondition>
+															<targets>547160127</targets>
+															<targetSelector href="" />
+															<type>None</type>
+														</AuraApplicator>
+													</Item>
+												</persistentApplicators>
 											</DispatchByTime>
 										</dispatch>
 									</Spell>
@@ -285,14 +285,14 @@
 						</applicator>
 						<continueCondition>
 							<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
-<returnType>bool</returnType>
-<sString>1</sString>
+							<returnType>bool</returnType>
+							<sString>1</sString>
 						</continueCondition>
 						<continueEvents>0</continueEvents>
 						<delay>
 							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
-<returnType>float</returnType>
-<sString>-1.0</sString>
+							<returnType>float</returnType>
+							<sString>-1.0</sString>
 						</delay>
 						<stopCondition>
 							<compiledString>FQAAAAAAAAAAVYvsMsBdww==</compiledString>
@@ -507,10 +507,10 @@
 								<applyTarget>ApplicatorTarget</applyTarget>
 								<caption>(A2u) Дельфин: доп. урон при заныривании</caption>
 								<enabled>
-										<compiledString>FRcAAAACAAAAHgAAADcAAABMYWd1bmFfQTJ1AABMYWd1bmFfQTJ1AFWL7IPsCGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoDAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAikX7i+Vdww==</compiledString>
-										<returnType>bool</returnType>
-										<sString>tal("Laguna_A2u")</sString>
-									</enabled>
+									<compiledString>FRcAAAACAAAAHgAAADcAAABMYWd1bmFfQTJ1AABMYWd1bmFfQTJ1AFWL7IPsCGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoDAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAikX7i+Vdww==</compiledString>
+									<returnType>bool</returnType>
+									<sString>tal("Laguna_A2u")</sString>
+								</enabled>
 								<formulaName></formulaName>
 								<LoggingEvent>-1</LoggingEvent>
 								<providerName></providerName>
@@ -650,7 +650,28 @@
 	<commonDescription textref="/Items/Talents/Class/Laguna/Ability_A2.TALENT_commonDescription.txt" />
 	<compiledDescriptionA textref="" />
 	<compiledDescriptionB textref="" />
-	<conditionFormulas />
+	<conditionFormulas>
+		<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="CC1D9CD7-E2C5-460C-A11F-A7A7544DAA8C">
+			<ConditionFormula>
+				<condition>
+					<compiledString>FRcAAAACAAAAHgAAADcAAABMYWd1bmFfQTJ1AABMYWd1bmFfQTJ1AFWL7IPsCGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoDAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAD7ZF+/fYG8CDwAGL5V3D</compiledString>
+					<returnType>bool</returnType>
+					<sString>tal("Laguna_A2u") == false</sString>
+				</condition>
+				<name>Laguna_A2u</name>
+			</ConditionFormula>
+		</Item>
+		<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="2B12781E-657E-4D5D-85DE-1DB88269BAC1">
+			<ConditionFormula>
+				<condition>
+					<compiledString>FRgAAAACAAAAHwAAADgAAABMYWd1bmFfQTJ1MgBMYWd1bmFfQTJ1MgBVi+yD7AhoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaAwAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AA+2Rfv32BvAg8ABi+Vdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>tal("Laguna_A2u2") == false</sString>
+				</condition>
+				<name>Laguna_A2u2</name>
+			</ConditionFormula>
+		</Item>
+	</conditionFormulas>
 	<conflictingTalents />
 	<constants href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="18F1D602-260C-4D46-8AB2-BAA9654E48F1">
 		<UnitConstantsContainer>
@@ -680,8 +701,8 @@
 						<name>A2_Radius</name>
 						<var>
 							<compiledString>FTYAAAAIAAAAPQAAAFYAAACUAAAApwAAALQAAADKAAAA4wAAAPYAAABMYWd1bmFfQTJ1MgBMYWd1bmFfQTJ1MgBXaWR0aAAAAEEydTJfQXJlYUJvbnVzAABXaWR0aABVi+yD7BxoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaAwAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AA+2TfuFyXRPi1UMUotFCFBoGAAAAItNEIsRi00Qi0JQ/9DcDRoBAACLTQxRi1UIUmggAAAAi0UQixCLTRCLQlDdXfD/0Nw1EgEAANno3sHcTfDdXejrI4tNDFGLVQhSaDAAAACLRRCLEItNEItCUP/Q3A0aAQAA3V3o3UXo2V3k2UXki+VdwwAAAAAAAPA/AAAAAAAAWUAAAAAAAAD4Pw==</compiledString>
-<returnType>float</returnType>
-<sString>tal("Laguna_A2u2") ? cWidth*1.5*(1 + cA2u2_AreaBonus/100) : cWidth*1.5</sString>
+							<returnType>float</returnType>
+							<sString>tal("Laguna_A2u2") ? cWidth*1.5*(1 + cA2u2_AreaBonus/100) : cWidth*1.5</sString>
 						</var>
 					</UnitConstant>
 				</Item>
@@ -725,7 +746,7 @@
 						</var>
 					</UnitConstant>
 				</Item>
-			<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="B5997642-4218-426E-BCC3-3F2693E964B3">
+				<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="B5997642-4218-426E-BCC3-3F2693E964B3">
 					<UnitConstant>
 						<name>Dec_MoveSpeed</name>
 						<var>
@@ -775,6 +796,26 @@
 						</var>
 					</UnitConstant>
 				</Item>
+				<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="0115228A-8578-4B2A-AA1C-DE4AACE0BDBB">
+					<UnitConstant>
+						<name>A2u_Slow</name>
+						<var>
+							<compiledString>FQ4AAAABAAAAGgAAAERlY19Nb3ZlU3BlZWQAVYvsi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9Jdww==</compiledString>
+							<returnType>float</returnType>
+							<sString>cDec_MoveSpeed</sString>
+						</var>
+					</UnitConstant>
+				</Item>
+				<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" id="41065FCF-C90F-42A9-AF02-CE2869D16E7C">
+					<UnitConstant>
+						<name>A2u_LandDamage</name>
+						<var>
+							<compiledString>FQ4AAAABAAAAGgAAAEEyX0xhbmREYW1hZ2UAVYvsi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9Jdww==</compiledString>
+							<returnType>float</returnType>
+							<sString>cA2_LandDamage</sString>
+						</var>
+					</UnitConstant>
+				</Item>
 			</vars>
 		</UnitConstantsContainer>
 	</constants>
@@ -783,9 +824,9 @@
 		<percent>0</percent>
 	</consumptionBonus>
 	<cooldownTime>
-		<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
+		<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAABwQQ==</compiledString>
 		<returnType>float</returnType>
-		<sString>1.0f</sString>
+		<sString>15</sString>
 	</cooldownTime>
 	<cooldownTimeSecondState>
 		<compiledString></compiledString>
@@ -813,7 +854,7 @@
 			<instantApply>false</instantApply>
 		</DispatchImmediate>
 	</dispatch>
-	<flags>67</flags>
+	<flags>3</flags>
 	<forceBonus>0</forceBonus>
 	<image href="/UI/Styles/Icons/Heroes/Laguna/A2.ITEX" />
 	<imageSecondState href="" />

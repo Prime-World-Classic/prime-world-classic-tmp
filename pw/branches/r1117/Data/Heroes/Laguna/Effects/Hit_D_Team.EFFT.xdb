@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <EffectSwitcher>
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A1.TALENT" Count="2" />
 	<deathType>Manual</deathType>
 	<effectOnInvisible href="/Heroes/Laguna/Effects/Hit_D.EFFT" />
 	<effectOnVisible href="/Heroes/Laguna/Effects/Hit_D_Red.EFFT" />

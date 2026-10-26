@@ -77,6 +77,45 @@ public:
     }
   }
 
+  // Keep only the connected masked areas that cross the middle column of the map (the river between the bases);
+  // the other areas (lakes and ponds of a base) are dropped. Used by the world logic copy of the water mask.
+  void KeepAreasCrossingMiddle()
+  {
+    if ( mask.IsEmpty() )
+      return;
+    const int sx = mask.GetSizeX(), sy = mask.GetSizeY();
+    const int cx = sx / 2;
+    CArray2D1Bit keep( sx, sy );
+    keep.FillZero();
+    vector<int> stack;
+    for ( int y0 = 0; y0 < sy; ++y0 )
+    {
+      if ( !mask.GetData( cx, y0 ) || keep.GetData( cx, y0 ) )
+        continue;
+      keep.SetData( cx, y0 );
+      stack.push_back( y0 * sx + cx );
+      while ( !stack.empty() )
+      {
+        const int i = stack.back();
+        stack.pop_back();
+        const int x = i % sx, y = i / sx;
+        const int nx[4] = { x - 1, x + 1, x, x };
+        const int ny[4] = { y, y, y - 1, y + 1 };
+        for ( int k = 0; k < 4; ++k )
+        {
+          if ( nx[k] < 0 || nx[k] >= sx || ny[k] < 0 || ny[k] >= sy )
+            continue;
+          if ( mask.GetData( nx[k], ny[k] ) && !keep.GetData( nx[k], ny[k] ) )
+          {
+            keep.SetData( nx[k], ny[k] );
+            stack.push_back( ny[k] * sx + nx[k] );
+          }
+        }
+      }
+    }
+    mask = keep;
+  }
+
 	static void Store( const char* data, float mapSizeX, float mapSizeY, int maskSize, const string& fileName );
 };
 

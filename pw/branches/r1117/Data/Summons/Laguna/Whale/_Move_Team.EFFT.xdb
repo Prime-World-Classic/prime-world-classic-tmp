@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <EffectSwitcher>
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A4_1.TALENT" Count="2" />
 	<deathType>Manual</deathType>
 	<effectOnInvisible href="/Summons/Laguna/Whale/_Move_Red.EFFT" />
 	<effectOnVisible href="/Summons/Laguna/Whale/_Move.EFFT" />

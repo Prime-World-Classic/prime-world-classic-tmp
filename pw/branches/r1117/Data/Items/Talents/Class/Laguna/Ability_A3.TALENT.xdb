@@ -20,67 +20,67 @@
 	</aoeSize>
 	<aoeType>None</aoeType>
 	<applicators>
-	<Item href="/Items/Talents/Class/Laguna/Ability_A3.TALENT" id="CCF4081F-A081-4E5A-A77A-B1615C9843E9">
-		<PermanentStatModApplicator>
-			<applyTarget>ApplicatorTarget</applyTarget>
-			<caption>три рыбки</caption>
-			<customApplyType>None</customApplyType>
-			<enabled>
-				<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
-				<returnType>bool</returnType>
-				<sString>true</sString>
-			</enabled>
-			<formulaName></formulaName>
-			<LoggingEvent>-1</LoggingEvent>
-			<modifier>
-				<addValue>
-					<compiledString>FRMAAAACAAAAIgAAADQAAABBM19GaXNoAExhZ3VuYUZpc2gAVYvsg+wMi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9JoCAAAAItFDIsQi00Mi4KIAQAA3V34/9DcbfjZXfTZRfSL5V3D</compiledString>
-					<returnType>float</returnType>
-					<sString>cA3_Fish - receiver.vLagunaFish</sString>
-				</addValue>
-				<multValue>
-					<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
-					<returnType>float</returnType>
-					<sString>1.0f</sString>
-				</multValue>
-				<stat>Life</stat>
-				<topModifier>false</topModifier>
-				<variable>LagunaFish</variable>
-			</modifier>
-			<providerName></providerName>
-		</PermanentStatModApplicator>
-	</Item>
-	<Item href="/Items/Talents/Class/Laguna/Ability_A3.TALENT" id="3C0F88F1-4C25-49BE-B55D-FE66FADBB1FA">
-		<PermanentStatModApplicator>
-			<applyTarget>ApplicatorTarget</applyTarget>
-			<caption>сбросить накопленный урон рыбок</caption>
-			<customApplyType>None</customApplyType>
-			<enabled>
-				<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
-				<returnType>bool</returnType>
-				<sString>true</sString>
-			</enabled>
-			<formulaName></formulaName>
-			<LoggingEvent>-1</LoggingEvent>
-			<modifier>
-				<addValue>
-					<compiledString>FQ4AAAABAAAAEgAAAExhZ3VuYUZpc2hEbWcAVYvsaAAAAACLRQyLEItNDIuCiAEAAP/Q2eBdww==</compiledString>
-					<returnType>float</returnType>
-					<sString>-receiver.vLagunaFishDmg</sString>
-				</addValue>
-				<multValue>
-					<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
-					<returnType>float</returnType>
-					<sString>1.0f</sString>
-				</multValue>
-				<stat>Life</stat>
-				<topModifier>false</topModifier>
-				<variable>LagunaFishDmg</variable>
-			</modifier>
-			<providerName></providerName>
-		</PermanentStatModApplicator>
-	</Item>
-	<Item href="/Items/Talents/Class/Laguna/status_A3_Fish.APLR" />
+		<Item href="/Items/Talents/Class/Laguna/Ability_A3.TALENT" id="CCF4081F-A081-4E5A-A77A-B1615C9843E9">
+			<PermanentStatModApplicator>
+				<applyTarget>ApplicatorTarget</applyTarget>
+				<caption>три рыбки</caption>
+				<customApplyType>None</customApplyType>
+				<enabled>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</enabled>
+				<formulaName></formulaName>
+				<LoggingEvent>-1</LoggingEvent>
+				<modifier>
+					<addValue>
+						<compiledString>FRMAAAACAAAAIgAAADQAAABBM19GaXNoAExhZ3VuYUZpc2gAVYvsg+wMi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9JoCAAAAItFDIsQi00Mi4KIAQAA3V34/9DcbfjZXfTZRfSL5V3D</compiledString>
+						<returnType>float</returnType>
+						<sString>cA3_Fish - receiver.vLagunaFish</sString>
+					</addValue>
+					<multValue>
+						<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
+						<returnType>float</returnType>
+						<sString>1.0f</sString>
+					</multValue>
+					<stat>Life</stat>
+					<topModifier>false</topModifier>
+					<variable>LagunaFish</variable>
+				</modifier>
+				<providerName></providerName>
+			</PermanentStatModApplicator>
+		</Item>
+		<Item href="/Items/Talents/Class/Laguna/Ability_A3.TALENT" id="3C0F88F1-4C25-49BE-B55D-FE66FADBB1FA">
+			<PermanentStatModApplicator>
+				<applyTarget>ApplicatorTarget</applyTarget>
+				<caption>сбросить накопленный урон рыбок</caption>
+				<customApplyType>None</customApplyType>
+				<enabled>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</enabled>
+				<formulaName></formulaName>
+				<LoggingEvent>-1</LoggingEvent>
+				<modifier>
+					<addValue>
+						<compiledString>FQ4AAAABAAAAEgAAAExhZ3VuYUZpc2hEbWcAVYvsaAAAAACLRQyLEItNDIuCiAEAAP/Q2eBdww==</compiledString>
+						<returnType>float</returnType>
+						<sString>-receiver.vLagunaFishDmg</sString>
+					</addValue>
+					<multValue>
+						<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
+						<returnType>float</returnType>
+						<sString>1.0f</sString>
+					</multValue>
+					<stat>Life</stat>
+					<topModifier>false</topModifier>
+					<variable>LagunaFishDmg</variable>
+				</modifier>
+				<providerName></providerName>
+			</PermanentStatModApplicator>
+		</Item>
+		<Item href="/Items/Talents/Class/Laguna/status_A3_Fish.APLR" />
 	</applicators>
 	<askId>3</askId>
 	<autoTargetSelector href="" />
@@ -96,17 +96,17 @@
 	<compiledDescriptionA textref="" />
 	<compiledDescriptionB textref="" />
 	<conditionFormulas>
-	<Item href="/Items/Talents/Class/Laguna/Ability_A3.TALENT" id="D8E85B5E-336D-4BEB-90C9-78D5223E4138">
-		<ConditionFormula>
-			<condition>
-				<compiledString>FRcAAAACAAAAHgAAADcAAABMYWd1bmFfQTN1AABMYWd1bmFfQTN1AFWL7IPsCGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoDAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAD7ZF+/fYG8CDwAGL5V3D</compiledString>
-				<returnType>bool</returnType>
-				<sString>tal("Laguna_A3u") == false</sString>
-			</condition>
-			<name>Laguna_A3u</name>
-		</ConditionFormula>
-	</Item>
-</conditionFormulas>
+		<Item href="/Items/Talents/Class/Laguna/Ability_A3.TALENT" id="D8E85B5E-336D-4BEB-90C9-78D5223E4138">
+			<ConditionFormula>
+				<condition>
+					<compiledString>FRcAAAACAAAAHgAAADcAAABMYWd1bmFfQTN1AABMYWd1bmFfQTN1AFWL7IPsCGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoDAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAD7ZF+/fYG8CDwAGL5V3D</compiledString>
+					<returnType>bool</returnType>
+					<sString>tal("Laguna_A3u") == false</sString>
+				</condition>
+				<name>Laguna_A3u</name>
+			</ConditionFormula>
+		</Item>
+	</conditionFormulas>
 	<conflictingTalents />
 	<constants href="/Items/Talents/Class/Laguna/Ability_A3.TALENT" id="2F384667-5AA0-442B-8A22-4BDF6FE9F2AF">
 		<UnitConstantsContainer>
@@ -146,18 +146,8 @@
 						<name>A3_RegenPerFish</name>
 						<var>
 							<compiledString>FQAAAAACAAAACAAAABIAAABVi+xqAVHZBUQAAADZHCRR2QVAAAAA2RwkagCLRQiLEItNCIuCNAEAAP/QUdkcJGoBi00QixGLTRCLQmD/0F3DAADAQAAA8EE=</compiledString>
-<returnType>float</returnType>
-<sString>damageScale( sIntellect, 6, 30)</sString>
-						</var>
-					</UnitConstant>
-				</Item>
-				<Item href="/Items/Talents/Class/Laguna/Ability_A3.TALENT" id="11D6E98D-BF90-45A2-8F19-15633D2FFF06">
-					<UnitConstant>
-						<name>A3_DamageLimit</name>
-						<var>
-							<compiledString>FQAAAAACAAAACAAAABIAAABVi+xqAVHZBUQAAADZHCRR2QVAAAAA2RwkagCLRQiLEItNCIuCNAEAAP/QUdkcJGoBi00QixGLTRCLQmD/0F3DAABIQgAASEM=</compiledString>
-<returnType>float</returnType>
-<sString>damageScale( sIntellect, 50, 200)</sString>
+							<returnType>float</returnType>
+							<sString>damageScale( sIntellect, 6, 30)</sString>
 						</var>
 					</UnitConstant>
 				</Item>
@@ -171,6 +161,26 @@
 						</var>
 					</UnitConstant>
 				</Item>
+				<Item href="/Items/Talents/Class/Laguna/Ability_A3.TALENT" id="239826F0-93C3-4255-96A7-0A05972A99E4">
+					<UnitConstant>
+						<name>A3_AgilityBonus</name>
+						<var>
+							<compiledString>FQAAAAACAAAACAAAABIAAABVi+xqAVHZBUQAAADZHCRR2QVAAAAA2RwkagCLRQiLEItNCIuCMAEAAP/QUdkcJGoAi00QixGLTRCLQmD/0F3DAACgQAAAGEI=</compiledString>
+							<returnType>float</returnType>
+							<sString>abilityScale(sStrength, 5, 38)</sString>
+						</var>
+					</UnitConstant>
+				</Item>
+				<Item href="/Items/Talents/Class/Laguna/Ability_A3.TALENT" id="FF61648E-31CD-4AB8-88D2-82F65767A2FC">
+					<UnitConstant>
+						<name>A3_DamageLimitPercent</name>
+						<var>
+							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAABwQQ==</compiledString>
+							<returnType>float</returnType>
+							<sString>15</sString>
+						</var>
+					</UnitConstant>
+				</Item>
 			</vars>
 		</UnitConstantsContainer>
 	</constants>
@@ -179,9 +189,9 @@
 		<percent>0</percent>
 	</consumptionBonus>
 	<cooldownTime>
-		<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAABgQQ==</compiledString>
+		<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAADIQQ==</compiledString>
 		<returnType>float</returnType>
-		<sString>14.0f</sString>
+		<sString>25</sString>
 	</cooldownTime>
 	<cooldownTimeSecondState>
 		<compiledString></compiledString>
@@ -209,7 +219,7 @@
 			<instantApply>false</instantApply>
 		</DispatchImmediate>
 	</dispatch>
-	<flags>67</flags>
+	<flags>3</flags>
 	<forceBonus>0</forceBonus>
 	<image href="/UI/Styles/Icons/Heroes/Laguna/A3.ITEX" />
 	<imageSecondState href="" />

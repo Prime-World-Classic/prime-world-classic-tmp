@@ -3184,11 +3184,15 @@ void AdventureScreen::UpdateHoldSelfCast( float deltaTime )
   SetState( STATE_NORMAL );
 }
 
+static NWorld::PFTalent * GetHoldChargeTalent( NWorld::PFBaseHero const * pHero );
+
 // a press of a talent that cannot be used right now: wait for it a little (busy hero, the end of a cooldown)
 bool AdventureScreen::QueueTalentPress( NWorld::PFTalent const * pTalent, int level, int slot )
 {
   if ( talentQueueFiring || g_talentQueueTime <= 0.0f || !pTalent )
     return false;
+  if ( GetHero() && GetHero()->IsInChannelling() && GetHoldChargeTalent( GetHero() ) )
+    return false; // no talents while a hold-to-charge talent is charging
   if ( !pTalent->IsOn() && !pTalent->IsEnoughMana() )
     return false;
   if ( pTalent->GetCurrentCooldown() > g_talentQueueTime )
@@ -3663,7 +3667,10 @@ bool AdventureScreen::CmdCancel()
     if ( !processed && bAdventureControlsEnabled && isHotkeysEnabled && !channellingIsCancelling )
     {
       NWorld::PFBaseHero* pHero = GetHero();
-      if ( pHero->IsInChannelling() )
+      // a hold-to-charge talent is driven by its key only (UpdateHoldCharge): Esc would fire it with the charge so far
+      if ( pHero->IsInChannelling() && GetHoldChargeTalent( pHero ) )
+        processed = true;
+      else if ( pHero->IsInChannelling() )
       {
         SendGameCommand( NWorld::CreateCmdCancelChannelling( GetHero() ), true );
         channellingIsCancelling = true; // this flag prevents blocking of esc menu user call in case of delayed command execution
@@ -3875,6 +3882,10 @@ bool AdventureScreen::MsgChatOpenChannel(const NDb::EChatChannel & channelID )
 void AdventureScreen::MsgSmartChatOpen()
 {
   if (!isHotkeysEnabled || ( blockedHotKeys & ( 1 << FlashWindowsType::SmartChat ) ))
+    return;
+
+  // typing in the chat: the quick chat key is global in input.cfg, its letter goes into the text, no wheel
+  if ( IsValid( chatController ) && chatController->IsActive() )
     return;
 
   // no smart chat controller (a local game without the chat): the wheel is shown, the messages are not sent
@@ -7819,6 +7830,13 @@ bool AdventureScreen::CmdActionBarHotKey( const int & slotIndex )
   }
 
   TempDebugTrace(NStr::StrFmt( "AdventureScreen::CmdActionBarHotKey() slotIndx=%d", slotIndex ));
+  // a hold-to-charge talent is charging: other hotkeys do nothing (they took over the key watch of the charge, and its
+  // release cancelled the charge = fired it), and they are not queued
+  if ( GetHero() && GetHero()->IsInChannelling() && GetHoldChargeTalent( GetHero() ) )
+  {
+    MessageTrace( "HoldCharge: slot %d pressed while charging - ignored", slotIndex );
+    return true;
+  }
   isHotKeyDown = true;
   talentQueuePressSlot = slotIndex; // a queued press of this talent watches this key
   ActionBarController * actionBarController = pLogic->GetActionBarController();

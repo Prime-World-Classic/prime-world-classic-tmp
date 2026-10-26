@@ -135,6 +135,9 @@
 	<BackLink DBID="/Items/Talents/Class/Katana/Ability_A2.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Katana/Ability_A4.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Katana/status_A0_SUP_Burn_UP.APLR" Count="1" />
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A0.TALENT" Count="1" />
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A2.TALENT" Count="2" />
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A4_1.TALENT" Count="2" />
 	<BackLink DBID="/Items/Talents/Class/Mage/A1Spell.SPLL" Count="3" />
 	<BackLink DBID="/Items/Talents/Class/Mage/A4_SummonDemon.APLR" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Mage/status_A4_2_DemonForm.APLR" Count="2" />
@@ -281,7 +284,7 @@
 	<BackLink DBID="/Items/Talents/Class/Bomber/Ability_A3.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/TalentKits/Redset7_2_Pirate/program_Redset7_2_EvadeOrrange.APLR" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Ratcatcher/Ability4.TALENT" Count="2" />
-	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A1.TALENT" Count="4" />
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A1.TALENT" Count="2" />
 	<signRecipients>EVENT_PARTICIPANTS</signRecipients>
 	<UISigns>
 		<Item href="/UI/Events/CommonEvents/EventDamageDealed_Energy.UIEV" id="FCDDC7F1-12E2-4611-8C2F-927182843C56">

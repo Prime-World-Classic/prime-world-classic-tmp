@@ -49,6 +49,53 @@
 				<statModName></statModName>
 			</StatModApplicator>
 		</Item>
+		<Item href="/Items/Talents/Class/Laguna/status_A3_Fish.APLR" id="67F6E6D2-4197-4788-8C01-AB51BD1F8E45">
+			<StatModApplicator>
+				<applyTarget>ApplicatorTarget</applyTarget>
+				<behaviorFlags>0</behaviorFlags>
+				<caption>проворство (от Силы Лагуны)</caption>
+				<constraint>None</constraint>
+				<dontUpdate>false</dontUpdate>
+				<effect>
+					<Item href="" />
+					<Item href="" />
+				</effect>
+				<enabled>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</enabled>
+				<formulaName></formulaName>
+				<lifeTime>
+					<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+					<returnType>float</returnType>
+					<sString>-1.0</sString>
+				</lifeTime>
+				<LoggingEvent>-1</LoggingEvent>
+				<modifier>
+					<addValue>
+						<compiledString>FRAAAAABAAAAHAAAAEEzX0FnaWxpdHlCb251cwBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+						<returnType>float</returnType>
+						<sString>cA3_AgilityBonus</sString>
+					</addValue>
+					<multValue>
+						<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
+						<returnType>float</returnType>
+						<sString>1.0f</sString>
+					</multValue>
+					<stat>AttackSpeed</stat>
+					<topModifier>false</topModifier>
+					<variable></variable>
+				</modifier>
+				<providerName></providerName>
+				<startCondition>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</startCondition>
+				<statModName></statModName>
+			</StatModApplicator>
+		</Item>
 		<Item href="/Items/Talents/Class/Laguna/status_A3_Fish.APLR" id="7635FF3F-02A3-4049-9453-53CB3E6B560F">
 			<StatModApplicator>
 				<applyTarget>ApplicatorTarget</applyTarget>
@@ -214,9 +261,9 @@
 											<caption>урона набралось на лимит: минус рыбка</caption>
 											<customApplyType>None</customApplyType>
 											<enabled>
-												<compiledString>FSsAAAAEAAAAMgAAAE8AAABuAAAAhAAAAExhZ3VuYUZpc2hEbWcAAABBM19EYW1hZ2VMaW1pdAAATGFndW5hRmlzaABVi+yD7AxoAAAAAItFDIsQi00Mi4KIAQAA/9CLTQxRi1UIUmgQAAAAi0UQixCLTRCLQlDdXfj/0Nxd+N/g9sRBeitoIAAAAItNDIsRi00Mi4KIAQAA/9DcHaYAAADf4PbEQXUJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcMAAAAAAAAAAA==</compiledString>
+												<compiledString>FTMAAAAFAAAAOgAAAFcAAABtAAAAjwAAAKUAAABMYWd1bmFGaXNoRG1nAAAAQTNfRGFtYWdlTGltaXRQZXJjZW50AAAATGFndW5hRmlzaABVi+yD7BRoAAAAAItFDIsQi00Mi4KIAQAA/9CLTQxRi1UIUmgQAAAAi0UQixCLTRCLQlDdXfj/0NwNzwAAAItNDIsRi00Mi0IM3V3w/9DcTfDcXfjf4PbEQXoraCgAAACLTQyLEYtNDIuCiAEAAP/Q3B3HAAAA3+D2xEF1CcdF7AEAAADrB8dF7AAAAACKReyL5V3DAAAAAAAAAAAAAABA4XqEPw==</compiledString>
 												<returnType>bool</returnType>
-												<sString>receiver.vLagunaFishDmg &gt;= cA3_DamageLimit &amp;&amp; receiver.vLagunaFish &gt; 0</sString>
+												<sString>receiver.vLagunaFishDmg &gt;= (cA3_DamageLimitPercent * 0.01f * rMaxLife) &amp;&amp; receiver.vLagunaFish &gt; 0</sString>
 											</enabled>
 											<formulaName></formulaName>
 											<LoggingEvent>-1</LoggingEvent>
@@ -278,9 +325,9 @@
 											</modifier>
 											<providerName></providerName>
 											<startCondition>
-												<compiledString>FTcAAAAGAAAAPgAAAFsAAAB6AAAAkAAAAJwAAACyAAAATGFndW5hRmlzaERtZwAAAEEzX0RhbWFnZUxpbWl0AABMYWd1bmFGaXNoAABMYWd1bmFGaXNoAFWL7IPsDGgAAAAAi0UMixCLTQyLgogBAAD/0ItNDFGLVQhSaBAAAACLRRCLEItNEItCUN1d+P/Q3F343+D2xEF6TWggAAAAi00MixGLTQyLgogBAAD/0Nwd3AAAAN/g9sRBdStoLAAAAItNDIsRi00Mi4KIAQAA/9DcHdQAAADf4PbEBXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcMAAAAAAAAEQAAAAAAAAPg/</compiledString>
+												<compiledString>FT8AAAAHAAAARgAAAGMAAAB5AAAAmwAAALEAAAC9AAAA0wAAAExhZ3VuYUZpc2hEbWcAAABBM19EYW1hZ2VMaW1pdFBlcmNlbnQAAABMYWd1bmFGaXNoAABMYWd1bmFGaXNoAFWL7IPsFGgAAAAAi0UMixCLTQyLgogBAAD/0ItNDFGLVQhSaBAAAACLRRCLEItNEItCUN1d+P/Q3A0FAQAAi00MixGLTQyLQgzdXfD/0NxN8Nxd+N/g9sRBek1oKAAAAItNDIsRi00Mi4KIAQAA/9DcHf0AAADf4PbEQXUraDQAAACLTQyLEYtNDIuCiAEAAP/Q3B31AAAA3+D2xAV6CcdF7AEAAADrB8dF7AAAAACKReyL5V3DAAAAAAAABEAAAAAAAAD4PwAAAEDheoQ/</compiledString>
 												<returnType>bool</returnType>
-												<sString>receiver.vLagunaFishDmg &gt;= cA3_DamageLimit &amp;&amp; receiver.vLagunaFish &gt; 1.5 &amp;&amp; receiver.vLagunaFish &lt; 2.5</sString>
+												<sString>receiver.vLagunaFishDmg &gt;= (cA3_DamageLimitPercent * 0.01f * rMaxLife) &amp;&amp; receiver.vLagunaFish &gt; 1.5 &amp;&amp; receiver.vLagunaFish &lt; 2.5</sString>
 											</startCondition>
 											<statModName></statModName>
 										</StatModApplicator>
@@ -325,9 +372,9 @@
 											</modifier>
 											<providerName></providerName>
 											<startCondition>
-												<compiledString>FTcAAAAGAAAAPgAAAFsAAAB6AAAAkAAAAJwAAACyAAAATGFndW5hRmlzaERtZwAAAEEzX0RhbWFnZUxpbWl0AABMYWd1bmFGaXNoAABMYWd1bmFGaXNoAFWL7IPsDGgAAAAAi0UMixCLTQyLgogBAAD/0ItNDFGLVQhSaBAAAACLRRCLEItNEItCUN1d+P/Q3F343+D2xEF6TWggAAAAi00MixGLTQyLgogBAAD/0Nwd3AAAAN/g9sRBdStoLAAAAItNDIsRi00Mi4KIAQAA/9DcHdQAAADf4PbEBXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcMAAAAAAAD4PwAAAAAAAOA/</compiledString>
+												<compiledString>FT8AAAAHAAAARgAAAGMAAAB5AAAAmwAAALEAAAC9AAAA0wAAAExhZ3VuYUZpc2hEbWcAAABBM19EYW1hZ2VMaW1pdFBlcmNlbnQAAABMYWd1bmFGaXNoAABMYWd1bmFGaXNoAFWL7IPsFGgAAAAAi0UMixCLTQyLgogBAAD/0ItNDFGLVQhSaBAAAACLRRCLEItNEItCUN1d+P/Q3A0FAQAAi00MixGLTQyLQgzdXfD/0NxN8Nxd+N/g9sRBek1oKAAAAItNDIsRi00Mi4KIAQAA/9DcHf0AAADf4PbEQXUraDQAAACLTQyLEYtNDIuCiAEAAP/Q3B31AAAA3+D2xAV6CcdF7AEAAADrB8dF7AAAAACKReyL5V3DAAAAAAAA+D8AAAAAAADgPwAAAEDheoQ/</compiledString>
 												<returnType>bool</returnType>
-												<sString>receiver.vLagunaFishDmg &gt;= cA3_DamageLimit &amp;&amp; receiver.vLagunaFish &gt; 0.5 &amp;&amp; receiver.vLagunaFish &lt; 1.5</sString>
+												<sString>receiver.vLagunaFishDmg &gt;= (cA3_DamageLimitPercent * 0.01f * rMaxLife) &amp;&amp; receiver.vLagunaFish &gt; 0.5 &amp;&amp; receiver.vLagunaFish &lt; 1.5</sString>
 											</startCondition>
 											<statModName></statModName>
 										</StatModApplicator>
@@ -372,9 +419,9 @@
 											</modifier>
 											<providerName></providerName>
 											<startCondition>
-												<compiledString>FSsAAAAEAAAAMgAAAE8AAABuAAAAhAAAAExhZ3VuYUZpc2hEbWcAAABBM19EYW1hZ2VMaW1pdAAATGFndW5hRmlzaABVi+yD7AxoAAAAAItFDIsQi00Mi4KIAQAA/9CLTQxRi1UIUmgQAAAAi0UQixCLTRCLQlDdXfj/0Nxd+N/g9sRBeitoIAAAAItNDIsRi00Mi4KIAQAA/9DcHaYAAADf4PbEBXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcMAAAAAAADgPw==</compiledString>
+												<compiledString>FTMAAAAFAAAAOgAAAFcAAABtAAAAjwAAAKUAAABMYWd1bmFGaXNoRG1nAAAAQTNfRGFtYWdlTGltaXRQZXJjZW50AAAATGFndW5hRmlzaABVi+yD7BRoAAAAAItFDIsQi00Mi4KIAQAA/9CLTQxRi1UIUmgQAAAAi0UQixCLTRCLQlDdXfj/0NwNzwAAAItNDIsRi00Mi0IM3V3w/9DcTfDcXfjf4PbEQXoraCgAAACLTQyLEYtNDIuCiAEAAP/Q3B3HAAAA3+D2xAV6CcdF7AEAAADrB8dF7AAAAACKReyL5V3DAAAAAAAA4D8AAABA4XqEPw==</compiledString>
 												<returnType>bool</returnType>
-												<sString>receiver.vLagunaFishDmg &gt;= cA3_DamageLimit &amp;&amp; receiver.vLagunaFish &lt; 0.5</sString>
+												<sString>receiver.vLagunaFishDmg &gt;= (cA3_DamageLimitPercent * 0.01f * rMaxLife) &amp;&amp; receiver.vLagunaFish &lt; 0.5</sString>
 											</startCondition>
 											<statModName></statModName>
 										</StatModApplicator>
@@ -385,9 +432,9 @@
 											<caption>сбросить накопленный урон</caption>
 											<customApplyType>None</customApplyType>
 											<enabled>
-												<compiledString>FR8AAAACAAAAJgAAAEMAAABMYWd1bmFGaXNoRG1nAAAAQTNfRGFtYWdlTGltaXQAVYvsg+wMaAAAAACLRQyLEItNDIuCiAEAAP/Qi00MUYtVCFJoEAAAAItFEIsQi00Qi0JQ3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+												<compiledString>FSYAAAADAAAALQAAAEoAAABgAAAATGFndW5hRmlzaERtZwAAAEEzX0RhbWFnZUxpbWl0UGVyY2VudABVi+yD7BRoAAAAAItFDIsQi00Mi4KIAQAA/9CLTQxRi1UIUmgQAAAAi0UQixCLTRCLQlDdXfj/0NwNmAAAAItNDIsRi00Mi0IM3V3w/9DcTfDcXfjf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAIpF7IvlXcMAAABA4XqEPw==</compiledString>
 												<returnType>bool</returnType>
-												<sString>receiver.vLagunaFishDmg &gt;= cA3_DamageLimit</sString>
+												<sString>receiver.vLagunaFishDmg &gt;= (cA3_DamageLimitPercent * 0.01f * rMaxLife)</sString>
 											</enabled>
 											<formulaName></formulaName>
 											<LoggingEvent>-1</LoggingEvent>

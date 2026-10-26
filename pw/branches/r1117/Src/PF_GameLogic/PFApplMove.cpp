@@ -17,6 +17,8 @@
 #include "PFClientCreature.h"
 #include "PFTalent.h"
 #include "PFStatistics.h"
+#include "PFTree.h"
+#include "PFAIWorld.h"
 
 #ifndef VISUAL_CUTTED
 #include "PFClientBaseMovingUnit.h"
@@ -246,6 +248,10 @@ namespace NWorld
     const CVec2& posFrom = GetAbilityOwner()->GetPosition().AsVec2D();
 
     CVec2 moveDir = posTo - posFrom;
+    // Taurus A4_1: the ram pushes aside from the way of the running bull (his heading, PFApplThrow::StepRam), smoothly
+    bool const ramPush = GetAbilityOwner()->GetVariableValue( "TaurusRamDash" ) > 0.0f;
+    if ( ramPush )
+      moveDir = CVec2( GetAbilityOwner()->GetVariableValue( "RamHeadX" ), GetAbilityOwner()->GetVariableValue( "RamHeadY" ) );
 
     float maxKickDistance = GetDB().distance;
 
@@ -273,7 +279,7 @@ namespace NWorld
       }
 
       kickDist = pTargetUnit->CheckStraightMove( pos + ortDir * kickDist, MAP_MODE_ALL_STATICS );
-      pTargetUnit->TeleportTo( pos + ortDir * kickDist, true, false );
+      pTargetUnit->TeleportTo( pos + ortDir * kickDist, !ramPush, false );
     }
     else
     {
@@ -655,9 +661,50 @@ namespace NWorld
     {
       // pClientUnit->Stand(); // stop all animations
       pClientUnit->StartFlying( DB.trajectory, DB.angle, flightTime, heightModifier, pTargetUnit->GetPosition().AsVec2D(), movePos, DB.flightType );
+      // Taurus A4_1: the steered run goes along the terrain, not along the line from the start to the first target point
+      pClientUnit->SetFlightFollowsTerrain( ramMode != RAM_NONE && !IsJumpToCursor() );
     }
 #endif // VISUAL_CUTTED
     return true;
+  }
+
+  // Taurus A4_2: the trees in the landing radius (talent constant A4_2_Radius) fall the moment the hero lands, before
+  // PlaceUnitWithPush: the landing strike drops them only in the stop spell, and by then the hero was already moved out
+  // to the free place in front of the trees. The trees are collected first: dropping changes their size in the AI world.
+  struct LandingTreeCollector : public NonCopyable
+  {
+    CVec2 pos;
+    float range;
+    vector<CPtr<PFTree>> trees;
+    LandingTreeCollector( CVec2 const& _pos, float _range ) : pos( _pos ), range( _range ) {}
+    void operator()( PFLogicObject& obj )
+    {
+      if ( obj.GetUnitType() == NDb::UNITTYPE_TREE && obj.IsInRange( pos, range ) )
+        if ( PFTree* pTree = dynamic_cast<PFTree*>( &obj ) )
+          trees.push_back( pTree );
+    }
+  };
+
+  void PFApplThrow::DropLandingTrees()
+  {
+    PFAbilityData const * pData = GetAbilityData();
+    if ( !pData || !pData->GetDBDesc() || !pData->GetDBDesc()->constants || !pData->GetConstant( "A4_2_Radius" ) )
+      return;
+    float const range = pData->CalcParam( "A4_2_Radius", pOwner.GetPtr(), pOwner.GetPtr(), pData );
+    if ( range <= 0.0f )
+      return;
+    CVec2 const pos = pTargetUnit->GetPosition().AsVec2D();
+    PFAIWorld const * pAIWorld = GetWorld()->GetAIWorld();
+    LandingTreeCollector f( pos, range );
+    pAIWorld->ForAllInRange( CVec3( pos, 0.0f ), range + pAIWorld->GetMaxObjectSize() * 0.5f, f,
+                             UnitMaskingPredicate( pOwner.GetPtr(), NDb::ESpellTarget( 536871936 ) ) ); // trees, as Rockman A3
+    for ( int i = 0; i < f.trees.size(); ++i )
+    {
+      CVec2 dir = f.trees[i]->GetPosition().AsVec2D() - pos;
+      if ( !Normalize( &dir ) )
+        dir = CVec2( 0.0f, 1.0f );
+      f.trees[i]->DropTree( dir, pOwner.GetPtr() );
+    }
   }
 
   void PFApplThrow::Stop()
@@ -673,6 +720,13 @@ namespace NWorld
 
     if ( ramMode == RAM_STEER && IsValid( pOwner ) && pTargetUnit == pOwner && !IsJumpToCursor() )
       pOwner->GetVariableVWM( "RamLeft" )->SetBaseValue( 0.0f ); // Taurus A4_1: the arrow of the run goes away
+
+    ReleaseRamGhost( false );
+    if ( ramMode == RAM_STEER && IsValid( pOwner ) && pTargetUnit == pOwner )
+    {
+      pOwner->GetVariableVWM( "RamGhost" )->SetBaseValue( 0.0f );
+      pOwner->GetVariableVWM( "RamTimeLeft" )->SetBaseValue( 0.0f );
+    }
 
     if ( ( GetDB().collisionFlags > 0 ) && ( ghostMoveIndex > -1 ) )
     {
@@ -713,6 +767,8 @@ namespace NWorld
       if ( !pTargetUnit->IsDead() )
       {
         pTargetUnit->Stop();
+        if ( GetDB().flightType == NDb::THROWTYPE_JUMP && pTargetUnit == pOwner && IsJumpToCursor() )
+          DropLandingTrees();
         pTargetUnit->PlaceUnitWithPush( pTargetUnit->GetPosition().AsVec2D(), pTargetUnit->GetObjectSize(), true );
 
         if ( GetDB().flightType == NDb::THROWTYPE_JUMP && pTargetUnit == pOwner && IsJumpToCursor() )
@@ -872,10 +928,66 @@ namespace NWorld
       if ( !Normalize( &ramHeading ) )
         ramHeading = CVec2( 0.0f, 1.0f );
       pOwner->GetVariableVWM( "RamHitObstacle" )->SetBaseValue( 0.0f );
+
+      // Taurus A4_1: the run lasts RamMaxTime seconds and goes through obstacles (ghost mode RamGhostMode) until an
+      // enemy hero is caught, then RamHeroHitTime seconds more without the extra ghost mode (StepRam)
+      pOwner->GetVariableVWM( "RamHeroHit" )->SetBaseValue( 0.0f );
+      ramHeroHit = false;
+      if ( pData->GetConstant( "RamMaxTime" ) )
+      {
+        float const maxTime = pData->CalcParam( "RamMaxTime", pOwner.GetPtr(), pOwner.GetPtr(), pData );
+        if ( maxTime > 0.0f )
+          flightTime = maxTime;
+      }
+      ramHeroHitTime = -1.0f;
+      if ( pData->GetConstant( "RamHeroHitTime" ) )
+        ramHeroHitTime = pData->CalcParam( "RamHeroHitTime", pOwner.GetPtr(), pOwner.GetPtr(), pData );
+      ramGhostFlags = 0;
+      if ( pData->GetConstant( "RamGhostMode" ) )
+        ramGhostFlags = (int)( pData->CalcParam( "RamGhostMode", pOwner.GetPtr(), pOwner.GetPtr(), pData ) + 0.5f );
+      if ( ramGhostFlags > 0 && ramGhostIndex < 0 )
+        ramGhostIndex = pTargetUnit->SetGhostMode( ramGhostFlags, false );
+      pOwner->GetVariableVWM( "RamGhost" )->SetBaseValue( ramGhostIndex > -1 ? 1.0f : 0.0f );
+      pOwner->GetVariableVWM( "RamHeadX" )->SetBaseValue( ramHeading.x );
+      pOwner->GetVariableVWM( "RamHeadY" )->SetBaseValue( ramHeading.y );
+      if ( !IsJumpToCursor() )
+      {
+        // Taurus A4_1: the timer of the run on the status status_A4_1_Run
+        pOwner->GetVariableVWM( "RamTimeTotal" )->SetBaseValue( flightTime );
+        pOwner->GetVariableVWM( "RamTimeLeft" )->SetBaseValue( flightTime );
+      }
     }
     else
+    {
       ramMode = RAM_FOLLOW;
-    MessageTrace( "Ram: start mode %d turn %.1f deg/s speed %.2f base %.2f time %.2f", ramMode, turnRate, speed, baseSpeed, flightTime );
+      // Taurus A4_1: a caught enemy hero ends the run of the owner soon (StepRam); while the owner runs through
+      // obstacles the dragged unit does too
+      if ( pTargetUnit->IsHero() && pTargetUnit->GetFaction() != pOwner->GetFaction() )
+        pOwner->GetVariableVWM( "RamHeroHit" )->SetBaseValue( 1.0f );
+      if ( pOwner->GetVariableValue( "RamGhost" ) > 0.0f && ramGhostIndex < 0 )
+      {
+        ramGhostFlags = NDb::GHOSTMOVEMODE_IGNORESTATIC | NDb::GHOSTMOVEMODE_IGNOREBUILDINGS;
+        ramGhostIndex = pTargetUnit->SetGhostMode( ramGhostFlags, false );
+      }
+    }
+    MessageTrace( "Ram: start mode %d turn %.1f deg/s speed %.2f base %.2f time %.2f ghost %d", ramMode, turnRate, speed, baseSpeed, flightTime, ramGhostFlags );
+  }
+
+  bool PFApplThrow::ReleaseRamGhost( bool checkPlace )
+  {
+    if ( ramGhostIndex < 0 || !IsValid( pTargetUnit ) )
+      return true;
+    pTargetUnit->ResetGhostMode( ramGhostIndex );
+    ramGhostIndex = -1;
+    if ( checkPlace && !pTargetUnit->CanOccupyPosition( pTargetUnit->GetPosition().AsVec2D() ) )
+    {
+      ramGhostIndex = pTargetUnit->SetGhostMode( ramGhostFlags, false );
+      return false;
+    }
+    if ( ramMode == RAM_STEER && IsValid( pOwner ) )
+      pOwner->GetVariableVWM( "RamGhost" )->SetBaseValue( 0.0f );
+    MessageTrace( "Ram: ghost mode off (mode %d) at %.2f s", ramMode, animatedTime );
+    return true;
   }
 
   // Taurus A4_2 "Mighty Leap": a talent with the constant JumpToCursor lands the jump of its owner at the cursor (unit
@@ -967,6 +1079,18 @@ namespace NWorld
 
     if ( ramMode == RAM_STEER )
     {
+      // Taurus A4_1: an enemy hero is caught (RAM_FOLLOW below) - the run ends RamHeroHitTime later, and the ghost mode
+      // goes away as soon as the hero stands on a free place
+      if ( !ramHeroHit && pOwner->GetVariableValue( "RamHeroHit" ) > 0.0f )
+      {
+        ramHeroHit = true;
+        if ( ramHeroHitTime >= 0.0f && animatedTime + ramHeroHitTime < flightTime )
+          flightTime = animatedTime + ramHeroHitTime;
+        MessageTrace( "Ram: enemy hero caught at %.2f s, the run ends at %.2f s", animatedTime, flightTime );
+      }
+      if ( ramHeroHit && ramGhostIndex > -1 )
+        ReleaseRamGhost( true );
+
       float const timeLeft = flightTime - animatedTime;
       // a dragged unit hit an obstacle (RAM_FOLLOW below): the whole ram stops
       if ( pOwner->GetVariableValue( "RamHitObstacle" ) > 0.0f )
@@ -1016,6 +1140,7 @@ namespace NWorld
         pOwner->GetVariableVWM( "RamHeadY" )->SetBaseValue( ramHeading.y );
         pOwner->GetVariableVWM( "RamTurn" )->SetBaseValue( ramTurnRate / ramSpeed );
         pOwner->GetVariableVWM( "RamSpeed" )->SetBaseValue( ramSpeed );
+        pOwner->GetVariableVWM( "RamTimeLeft" )->SetBaseValue( timeLeft > 0.0f ? timeLeft : 0.0f );
       }
       if ( (int)( animatedTime * 8.0f ) != (int)( ( animatedTime - dtInSeconds ) * 8.0f ) )
         MessageTrace( "Ram: t %.2f pos %.1f %.1f cursor %.1f %.1f heading %.2f %.2f moving %d", animatedTime, pos.x, pos.y,
@@ -1024,6 +1149,8 @@ namespace NWorld
     }
 
     // RAM_FOLLOW: keep right in front of the running owner; end a step after he stops
+    if ( ramGhostIndex > -1 && pOwner->GetVariableValue( "RamGhost" ) <= 0.0f )
+      ReleaseRamGhost( false );
     CDynamicCast<PFBaseMovingUnit> pRunner( pOwner );
     if ( !pRunner || !IsUnitValid( pOwner ) || !pRunner->IsMovingSpecial() )
     {

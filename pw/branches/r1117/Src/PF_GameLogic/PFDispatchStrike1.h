@@ -100,8 +100,11 @@ protected:
   CVec2 originalDir;
   float clientStartDelay;
   float suspendTime;
+  float baseSpeed;
+  float speedUpPercent;
+  float pathLength;
 public:
-  ZEND int operator&( IBinSaver &f ) { f.Add(1,(DBLinker*)this); f.Add(2,&curPos); f.Add(3,&lastTargetPos); f.Add(4,&speed); f.Add(5,&m_startTime); f.Add(6,&travelledDistance); f.Add(7,&maxDistance); f.Add(8,&originalSenderPos); f.Add(9,&originalDir); f.Add(10,&clientStartDelay); f.Add(11,&suspendTime); return 0; }
+  ZEND int operator&( IBinSaver &f ) { f.Add(1,(DBLinker*)this); f.Add(2,&curPos); f.Add(3,&lastTargetPos); f.Add(4,&speed); f.Add(5,&m_startTime); f.Add(6,&travelledDistance); f.Add(7,&maxDistance); f.Add(8,&originalSenderPos); f.Add(9,&originalDir); f.Add(10,&clientStartDelay); f.Add(11,&suspendTime); f.Add(12,&baseSpeed); f.Add(13,&speedUpPercent); f.Add(14,&pathLength); return 0; }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

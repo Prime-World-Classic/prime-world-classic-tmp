@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <StatusApplicator>
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A1.TALENT" Count="1" />
 	<applicators>
 		<Item href="/Items/Talents/Class/Laguna/status_A1u_Current.APLR" id="7C85C947-27A4-4CD6-AB2E-101924CE6D75">
 			<StatModApplicator parent="/Items/Talents/Class/Reaper/appl_MS_NoFX.APLR">

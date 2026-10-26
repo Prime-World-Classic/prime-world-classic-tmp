@@ -1574,6 +1574,8 @@ void NWorld::PFWorld::LoadWaterMap( nstl::string const& fileName )
 
   CObj<IBinSaver> pSaver = CreateChunklessSaver( pStream, 0, true );
   pSaver->Add( 1, &waterMap );
+  // only the river counts: the mask also paints the lakes of a base
+  waterMap.KeepAreasCrossingMiddle();
   // the painted mask covers the deep part of the river, the visible water near the bank is 3-5 units wider
   waterMap.DilateWorld( WATER_REACH );
   hasWaterMap = true;

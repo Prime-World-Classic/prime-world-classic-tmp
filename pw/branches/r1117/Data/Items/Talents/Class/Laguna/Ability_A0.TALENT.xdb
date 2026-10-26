@@ -98,27 +98,57 @@
 						</var>
 					</UnitConstant>
 				</Item>
-				<Item href="/Items/Talents/Class/Laguna/Ability_A0.TALENT" id="116CAB68-902B-41EF-80F8-CBB83A2E2008">
+				<Item href="/Items/Talents/Class/Laguna/Ability_A0.TALENT" id="5D30DF90-D9A8-44A6-ABA2-A3AF6AD85384">
+					<UnitConstant>
+						<name>A0_WaterBonus</name>
+						<var>
+							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACgQQ==</compiledString>
+							<returnType>float</returnType>
+							<sString>20</sString>
+						</var>
+					</UnitConstant>
+				</Item>
+				<Item href="/Items/Talents/Class/Laguna/Ability_A0.TALENT" id="5441C5DA-9B7E-4209-99B3-CD858FB1E5AD">
 					<UnitConstant>
 						<name>A0_WaterSpeed</name>
 						<var>
-							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACgQQ==</compiledString>
+							<compiledString>FQ4AAAABAAAAGgAAAEEwX1dhdGVyQm9udXMAVYvsi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9Jdww==</compiledString>
 							<returnType>float</returnType>
-							<sString>20</sString>
+							<sString>cA0_WaterBonus</sString>
 						</var>
 					</UnitConstant>
 				</Item>
-				<Item href="/Items/Talents/Class/Laguna/Ability_A0.TALENT" id="CF2F607D-5504-496D-BAC3-FA9F2538CBD9">
+				<Item href="/Items/Talents/Class/Laguna/Ability_A0.TALENT" id="30D7EF8B-0CC8-49AB-B841-5BFE4DF5EB20">
 					<UnitConstant>
 						<name>A0_WaterCdr</name>
 						<var>
-							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACgQQ==</compiledString>
+							<compiledString>FQ4AAAABAAAAGgAAAEEwX1dhdGVyQm9udXMAVYvsi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9Jdww==</compiledString>
 							<returnType>float</returnType>
-							<sString>20</sString>
+							<sString>cA0_WaterBonus</sString>
 						</var>
 					</UnitConstant>
 				</Item>
-				<Item href="/Items/Talents/Class/Laguna/Ability_A0.TALENT" id="6B1F40A5-E333-4CC5-AD21-C88AC34F5031">
+				<Item href="/Items/Talents/Class/Laguna/Ability_A0.TALENT" id="BC91A288-2071-4BBD-8516-A78C78B2455F">
+					<UnitConstant>
+						<name>A0_WaterAttack</name>
+						<var>
+							<compiledString>FQ4AAAABAAAAGgAAAEEwX1dhdGVyQm9udXMAVYvsi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9Jdww==</compiledString>
+							<returnType>float</returnType>
+							<sString>cA0_WaterBonus</sString>
+						</var>
+					</UnitConstant>
+				</Item>
+				<Item href="/Items/Talents/Class/Laguna/Ability_A0.TALENT" id="650AA87D-AD91-4C3C-B03C-72804DCBE6AB">
+					<UnitConstant>
+						<name>A0_CastDuration</name>
+						<var>
+							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAABAQA==</compiledString>
+							<returnType>float</returnType>
+							<sString>3.0f</sString>
+						</var>
+					</UnitConstant>
+				</Item>
+				<Item href="/Items/Talents/Class/Laguna/Ability_A0.TALENT" id="4A4797AE-B33F-4AC7-9B5E-6FCBF0F798F2">
 					<UnitConstant>
 						<name>Haste_Percent</name>
 						<var>
@@ -178,15 +208,15 @@
 				</actionsCount>
 				<applyTarget>ApplicatorTarget</applyTarget>
 				<behaviorFlags>152</behaviorFlags>
-				<caption>каждая 3-я атака: метка прилива</caption>
+				<caption>каждая 3-я атака: метка прилива (отключено)</caption>
 				<effect>
 					<Item href="" />
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsMsBdww==</compiledString>
 					<returnType>bool</returnType>
-					<sString>true</sString>
+					<sString>false</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -332,15 +362,15 @@
 				</actionsCount>
 				<applyTarget>ApplicatorTarget</applyTarget>
 				<behaviorFlags>152</behaviorFlags>
-				<caption>урон классовой способностью: разрядить метки</caption>
+				<caption>урон классовой способностью: разрядить метки (отключено)</caption>
 				<effect>
 					<Item href="" />
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsMsBdww==</compiledString>
 					<returnType>bool</returnType>
-					<sString>true</sString>
+					<sString>false</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -522,9 +552,9 @@
 									<LoggingEvent>-1</LoggingEvent>
 									<modifier>
 										<addValue>
-											<compiledString>FT0AAAAGAAAARAAAAFoAAABuAAAAgAAAAKAAAADBAAAASW5XYXRlcgBBMF9XYXRlckxpbmdlcgAATGFndW5hV2V0AAAATGFndW5hV2V0AAAAQTBfV2F0ZXJUaWNrAFWL7IPsFGgAAAAAi0UIixCLTQiLgogBAAD/0Nwd8AAAAN/g9sRBdTqLTQxRi1UIUmgIAAAAi0UQixCLTRCLQlD/0GgYAAAAi00IixGLTQiLgogBAADdXfj/0Nxt+N1d8OtEaCQAAACLTQiLEYtNCIuCiAEAAP/QUdkcJItNDFGLVQhSaDAAAACLRRCLEItNEItCUP/QUdkcJOgdAAAAg8QI2eDdXfDdRfDZXezZReyL5V3DAAAAAAAAAABVi+xR2UUI2UUM3tnf4PbEQXUI2UUI2V386wbZRQzZXfzZRfyL5V3D</compiledString>
+											<compiledString>FVkAAAAIAAAAYAAAAHYAAACGAAAApwAAANMAAADlAAAAFwEAADgBAABJbldhdGVyAExhZ3VuYVdldAAAAEEwX1dhdGVyVGljawAAAABBMF9XYXRlckxpbmdlcgAATGFndW5hV2V0AAAATGFndW5hV2V0AAAAQTBfV2F0ZXJUaWNrAFWL7IPsEGgAAAAAi0UIixCLTQiLgogBAAD/0NwdYQEAAN/g9sRBD4WRAAAAaAgAAACLTQiLEYtNCIuCiAEAAP/QUdkcJItNDFGLVQhSaBQAAACLRRCLEItNEItCUP/QUdkcJOioAAAAg8QI2eBR2Rwki00MUYtVCFJoJAAAAItFEIsQi00Qi0JQ/9BoNAAAAItNCIsRi00Ii4KIAQAA3V34/9DcbfjZXfTZRfRR2Rwk6IMAAACDxAjZXfDrRGhAAAAAi00IixGLTQiLgogBAAD/0FHZHCSLTQxRi1UIUmhMAAAAi0UQixCLTRCLQlD/0FHZHCToFwAAAIPECNng2V3w2UXwi+VdwwAAAAAAAAAAVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdw1WL7FHZRQjZRQze2d/g9sQFegjZRQjZXfzrBtlFDNld/NlF/IvlXcM=</compiledString>
 											<returnType>float</returnType>
-											<sString>sender.vInWater &gt; 0 ? (cA0_WaterLinger - sender.vLagunaWet) : -min(cA0_WaterTick, sender.vLagunaWet)</sString>
+											<sString>sender.vInWater &gt; 0 ? max(cA0_WaterLinger - sender.vLagunaWet, -min(cA0_WaterTick, sender.vLagunaWet)) : -min(cA0_WaterTick, sender.vLagunaWet)</sString>
 										</addValue>
 										<multValue>
 											<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
@@ -581,6 +611,115 @@
 				</startOffset>
 				<targetSelector href="" />
 			</SpellPeriodicallyApplicator>
+		</Item>
+		<Item href="/Items/Talents/Class/Laguna/Ability_A0.TALENT" id="77F487CC-F2EB-4BE8-8CA1-ABE4A2B9DFA8">
+			<TriggerApplicator>
+				<actionsCount>
+					<compiledString></compiledString>
+					<returnType>int</returnType>
+					<sString>0</sString>
+				</actionsCount>
+				<applyTarget>AbilityOwner</applyTarget>
+				<behaviorFlags>0</behaviorFlags>
+				<caption>применение классового таланта: бонус реки на A0_CastDuration сек</caption>
+				<effect>
+					<Item href="" />
+					<Item href="" />
+				</effect>
+				<enabled>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</enabled>
+				<formulaName></formulaName>
+				<lifeTime>
+					<compiledString></compiledString>
+					<returnType>float</returnType>
+					<sString>-1.0</sString>
+				</lifeTime>
+				<LoggingEvent>-1</LoggingEvent>
+				<playAck>false</playAck>
+				<processor href="/Items/Talents/Class/Laguna/Ability_A0.TALENT" id="80B0FA8F-3136-4208-B8FC-257D3307CA78">
+					<EventProcessorAbilityManacostTransformer>
+						<applyTarget>AbilityOwner</applyTarget>
+						<filter>
+							<abilitiesList />
+							<abilityCondition>
+								<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+								<returnType>bool</returnType>
+								<sString>true</sString>
+							</abilityCondition>
+							<abilityCostMode>Any</abilityCostMode>
+							<exceptThis>false</exceptThis>
+							<flags>671088768</flags>
+							<onlySingleTarget>false</onlySingleTarget>
+						</filter>
+						<spell href="/Items/Talents/Class/Laguna/Ability_A0.TALENT" id="4991689C-933A-4FB8-BE45-0F92122BF536">
+							<Spell>
+								<applicators>
+									<Item href="/Items/Talents/Class/Laguna/Ability_A0.TALENT" id="3844858B-11A7-4CC9-A731-C6EA2FE88C68">
+										<PermanentStatModApplicator>
+											<applyTarget>AbilityOwner</applyTarget>
+											<caption>таймер воды: не меньше A0_CastDuration</caption>
+											<customApplyType>None</customApplyType>
+											<enabled>
+												<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+												<returnType>bool</returnType>
+												<sString>true</sString>
+											</enabled>
+											<formulaName></formulaName>
+											<LoggingEvent>-1</LoggingEvent>
+											<modifier>
+												<addValue>
+													<compiledString>FRoAAAACAAAALwAAAEEAAABBMF9DYXN0RHVyYXRpb24ATGFndW5hV2V0AFWL7IPsDFHZ7tkcJItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SaBAAAACLRQyLEItNDIuCiAEAAN1d+P/Q3G342V302UX0UdkcJOgLAAAAg8QIi+VdwwAAAABVi+xR2UUI2UUM3tnf4PbEBXoI2UUI2V386wbZRQzZXfzZRfyL5V3D</compiledString>
+													<returnType>float</returnType>
+													<sString>max(cA0_CastDuration - receiver.vLagunaWet, 0.0f)</sString>
+												</addValue>
+												<multValue>
+													<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
+													<returnType>float</returnType>
+													<sString>1.0f</sString>
+												</multValue>
+												<stat>Life</stat>
+												<topModifier>false</topModifier>
+												<variable>LagunaWet</variable>
+											</modifier>
+											<providerName></providerName>
+										</PermanentStatModApplicator>
+									</Item>
+								</applicators>
+								<dispatch href="/Items/Talents/Class/Laguna/Ability_A0.TALENT" id="F6912B21-37C5-45E9-A70D-A735B8710457">
+									<DispatchImmediate>
+										<alwaysApply>false</alwaysApply>
+										<applyEffect>
+											<Item href="" />
+											<Item href="" />
+										</applyEffect>
+										<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
+										<applyEffectOrientation>Default</applyEffectOrientation>
+										<applyEffectRandomAnglePoints>0</applyEffectRandomAnglePoints>
+										<dieAfterApply>true</dieAfterApply>
+										<dispatchEffect>
+											<Item href="" />
+											<Item href="" />
+										</dispatchEffect>
+										<flags>1</flags>
+										<instantApply>false</instantApply>
+									</DispatchImmediate>
+								</dispatch>
+							</Spell>
+						</spell>
+					</EventProcessorAbilityManacostTransformer>
+				</processor>
+				<providerName></providerName>
+				<startCondition>
+					<compiledString></compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</startCondition>
+				<useAbilityCooldown>false</useAbilityCooldown>
+				<useAbilityOwnerMana>false</useAbilityOwnerMana>
+			</TriggerApplicator>
 		</Item>
 	</passiveApplicators>
 	<persistentId>Laguna_A0</persistentId>

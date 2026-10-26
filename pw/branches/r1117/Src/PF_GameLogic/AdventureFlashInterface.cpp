@@ -91,6 +91,11 @@ void AdventureFlashInterface::ShowHeroPortrait( int heroID, bool isEnemy )
   CallMethod( "ShowHeroPortrait", heroID, isEnemy );
 }
 
+void AdventureFlashInterface::SetHeroOtherSide( int heroID, bool otherSide )
+{
+  CallMethod( "SetHeroOtherSide", heroID, otherSide );
+}
+
 void AdventureFlashInterface::SetHeroParams( int heroID, const HeroInfoParams & unitParams)
 {
   CallMethod( "SetHeroParams", heroID, unitParams.level, unitParams.curHealth, unitParams.maxHealth, 

@@ -172,6 +172,7 @@ public:
     string & flagIcon, wstring & flagTooltip, bool isAnimatedAvatar, int leagueIndex, int ownLeaguePlace, const vector<int>& leaguePlaces);
 
   void ShowHeroPortrait( int heroID, bool isEnemy );
+  void SetHeroOtherSide( int heroID, bool otherSide ); // ally shown on the enemy side of the panels (TeamSidesLayout); call before ShowHeroPortrait
 
   void SetHeroParams( int heroID, const HeroInfoParams & unitParams);
   void SetFriendship(int heroID, bool areFriends, bool requestSent);

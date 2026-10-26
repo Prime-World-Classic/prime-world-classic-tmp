@@ -3,9 +3,9 @@
 	<BackLink DBID="/Items/Talents/Class/Angel/Ability_A2.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Angel/Ability_A1.TALENT" Count="1" />
 	<condition>
-		<compiledString>FQAAAAAAAAAAVYvsg+wMi0UMixCLTQyLgowAAAD/0ItNDIsRi00Mi4LAAAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+		<compiledString>FQAAAAAAAAAAVYvsg+wUVmoEi0UMixCLTQyLgiwBAAD/0A+28GoRi00MixGLTQyLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqBItVDIsCi00Mi5AsAQAA/9IPtvBqEYtFDIsQi00Mi4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UMiwKLTQyLkIwAAAD/0otFDIsQi00Mi4LAAAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IpF/F6L5V3D</compiledString>
 		<returnType>bool</returnType>
-		<sString>rBaseAttackSpeed &gt;= rBaseDexterity</sString>
+		<sString>(pSecond-&gt;IsRecommended(4) &gt; pSecond-&gt;IsRecommended(17) ? 1 : pSecond-&gt;IsRecommended(4) &lt; pSecond-&gt;IsRecommended(17) ? 0 : rBaseAttackSpeed&gt;=rBaseDexterity)</sString>
 	</condition>
 	<name>A2_MaxStat</name>
 </ConditionFormula>

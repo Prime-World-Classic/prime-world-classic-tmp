@@ -433,6 +433,38 @@
 				>
 			</File>
 			<File
+				RelativePath=".\conststore.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\conststore.h"
+				>
+			</File>
+			<File
+				RelativePath=".\d3d9backend.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\d3d9backend.h"
+				>
+			</File>
+			<File
+				RelativePath=".\renderbackend.h"
+				>
+			</File>
+			<File
+				RelativePath=".\renderstats.h"
+				>
+			</File>
+			<File
+				RelativePath=".\screenshot.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\screenshot.h"
+				>
+			</File>
+			<File
 				RelativePath=".\specific.h"
 				>
 			</File>
@@ -537,11 +569,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\DeviceLost.cpp"
+				RelativePath=".\Reallocate.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\DeviceLost.h"
+				RelativePath=".\Reallocate.h"
 				>
 			</File>
 			<File
@@ -624,14 +656,6 @@
 				Name="Utils"
 				>
 				<File
-					RelativePath="./../vendorFOURCC.h"
-					>
-				</File>
-				<File
-					RelativePath=".\atir2vb.h"
-					>
-				</File>
-				<File
 					RelativePath=".\CleanGeometry.cpp"
 					>
 				</File>
@@ -697,6 +721,14 @@
 				</File>
 				<File
 					RelativePath=".\renderprimitivetype.h"
+					>
+				</File>
+				<File
+					RelativePath=".\renderpixellayout.h"
+					>
+				</File>
+				<File
+					RelativePath=".\renderwindow.h"
 					>
 				</File>
 				<File
@@ -821,14 +853,6 @@
 				</File>
 				<File
 					RelativePath=".\BatchedRenderer.component"
-					>
-				</File>
-				<File
-					RelativePath=".\DXManager.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\DXManager.h"
 					>
 				</File>
 				<File

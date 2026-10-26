@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "renderer.h"
+#include "renderbackend.h"   // HBuffer/EBackendPool: создание буферов идёт через seam
 #include "DxResourcesControl.h"
 #include "DebugLocks.h"
 #include <MemoryLib/UserMessage.h>
@@ -187,13 +188,13 @@ void GetD3DPoolAndUsagesParamaters(DWORD& usage, D3DPOOL& pool, PoolType poolTyp
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static IDirect3DVertexBuffer9* CreateVBInternal(int size, PoolType type, void const *pData = 0)
 {
-  DWORD usage;
-  D3DPOOL pool;
-  GetD3DPoolAndUsagesParamaters(usage, pool, type);
-
-  IDirect3DVertexBuffer9* d3dvb = 0;
-  HRESULT hr = GetDevice()->CreateVertexBuffer(size, usage, 0, pool, &d3dvb, 0);
+  // Создание — за бэкендом: какой D3DPOOL/usage соответствует пулу, знает он
+  // (docs/PLAN_NVRHI.md §2.3). Запись начальных данных остаётся здесь — это
+  // Lock-путь D3D9, в этапе 3 он становится upload-кольцом.
+  HBuffer handle;
+  HRESULT hr = GetBackend()->CreateVertexBuffer(size, static_cast<EBackendPool>(type), &handle);
   NI_DX_THROW_CRITICAL( hr, NStr::StrFmt("CreateVB(%d bytes)", size) );
+  IDirect3DVertexBuffer9* d3dvb = static_cast<IDirect3DVertexBuffer9*>(handle.p);
   if (pData && d3dvb)
     FillVB(d3dvb, size, pData);
   return d3dvb;
@@ -208,13 +209,13 @@ DXVertexBufferRef CreateVB(int size, PoolType type, void const *pData /*= 0*/)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void FillVB(IDirect3DVertexBuffer9 *pBuff, int size, void const *pData, unsigned int lockFlags)
+void FillVB(IDirect3DVertexBuffer9 *pBuff, int size, void const *pData, ERenderLockType lockFlags)
 {
 	void *pDst = LockVB(pBuff, lockFlags, size);
 	if (pDst)
 	{
 		memcpy(pDst, pData, size);
-		pBuff->Unlock();
+		BackendUnlockBuffer(pBuff);
 	}
 }
 
@@ -227,12 +228,12 @@ uint GetLockCall(void* _pBuff) { return Render::lockCalls[(void*)_pBuff]; }
 #endif // _DEBUG_LOCKS
 
 
-void* LockVB(IDirect3DVertexBuffer9 *pBuff, unsigned int flags, int size)
+void* LockVB(IDirect3DVertexBuffer9 *pBuff, ERenderLockType mode, int size)
 {
   ASSERT(pBuff);
   DEBUG_LOCKS(static uint callNmb = 0;)
   void *pData = NULL;
-  HRESULT hr = pBuff->Lock(0, size, &pData, flags);
+  HRESULT hr = BackendLockBuffer(pBuff, 0, size, mode, &pData);
   NI_DX_THROW( hr, "Lock vertex buffer failed" );
   DEBUG_LOCKS(lockCalls[pBuff] = callNmb++;)
   return pData;
@@ -242,16 +243,14 @@ void* LockVB(IDirect3DVertexBuffer9 *pBuff, unsigned int flags, int size)
 template<typename T>
 static IDirect3DIndexBuffer9* CreateIBInternal(int size, PoolType type, T const *pData = 0)
 {
-	DWORD usage;
-	D3DPOOL pool;
-	GetD3DPoolAndUsagesParamaters(usage, pool, type);
   NI_STATIC_ASSERT((sizeof(T) == 4) || (sizeof(T) == 2), UnsupportedIndexSize);
 
-	IDirect3DIndexBuffer9* d3dib = 0;
-  HRESULT hr = GetDevice()->CreateIndexBuffer(size, usage, sizeof(T) == 4 ? D3DFMT_INDEX32 : D3DFMT_INDEX16, pool, &d3dib, 0);
+  HBuffer handle;
+  HRESULT hr = GetBackend()->CreateIndexBuffer(size, sizeof(T) == 4, static_cast<EBackendPool>(type), &handle);
 	NI_DX_THROW_CRITICAL( hr, NStr::StrFmt("CreateIB(%d bytes)", size) );
+	IDirect3DIndexBuffer9* d3dib = static_cast<IDirect3DIndexBuffer9*>(handle.p);
   if (pData  && d3dib)
-    FillIB(d3dib, size, pData, 0);
+    FillIB(d3dib, size, pData, LOCK_DEFAULT);
 	return d3dib;
 }
 
@@ -271,24 +270,48 @@ DXIndexBufferRef CreateIB16(int size, PoolType type, WORD const *pData /*= 0*/)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-unsigned int* LockIB(IDirect3DIndexBuffer9 *pBuff, unsigned int flags, int size)
+unsigned int* LockIB(IDirect3DIndexBuffer9 *pBuff, ERenderLockType mode, int size)
 {
   ASSERT(pBuff);
 	void *pData = NULL;
-	HRESULT hr = pBuff->Lock(0, size, &pData, flags);
+	HRESULT hr = BackendLockBuffer(pBuff, 0, size, mode, &pData);
 	NI_DX_THROW( hr, "Lock index buffer failed" );
 	return reinterpret_cast<unsigned int*>(pData);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void FillIB(IDirect3DIndexBuffer9 *pBuff, int size, void const *pData, unsigned int lockFlags)
+void FillIB(IDirect3DIndexBuffer9 *pBuff, int size, void const *pData, ERenderLockType lockFlags)
 {
 	void *pDst = LockIB(pBuff, lockFlags, size);
 	if (pDst)
 	{
 		memcpy(pDst, pData, size);
-		pBuff->Unlock();
+		BackendUnlockBuffer(pBuff);
 	}
+}
+
+// Buffer locking goes through the backend (declaration in dxutils.h): the
+// mode comes from locktype.h, the mechanics (D3D9 flags, later the write ring) live in the backend.
+HRESULT BackendLockBuffer(IDirect3DVertexBuffer9* pBuff, unsigned offset, unsigned size,
+                          ERenderLockType mode, void** ppData)
+{
+  return GetBackend()->LockVertexBuffer(MakeBackendHandle<HBuffer>(pBuff), offset, size, mode, ppData);
+}
+
+HRESULT BackendLockBuffer(IDirect3DIndexBuffer9* pBuff, unsigned offset, unsigned size,
+                          ERenderLockType mode, void** ppData)
+{
+  return GetBackend()->LockIndexBuffer(MakeBackendHandle<HBuffer>(pBuff), offset, size, mode, ppData);
+}
+
+HRESULT BackendUnlockBuffer(IDirect3DVertexBuffer9* pBuff)
+{
+  return GetBackend()->UnlockVertexBuffer(MakeBackendHandle<HBuffer>(pBuff));
+}
+
+HRESULT BackendUnlockBuffer(IDirect3DIndexBuffer9* pBuff)
+{
+  return GetBackend()->UnlockIndexBuffer(MakeBackendHandle<HBuffer>(pBuff));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -346,17 +369,17 @@ bool SharedD3DBufferST<_DynBuffer>::Lock() // returns false if Lock didn't succe
     return true;
 
   if( GetSize() && !Get(*this) )
-    _DynBuffer::OnDeviceReset();
+    _DynBuffer::OnResourcesReallocate();
 
   if( Get(*this) ) {
     if(ptr) {
-      if( FAILED((*this)->Lock(position, GetSize() - position, &ptr, LOCKFLAGS_APPEND)) )
+      if( FAILED(BackendLockBuffer(Get(*this), position, GetSize() - position, LOCK_NOOVERWRITE, &ptr)) )
         return false;
     }
     else { // flash requested
       QuerySize(sizeRequested);
       sizeRequested = 0;
-      if( FAILED((*this)->Lock(0, GetSize(), &ptr, LOCKFLAGS_FLUSH)) )
+      if( FAILED(BackendLockBuffer(Get(*this), 0, GetSize(), LOCK_DISCARD, &ptr)) )
         return false;
       ++timeStamp;
     }
@@ -431,7 +454,7 @@ bool DXVertexBufferDynamicRef::Resize(int _size, bool nullOnLostDevice /*= false
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void DXVertexBufferDynamicRef::OnDeviceReset()
+void DXVertexBufferDynamicRef::OnResourcesReallocate()
 {
 	if (size == 0)
 		return;
@@ -459,7 +482,7 @@ bool DXIndexBufferDynamicRef_<16>::Resize(int _size)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>
-void DXIndexBufferDynamicRef_<32>::OnDeviceReset()
+void DXIndexBufferDynamicRef_<32>::OnResourcesReallocate()
 {
 	if (size == 0)
 		return;
@@ -468,7 +491,7 @@ void DXIndexBufferDynamicRef_<32>::OnDeviceReset()
 }
 
 template<>
-void DXIndexBufferDynamicRef_<16>::OnDeviceReset()
+void DXIndexBufferDynamicRef_<16>::OnResourcesReallocate()
 {
   if (size == 0)
     return;

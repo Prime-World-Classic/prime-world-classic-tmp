@@ -61,9 +61,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FRcAAAACAAAAHgAAADcAAABUYXVydXNfQTB1AABUYXVydXNfQTB1AFWL7IPsFGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoDAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAD7ZN+4XJdDaLVQiLAotNCIuQwAAAAP/Si0UIixCLTQiLgowAAADdXfD/0Nxd8N/g9sRBegnHRewBAAAA6wfHRewAAAAAikXsi+Vdww==</compiledString>
+					<compiledString>FRcAAAACAAAAHwAAADgAAABUYXVydXNfQTB1AABUYXVydXNfQTB1AFWL7IPsIFZoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaAwAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AA+2TfuFyQ+EyQAAAGoEi1UIiwKLTQiLkCwBAAD/0g+28GoRi0UIixCLTQiLgiwBAAD/0A+2yDvxfgzHRfQBAAAA6YAAAABqBItVCIsCi00Ii5AsAQAA/9IPtvBqEYtFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0XwAAAAAOtDi1UIiwKLTQiLkIwAAAD/0otFCIsQi00Ii4LAAAAA3V3o/9DcXejf4PbEQXoJx0XkAQAAAOsHx0XkAAAAAItN5IlN8ItV8IlV9IN99AB1CcdF4AEAAADrB8dF4AAAAACKReBei+Vdww==</compiledString>
 					<returnType>bool</returnType>
-					<sString>tal("Taurus_A0u") &amp;&amp; sBaseDexterity &gt;= sBaseAttackSpeed</sString>
+					<sString>tal("Taurus_A0u") &amp;&amp; !(pFirst-&gt;IsRecommended(4) &gt; pFirst-&gt;IsRecommended(17) ? 1 : pFirst-&gt;IsRecommended(4) &lt; pFirst-&gt;IsRecommended(17) ? 0 : sBaseAttackSpeed&gt;=sBaseDexterity)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -108,9 +108,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FRcAAAACAAAAHgAAADcAAABUYXVydXNfQTB1AABUYXVydXNfQTB1AFWL7IPsFGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoDAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAD7ZN+4XJdDaLVQiLAotNCIuQwAAAAP/Si0UIixCLTQiLgowAAADdXfD/0Nxd8N/g9sRBdQnHRewBAAAA6wfHRewAAAAAikXsi+Vdww==</compiledString>
+					<compiledString>FRcAAAACAAAAHwAAADgAAABUYXVydXNfQTB1AABUYXVydXNfQTB1AFWL7IPsIFZoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaAwAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AA+2TfuFyQ+EyQAAAGoEi1UIiwKLTQiLkCwBAAD/0g+28GoRi0UIixCLTQiLgiwBAAD/0A+2yDvxfgzHRfQBAAAA6YAAAABqBItVCIsCi00Ii5AsAQAA/9IPtvBqEYtFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0XwAAAAAOtDi1UIiwKLTQiLkIwAAAD/0otFCIsQi00Ii4LAAAAA3V3o/9DcXejf4PbEQXoJx0XkAQAAAOsHx0XkAAAAAItN5IlN8ItV8IlV9IN99AB0CcdF4AEAAADrB8dF4AAAAACKReBei+Vdww==</compiledString>
 					<returnType>bool</returnType>
-					<sString>tal("Taurus_A0u") &amp;&amp; sBaseDexterity &lt; sBaseAttackSpeed</sString>
+					<sString>tal("Taurus_A0u") &amp;&amp; (pFirst-&gt;IsRecommended(4) &gt; pFirst-&gt;IsRecommended(17) ? 1 : pFirst-&gt;IsRecommended(4) &lt; pFirst-&gt;IsRecommended(17) ? 0 : sBaseAttackSpeed&gt;=sBaseDexterity)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>

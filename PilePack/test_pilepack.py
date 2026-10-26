@@ -200,7 +200,7 @@ def test_first_build_and_incremental(root):
     code, out = run(['build'] + a)
     check(code == 0, 'первый build завершился (%s)' % out.strip().splitlines()[-3:])
     names = pile_names(root)
-    check(names == ['gamedata%02d.pile' % i for i in range(1, len(names) + 1)] and len(names) >= 3,
+    check(names == ['gamedata%03d.pile' % i for i in range(1, len(names) + 1)] and len(names) >= 3,
           'имена gamedataNN.pile подряд: %s' % names)
     piles = load_manifest_piles(root)
     check(sum(len(p.files) for p in piles) == 12, 'все 12 файлов разложены')
@@ -297,13 +297,19 @@ def test_split_oversized(root):
     # раздуваем один файл из первого pile так, чтобы pile перевалил за split
     big = target.files[0][0]
     mkfile(os.path.join(data, big.replace('/', os.sep)), 32000, 'rand', seed=7)
+    before = mtimes(root)
     code, out = run(['build'] + a)
     check('делим списки по исходным байтам' in out, 'деление запущено')
     piles = load_manifest_piles(root)
     names = [p.name for p in piles]
     check(len(names) == len(before_names) + 1, 'появился ещё один pile: %s' % names)
-    check(names == ['gamedata%02d.pile' % i for i in range(1, len(names) + 1)],
-          'имена пересчитаны подряд: %s' % names)
+    new_name = 'gamedata%03d.pile' % (len(before_names) + 1)
+    check(sorted(names) == sorted(before_names + [new_name]),
+          'имена стабильны, новая часть — %s: %s' % (new_name, names))
+    after = mtimes(root)
+    untouched = [n for n in before_names if n != target.name]
+    check(all(after[n] == before[n] for n in untouched),
+          'остальные pile не переименованы и не пересобраны')
     check(all(p.packed_size <= 40000 for p in piles),
           'все pile ниже порога: %s' % [p.packed_size for p in piles])
     src_sizes = [p.source_size() for p in piles if big in [f[0] for f in p.files]]
@@ -314,6 +320,28 @@ def test_split_oversized(root):
     total = sum(len(p.files) for p in piles)
     check(total == len(pp.Policy(os.path.join(root, 'policy.txt')).walk(data)),
           'все файлы Data разложены (%d)' % total)
+
+
+def test_relayout_on_target_change(root):
+    print('смена цели: файлы раскладываются заново, а не делятся пополам')
+    data = os.path.join(root, 'Data')
+    spec = {'r/f%03d.bin' % i: (3000, 'rand') for i in range(40)}
+    tree(data, spec)
+    code, out = run(['build'] + common_args(root) + ['--target', '60000'])
+    check(code == 0, 'первая сборка по 60000')
+    before = len(pile_names(root))
+    code, out = run(['build'] + common_args(root) + ['--target', '15000'])
+    check('раскладка заново' in out, 'смена цели запускает раскладку заново')
+    piles = load_manifest_piles(root)
+    check(len(piles) > before * 2, 'pile стало больше: %d -> %d' % (before, len(piles)))
+    check(all(p.packed_size <= 15000 + pp.SPLIT_MARGIN for p in piles),
+          'все pile в пределах новой цели: %s' % [p.packed_size for p in piles])
+    check(pile_names(root) == sorted(p.name for p in piles), 'старых pile в выходной папке не осталось')
+    check(sum(len(p.files) for p in piles) == 40, 'все 40 файлов разложены')
+    check(pp.cmd_verify(verify_args(root)) == 0, 'verify после раскладки заново: чисто')
+    code, out = run(['build'] + common_args(root) + ['--target', '15000'])
+    check('пересобираем 0' in out and 'раскладка заново' not in out,
+          'повторный прогон с той же целью ничего не трогает')
 
 
 def test_policy_and_guards(root):
@@ -339,11 +367,15 @@ def test_policy_and_guards(root):
 
     mkfile(os.path.join(data, 'Zz.txt'), 10, 'text')
     mkfile(os.path.join(data, 'zz.txt'), 10, 'text')
-    code, out = run(['plan'] + common_args(root))
-    check(code != 0 or 'конфликт имён без учёта регистра' in out,
-          'конфликт имён без учёта регистра не пропускается')
-    os.remove(os.path.join(data, 'Zz.txt'))
-    os.remove(os.path.join(data, 'zz.txt'))
+    if len([n for n in os.listdir(data) if n.lower() == 'zz.txt']) < 2:
+        print('  skip конфликт регистра: ФС без учёта регистра (Windows), два имени — один файл')
+        os.remove(os.path.join(data, 'zz.txt'))
+    else:
+        code, out = run(['plan'] + common_args(root))
+        check(code != 0 or 'конфликт имён без учёта регистра' in out,
+              'конфликт имён без учёта регистра не пропускается')
+        os.remove(os.path.join(data, 'Zz.txt'))
+        os.remove(os.path.join(data, 'zz.txt'))
 
     mkfile(os.path.join(data, '0zero.txt'), 10, 'text')
     code, out = run(['plan'] + common_args(root))
@@ -351,12 +383,169 @@ def test_policy_and_guards(root):
     os.remove(os.path.join(data, '0zero.txt'))
 
 
+def test_line_endings(root):
+    print('переводы строк: CRLF и LF в Data дают одинаковые pile, двоичные файлы не трогаются')
+    data = os.path.join(root, 'Data')
+    lf = b'<?xml version="1.0"?>\n<a>\n  <b>1</b>\n</a>\n' * 50
+    binary = b'\x00\r\n\x01\r\n' * 100
+    lone_cr = b'\xff\xfe\r\n\x80\r\x90' * 2000           # без NUL, но с одиночными CR (как layer_mask)
+    a = common_args(root)
+
+    def put(text):
+        for rel, body in (('x/a.txt', text), ('x/b.bin', binary), ('x/c.bin', lone_cr)):
+            path = os.path.join(data, rel.replace('/', os.sep))
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, 'wb') as f:
+                f.write(body)
+
+    put(lf.replace(b'\n', b'\r\n'))
+    code, out = run(['build'] + a)
+    check(code == 0, 'build из CRLF-копии завершился')
+    with open(os.path.join(root, 'Piles', 'gamedata001.pile'), 'rb') as f:
+        from_crlf = f.read()
+    files = {f[0]: f[1] for p in load_manifest_piles(root) for f in p.files}
+    check(files.get('x/a.txt') == len(lf), 'размер текста в манифесте — с LF (%s)' % files.get('x/a.txt'))
+    check(files.get('x/b.bin') == len(binary), 'двоичный файл с \\r\\n сохранён как есть')
+    check(files.get('x/c.bin') == len(lone_cr), 'файл без NUL, но с одиночными CR — двоичный, не тронут')
+
+    put(lf)
+    code, out = run(['build'] + a)
+    check('пересобираем 0' in out, 'та же Data с LF не вызывает пересборку (%s)'
+          % [l for l in out.splitlines() if 'план:' in l])
+    run(['build', '--force'] + a)
+    with open(os.path.join(root, 'Piles', 'gamedata001.pile'), 'rb') as f:
+        check(f.read() == from_crlf, 'pile из LF-копии побайтно равен pile из CRLF-копии')
+
+
+def test_referenced_from_ignored(root):
+    print('ignore_dir: файлы, на которые ссылаются отобранные данные, всё равно берутся')
+    data = os.path.join(root, 'Data')
+    files = {
+        'Glyphs/_.GLDB.xdb': b'<a><glyph href="/Maps/Test/G/Rune.GLPH" /><glyph href="" /></a>',
+        'Maps/Test/G/Rune.GLPH.xdb': (b'<a><icon href="Icon/r.TXTR" />'
+                                      b'<geometryFileName>/Maps/Test/G/r.bin</geometryFileName>'
+                                      b'<name textref="/Maps/Test/G/Rune_name.txt" /></a>'),
+        'Maps/Test/G/Icon/r.TXTR.xdb': b'<a />',
+        'Maps/Test/G/r.bin': b'\x00\x01',
+        'Maps/Test/G/Rune_name.txt': b'name',
+        'Maps/Test/G/Rune_name_en.txt': b'name',
+        'Maps/Test/G/unused.xdb': b'<a />',
+        'Maps/Test/G/r.maya': b'src',
+    }
+    for rel, body in files.items():
+        path = os.path.join(data, rel.replace('/', os.sep))
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'wb') as f:
+            f.write(body)
+    pol = pp.Policy(os.path.join(root, 'policy.txt'))
+    keys = set(pol.walk(data))
+    want = {'Maps/Test/G/Rune.GLPH.xdb', 'Maps/Test/G/Icon/r.TXTR.xdb', 'Maps/Test/G/r.bin',
+            'Maps/Test/G/Rune_name.txt', 'Maps/Test/G/Rune_name_en.txt'}
+    check(want <= keys, 'взяты прямая ссылка, относительная, путь в теге и текст с переводом: %s'
+          % sorted(want - keys))
+    check(set(pol.referenced) == want, 'referenced — ровно они: %s' % sorted(pol.referenced))
+    check('Maps/Test/G/unused.xdb' not in keys, 'файл без ссылок из исключённого каталога не берётся')
+    check('Maps/Test/G/r.maya' not in keys, 'расширение вне ext не берётся и по ссылке')
+
+
+def test_scan_cache(root):
+    print('кэш скана: размер+mtime вместо чтения, правка с новым mtime ловится, --rescan читает всё')
+    data = os.path.join(root, 'Data')
+    old = 1000000000                                   # mtime далеко до начала скана: кэшу можно верить
+    spec = {'d/f%02d.bin' % i: (5000, 'rand') for i in range(6)}
+    spec['ref/a.xdb'] = (0, 'text')
+    tree(data, spec)
+    with open(os.path.join(data, 'ref', 'a.xdb'), 'wb') as f:
+        f.write(b'<a><b href="/Test/t.bin" /></a>')
+    mkfile(os.path.join(data, 'Test', 't.bin'), 3000, 'rand', seed=7)
+    for dirpath, _, names in os.walk(data):
+        for n in names:
+            os.utime(os.path.join(dirpath, n), (old, old))
+    a = common_args(root)
+    cache_path = os.path.join(root, 'Piles', pp.SCAN_CACHE_NAME)
+
+    def stat_line(out):
+        return [l for l in out.splitlines() if 'скан Data' in l]
+
+    code, out = run(['build'] + a)
+    check(code == 0 and os.path.isfile(cache_path), 'первый build записал кэш скана')
+    check('прочитано 8, из кэша 0' in out, 'первый прогон читает все файлы (%s)' % stat_line(out))
+    check('Test/t.bin' in [f[0] for p in load_manifest_piles(root) for f in p.files],
+          'файл из ignore_dir взят по ссылке')
+
+    code, out = run(['plan'] + a)
+    # «пересобираем 0» значит и то, что Test/t.bin по-прежнему найден: ссылку взяли из кэша
+    check('прочитано 0, из кэша 8' in out and 'пересобираем 0' in out
+          and 'привязку снимаем' not in out,
+          'повторный прогон берёт всё из кэша, ссылка из .xdb жива (%s)' % stat_line(out))
+
+    # правка с новым mtime ловится без --rescan
+    rel = 'd/f03.bin'
+    p = os.path.join(data, rel.replace('/', os.sep))
+    mkfile(p, 5000, 'rand', seed=42)
+    code, out = run(['build'] + a)
+    check('прочитано 1, из кэша 7' in out and 'пересобираем 1' in out,
+          'изменённый файл (новый mtime) перечитан, его pile пересобран (%s)' % stat_line(out))
+
+    # та же правка, но mtime вернули назад: кэш её не видит, --rescan видит
+    os.utime(p, (old, old))
+    run(['build'] + a)                                 # кэш запоминает old для нового содержимого
+    with open(p, 'rb') as f:
+        body = f.read()
+    with open(p, 'wb') as f:
+        f.write(bytes([body[0] ^ 0xFF]) + body[1:])
+    os.utime(p, (old, old))
+    code, out = run(['plan'] + a)
+    check('пересобираем 0' in out, 'правка с прежними размером и mtime кэшу не видна (ожидаемо)')
+    code, out = run(['build', '--rescan'] + a)
+    check('прочитано 8, из кэша 0' in out and 'пересобираем 1' in out,
+          '--rescan читает всё и ловит такую правку (%s)' % stat_line(out))
+    check(pp.cmd_verify(verify_args(root)) == 0, 'verify после --rescan чист')
+
+    # недавно тронутому файлу кэш не верит (racy): mtime в окне RACY_NS до скана
+    os.utime(p, None)
+    run(['build'] + a)
+    code, out = run(['plan'] + a)
+    check('прочитано 1, из кэша 7' in out, 'файл, тронутый прямо перед сканом, перечитан (%s)'
+          % stat_line(out))
+
+    # битый кэш не ломает сборку
+    with open(cache_path, 'wb') as f:
+        f.write(b'{not json')
+    code, out = run(['plan'] + a)
+    check(code == 0 and 'прочитано 8, из кэша 0' in out, 'битый кэш игнорируется')
+
+
 def main():
+    with tempfile.TemporaryDirectory(prefix='pilepack-test-') as root:
+        with open(os.path.join(root, 'policy.txt'), 'w', encoding='utf-8') as f:
+            f.write('ext: txt bin xdb\nignore_dir: Test\n')
+        print('== test_referenced_from_ignored')
+        test_referenced_from_ignored(root)
+
+    with tempfile.TemporaryDirectory(prefix='pilepack-test-') as root:
+        with open(os.path.join(root, 'policy.txt'), 'w', encoding='utf-8') as f:
+            f.write('ext: txt bin xdb\nignore_dir: Test\n')
+        print('== test_scan_cache')
+        test_scan_cache(root)
+
     with tempfile.TemporaryDirectory(prefix='pilepack-test-') as root:
         with open(os.path.join(root, 'policy.txt'), 'w', encoding='utf-8') as f:
             f.write(POLICY)
         print('== формат')
         test_format_smoke(root)
+
+    with tempfile.TemporaryDirectory(prefix='pilepack-test-') as root:
+        with open(os.path.join(root, 'policy.txt'), 'w', encoding='utf-8') as f:
+            f.write(POLICY)
+        print('== test_line_endings')
+        test_line_endings(root)
+
+    with tempfile.TemporaryDirectory(prefix='pilepack-test-') as root:
+        with open(os.path.join(root, 'policy.txt'), 'w', encoding='utf-8') as f:
+            f.write(POLICY)
+        print('== test_relayout_on_target_change')
+        test_relayout_on_target_change(root)
 
     # одна и та же установка: сборка -> инкрементальность -> новые/удалённые -> деление
     with tempfile.TemporaryDirectory(prefix='pilepack-test-') as root:

@@ -1,5 +1,9 @@
 #pragma once
-#include <d3dx9shader.h>
+#include <d3dcompiler.h>
+
+// Shader bytecode: D3DCompile returns ID3DBlob where D3DX used ID3DXBuffer
+// (same two methods: GetBufferPointer/GetBufferSize)
+typedef ID3DBlob* ShaderBlob;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 _interface IXmlSaver;
@@ -28,9 +32,9 @@ class UberShaderFileInfo
 public:
   UberShaderFileInfo(UberShaderDesc& _shader) : shader(_shader), needWrite(true), similar(0) {}
   void Reset();
-  void Read( int isV20 = 0 );
-  void Build( LPD3DXBUFFER *matrix );
-  void Write( int isV20 = 0 );
+  void Read();
+  void Build( ShaderBlob *matrix );
+  void Write();
   void SetDir(string &dir) {directory = dir;}
   int GetIdx (int code) { return codes[code].idx; }
   int GetCRC (int code) { return codes[code].CRC; }

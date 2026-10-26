@@ -19,7 +19,7 @@ namespace Terrain {
 
 namespace PF_Render
 {
-class Interface : public Render::Interface, public Render::DeviceLostHandler
+class Interface : public Render::Interface, public Render::ReallocateHandler
 {
 protected:
   Interface(HWND hwnd = 0);
@@ -43,9 +43,9 @@ public:
 
   virtual void ConstrainRender(const RECT &_rect) { renderArea = _rect; }
 
-  // From Render::DeviceLostHandler
-  virtual void OnDeviceLost() {}
-  virtual void OnDeviceReset();
+  // From Render::ReallocateHandler
+  virtual void OnResourcesRelease() {}
+  virtual void OnResourcesReallocate();
 
   virtual bool SetShadows( bool val );
 
@@ -69,8 +69,6 @@ protected:
 	void RenderMainScene(bool GIsEditor);
 
   void CopyDepth(const DXSurfaceRef& _dest);
-  // resolve Z-buffer (multisampled or not) to pMainDepth
-  void CopyDepthRESZ();
 
 private:
 	void Init();

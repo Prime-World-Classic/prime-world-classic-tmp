@@ -2,6 +2,7 @@
 <UITexture>
 	<BackLink DBID="/Creeps/Champions/Champion3/CTF_S16_C2.CREEP" Count="2" />
 	<BackLink DBID="/Creeps/Normals/Normal5/PvE_Coop1.CREEP" Count="1" />
+	<BackLink DBID="/Heroes/DefaultStatus/LeaverBonus.APLR" Count="1" />
 	<generatedFileName></generatedFileName>
 	<importOnlyShape>false</importOnlyShape>
 	<mipLevels>0</mipLevels>

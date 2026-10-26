@@ -52,8 +52,12 @@ class PFPlayer : public PFWorldObjectBase, public NNameMap::Map
   bool              leaver;
 
   CObj<PlayerBehaviourTracker> behaviourTracker;
+
+  // Player disconnected and has not returned to the battle yet (stays true while reconnecting/loading).
+  // Allies get the "Closed Ranks" bonus for every such player (PFWorld::UpdateLeaverBonus).
+  bool              leftBattle;
 public:
-  ZEND int operator&( IBinSaver &f ) { f.Add(1,(PFWorldObjectBase*)this); f.Add(2,&userID); f.Add(3,&pHero); f.Add(4,&playerID); f.Add(5,&teamID); f.Add(6,&originalTeamID); f.Add(7,&zzimaSex); f.Add(8,&isPlaying); f.Add(9,&isActive); f.Add(10,&aiForLeaversEnabled); f.Add(11,&aiForLeaversThreshold); f.Add(12,&aiStartTimer); f.Add(13,&disconnected); f.Add(14,&leaver); f.Add(15,&behaviourTracker); return 0; }
+  ZEND int operator&( IBinSaver &f ) { f.Add(1,(PFWorldObjectBase*)this); f.Add(2,&userID); f.Add(3,&pHero); f.Add(4,&playerID); f.Add(5,&teamID); f.Add(6,&originalTeamID); f.Add(7,&zzimaSex); f.Add(8,&isPlaying); f.Add(9,&isActive); f.Add(10,&aiForLeaversEnabled); f.Add(11,&aiForLeaversThreshold); f.Add(12,&aiStartTimer); f.Add(13,&disconnected); f.Add(14,&leaver); f.Add(15,&behaviourTracker); f.Add(16,&leftBattle); return 0; }
 
   PFPlayer( PFWorld * _world, 
             int _playerID,
@@ -98,6 +102,7 @@ public:
   void              SetDisconnected(const bool _disconnected, const bool _leaver);
   bool const        IsDisconnected() const { return disconnected; }
   bool const        IsLeaver() const { return leaver; }
+  bool const        HasLeftBattle() const { return leftBattle; }
   timer::Time const GetTimeElapsedSinceDisconnection() const;
 
   bool              IsChatMuted() const { return chatMuted; }

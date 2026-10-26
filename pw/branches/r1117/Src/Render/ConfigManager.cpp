@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "ConfigManager.h"
 #include "configdatabase.h"
+#include "renderer.h"        // GetBackend() — caps приходят от бэкенда (шаг 4)
+#include "renderbackend.h"   // BackendSystemInfo
+#include "System/CmdLineLite.h"
 
 
 static bool s_readableDepth = true;
@@ -20,8 +23,7 @@ public:
   ConfigManagerImpl(void);
   ~ConfigManagerImpl(void) {}
 
-  HRESULT CheckDeviceCaps(IDirect3DDevice9* _pDevice, bool _checkFormats/* = true*/);
-  void    CheckFormats(IDirect3D9* _pD3D, UINT Adapter, D3DDEVTYPE DeviceType, D3DFORMAT AdapterFormat);
+  HRESULT CheckDeviceCaps(IDirect3DDevice9* _pDevice);
 
   // SetPerfomanceLevel - level 0 is of most quality
   void SetPerfomanceLevel(ResourceType _type, UINT _level);
@@ -36,7 +38,7 @@ public:
   bool CheckFeatureSupport(DWORD _features) const;
   bool CheckFeatureSupportExact(DWORD _features) const;
   DWORD      GetAllFeatures() const { return caps; }
-  bool ReadableDepthEnabled() const { return s_readableDepth && !Compatibility::IsRunnedUnderWine() && ReadableDepthSupported(); }
+  bool ReadableDepthEnabled() const { return s_readableDepth && ReadableDepthSupported(); }
   const ConfigParams& GetConfigParams() const { return config_params; }
 
   bool ReadableDepthSupported() const;
@@ -44,16 +46,9 @@ public:
 protected:
   DWORD caps;
   UINT perfLevels[NUM_RESOURCE_TYPES];
-  vector<D3DFORMAT>  r2vbFormats;
   vector<StringPair> config_params;
   IConfigManager::SysInfo sysInfo;
 };
-
-static inline bool AllowDF24(DWORD _caps)
-{ // Allow only for Radeon X1000 family
-  return false;
-  //return (_caps & IConfigManager::hasDF24) && !(_caps & IConfigManager::hasVT16) && !(_caps & IConfigManager::hasVT32);
-}
 
 ConfigManagerImpl::ConfigManagerImpl() : caps()
 {
@@ -61,39 +56,87 @@ ConfigManagerImpl::ConfigManagerImpl() : caps()
 }
 
 
-inline void SetFlag(DWORD _flag, bool _val, DWORD *_pDest)
-{
-  NI_STATIC_ASSERT((0 == int(false)) && (1 == int(true)), WRONG_ASSUMPTION_ABOUT_BOOL_REPRESENTATION);
+// SetFlag удалён: флаги caps больше не выставляются по одному — маску
+// приносит бэкенд целиком (BackendSystemInfo::features, шаг 4).
 
-  *_pDest = (~_flag & *_pDest) | (-int(_val) & _flag);
+// Дамп разрешённых пинов config.txt (docs/PLAN_NVRHI.md §2.5).
+// config.txt — это матчер: из идентификатора адаптера, caps и переданных
+// 1024/64/1700 он разрешает список команд, которые затем исполняются как
+// setvar. На этапе 3 вместо D3DCAPS9 придёт синтезированный BackendSystemInfo,
+// и обязан разрешиться ТОТ ЖЕ список. Сравнивать будет не с чем, если не снять
+// эталон, пока D3D9 жив, — отсюда этот дамп.
+// Ключ командной строки, а не только dev-переменная: CheckDeviceCaps() работает
+// ДО NGlobal::ExecuteConfig("autoexec.cfg") (тот исполняется в PseudoWinMain
+// позже инициализации рендера), поэтому setvar из autoexec.cfg до этого места
+// не доходит — проверено прогоном. Переменная оставлена для интерактивной
+// отладки, когда порядок не важен.
+static bool s_dumpConfigPins = false;
+REGISTER_DEV_VAR( "dump_config_pins", s_dumpConfigPins, STORAGE_NONE );
+
+static bool DumpConfigPinsRequested()
+{
+  return s_dumpConfigPins
+      || CmdLineLite::Instance().IsKeyDefined( "dumpConfigPins" )
+      || CmdLineLite::Instance().IsKeyDefined( "-dumpConfigPins" );
+}
+
+// Форс флагов depth-текстур (hasD16T/hasD24X/hasD24S) — замена отсутствующему
+// GPU-железу по части корректности: без этих битов HasDSM() (единый гейт
+// аппаратных карт теней) путь shadow maps не исполняется вообще.
+//
+// НА E2E-СТЕНДЕ (tiny10, «Microsoft Basic Render Driver») БЕСПОЛЕЗЕН И ОПАСЕН:
+// устройство не умеет depth-форматы как текстуру — CheckDeviceFormat
+// (DEPTHSTENCIL, TEXTURE) = no для D16/D24X8/D24S8, а реальная попытка
+// CreateTexture даёт 0x8876086C (замер tools/dsm_probe, 2026-10-15,
+// docs/PLAN_NVRHI.md §2.15 п.9). Форс превратил бы «путь не исполняется» в
+// NI_DX_THROW на создании ресурса. Механизм оставлен для машин с реальным
+// D3D9-железом и для прогонов поверх NvrhiBackend (этап 3), где depth-текстуры
+// есть; в E2E на tiny10 не включается и новый визуальный эталон не создаётся.
+static bool s_forceDsm = false;
+REGISTER_DEV_VAR( "force_dsm", s_forceDsm, STORAGE_NONE );
+
+static bool ForceDsmRequested()
+{
+  return s_forceDsm
+      || CmdLineLite::Instance().IsKeyDefined( "forceDsm" )
+      || CmdLineLite::Instance().IsKeyDefined( "-forceDsm" );
 }
 
 
-static const D3DFORMAT g_R2VBFormats[] = {
-   D3DFMT_A32B32G32R32F,
-   D3DFMT_G32R32F,
-   D3DFMT_A16B16G16R16F,
-   D3DFMT_A16B16G16R16,
-   D3DFMT_Q16W16V16U16,
-   D3DFMT_R32F,
-   D3DFMT_G16R16F,
-   D3DFMT_G16R16,
-   D3DFMT_V16U16,
-   D3DFMT_A2W10V10U10,
-   D3DFMT_A2R10G10B10,
-   D3DFMT_Q8W8V8U8,
-   D3DFMT_A8R8G8B8,
-};
-
-HRESULT ConfigManagerImpl::CheckDeviceCaps(IDirect3DDevice9* _pDevice, bool _checkFormats)
+HRESULT ConfigManagerImpl::CheckDeviceCaps(IDirect3DDevice9* _pDevice)
 {
   ASSERT(_pDevice);
 
   HRESULT hr = E_FAIL;
 
+  // Возможности приходят от бэкенда (шаг 4): D3DCAPS9 здесь больше НЕ источник
+  // caps — он остался только матчеру config.txt (AdapterOrdinal/DeviceType/маски
+  // caps), у которого нейтрального словаря пока нет (§2.5).
+  BackendSystemInfo backendInfo = {};
+  hr = GetBackend()->GetSystemInfo( backendInfo );
+  NI_DX_THROW( hr, "IRenderBackend::GetSystemInfo failed" );
+
+  sysInfo.MaxVertexShaderConst = backendInfo.maxVertexShaderConst;
+  sysInfo.IsNullRef            = backendInfo.isNullRef;
+  caps                         = backendInfo.features;
+  if( ForceDsmRequested() )
+    caps |= hasD16T | hasD24X | hasD24S;    // см. комментарий у dev-var'а
+  // По строке в сессионном логе видно, каким путём пойдёт глубина: читаемая
+  // (depth SRV — только NVRHI-бэкенд) или DoDepthOut (D3D9-путь, он же путь
+  // реального железа без vendor-форматов). Без этой строки контур A/B
+  // различим только по косвенным признакам (проблема 10, docs/
+  // NVRHI_VULKAN_VS_DXVK_ISSUES.md).
+  DebugTrace("Readable depth: %s (caps=0x%x)", ReadableDepthEnabled() ? "on" : "off", caps);
+
   D3DCAPS9 caps9;
   _pDevice->GetDeviceCaps(&caps9);
-  sysInfo.MaxVertexShaderConst = caps9.MaxVertexShaderConst;
+
+  // Диагностика порядка запуска: дамп пинов завязан на ключ командной строки, а
+  // CmdLineLite инициализируется в PseudoWinMain — проверяем, что к моменту
+  // создания устройства он уже заполнен.
+  DebugTrace( "CheckDeviceCaps: args=%d dumpConfigPins=%d",
+              CmdLineLite::Instance().ArgsCount(),
+              (int)CmdLineLite::Instance().IsKeyDefined( "-dumpConfigPins" ) );
 
   D3DADAPTER_IDENTIFIER9 adapterID;
   IntrusivePtr<IDirect3D9> pD3D;
@@ -114,32 +157,33 @@ HRESULT ConfigManagerImpl::CheckDeviceCaps(IDirect3DDevice9* _pDevice, bool _che
   if(D3DDEVTYPE_REF == caps9.DeviceType)  // Probably this mean it is NULLREF actually.
     sysInfo.IsNullRef = NGlobal::GetVar("nullrender").GetInt64();
 
-  if( _checkFormats ) {
-    D3DDISPLAYMODE displayMode;
-    pD3D->GetAdapterDisplayMode(caps9.AdapterOrdinal, &displayMode);
-
-    CheckFormats(::Get(pD3D), caps9.AdapterOrdinal, caps9.DeviceType, displayMode.Format);
-  }
-
-  if( hasR2VB & caps )
-  {
-    IDirect3DTexture9* pRT = 0;
-    const DWORD usage = D3DUSAGE_RENDERTARGET | D3DUSAGE_DMAP;
-    for(int i = 0; i < ARRAY_SIZE(g_R2VBFormats); ++i)
-      if( SUCCEEDED(_pDevice->CreateTexture(1, 1, 1, usage, g_R2VBFormats[i], D3DPOOL_DEFAULT, &pRT, 0)) )
-      {
-        r2vbFormats.push_back(g_R2VBFormats[i]);
-        pRT->Release();
-        hr = S_OK;
-      }
-  }
-  
   if( IConfigDatabase* const pCDB = IConfigDatabase::Create() )
   {
     SOUND_DEVICE sndDev;
     if( pCDB->Load("config.txt", sndDev, adapterID, caps9, 1024, 64, 1700) )
         config_params = pCDB->GetAggregateProperties();
     pCDB->Release();
+
+    if( DumpConfigPinsRequested() )
+    {
+      // Входы матчера: без них список пинов нельзя воспроизвести на другом
+      // железе (или при другом синтезе caps). 1024/64/1700 — жёстко зашитые
+      // SystemMemory/VideoMemory/CPUSpeed, их решение менять не будем (§2.5).
+      // Идентичность и возможности печатаются из BackendSystemInfo — т.е. из
+      // того же источника, что теперь читает клиент (шаг 4); сравнение с
+      // эталоном 2026-10-14 (§2.5) работает без изменений.
+      // Форматтер клиента %llu не понимает (в Render такого нет нигде) —
+      // версия драйвера печатается двумя половинками.
+      DebugTrace( "ConfigPins: adapter=\"%s\" vendor=0x%04x device=0x%04x driver=%u.%u "
+                  "mem=1024 vid=64 cpu=1700 MaxVertexShaderConst=%u IsNullRef=%d caps=0x%x pins=%d",
+                  backendInfo.description, backendInfo.vendorId, backendInfo.deviceId,
+                  (unsigned)(backendInfo.driverVersion >> 32),
+                  (unsigned)(backendInfo.driverVersion & 0xffffffffULL),
+                  sysInfo.MaxVertexShaderConst, (int)sysInfo.IsNullRef, caps,
+                  (int)config_params.size() );
+      for( size_t i = 0; i < config_params.size(); ++i )
+        DebugTrace( "ConfigPin: %s %s", config_params[i].first.c_str(), config_params[i].second.c_str() );
+    }
 
     for(int i = config_params.size(); --i >= 0;) {
       const StringPair& curProperty = config_params[i];
@@ -153,29 +197,6 @@ HRESULT ConfigManagerImpl::CheckDeviceCaps(IDirect3DDevice9* _pDevice, bool _che
   }
 
   return hr;
-}
-
-
-void ConfigManagerImpl::CheckFormats(IDirect3D9* _pD3D, UINT _Adapter, D3DDEVTYPE _DeviceType, D3DFORMAT _AdapterFormat)
-{
-  ASSERT(_pD3D);
-
-#define CHECK_SUPPORT(usage, type, fmt) (D3D_OK == _pD3D->CheckDeviceFormat(_Adapter, _DeviceType, _AdapterFormat, usage, type, fmt))
-
-  SetFlag(hasDF16, CHECK_SUPPORT(D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE, FOURCC_DF16), &caps);
-  SetFlag(hasDF24, CHECK_SUPPORT(D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE, FOURCC_DF24), &caps);
-  SetFlag(hasRAWZ, CHECK_SUPPORT(D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE, FOURCC_RAWZ), &caps);
-  SetFlag(hasINTZ, CHECK_SUPPORT(D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE, FOURCC_INTZ), &caps);
-  SetFlag(hasRESZ, CHECK_SUPPORT(D3DUSAGE_RENDERTARGET, D3DRTYPE_SURFACE, FOURCC_RESZ), &caps);
-  SetFlag(hasR2VB, CHECK_SUPPORT(                    0, D3DRTYPE_SURFACE, FOURCC_R2VB), &caps);
-  SetFlag(hasNLRT, CHECK_SUPPORT(D3DUSAGE_RENDERTARGET, D3DRTYPE_SURFACE, FOURCC_NULL), &caps);
-  SetFlag(hasD16T, CHECK_SUPPORT(D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE, D3DFMT_D16),  &caps);
-  SetFlag(hasD24X, CHECK_SUPPORT(D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE, D3DFMT_D24X8), &caps);
-  SetFlag(hasD24S, CHECK_SUPPORT(D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE, D3DFMT_D24S8), &caps);
-  SetFlag(hasVT16, CHECK_SUPPORT(D3DUSAGE_QUERY_VERTEXTEXTURE, D3DRTYPE_TEXTURE, D3DFMT_A16B16G16R16F), &caps);
-  SetFlag(hasVT32, CHECK_SUPPORT(D3DUSAGE_QUERY_VERTEXTEXTURE, D3DRTYPE_TEXTURE, D3DFMT_A32B32G32R32F), &caps);
-
-#undef CHECK_SUPPORT
 }
 
 
@@ -205,9 +226,6 @@ UINT ConfigManagerImpl::FindAcceptableTechnique(const TechniqueDesc **_pDesc, UI
     const TechniqueDesc &desc = *(_pDesc[n]);
     if( desc.flags != (desc.flags & caps) )
       continue;
-    if( (desc.flags & hasR2VB) &&
-        (std::find(r2vbFormats.begin(), r2vbFormats.end(), desc.r2vbFormat) == r2vbFormats.end()) )
-      continue;
     break;
   } while(++n < numDesc);
   return n;
@@ -228,32 +246,33 @@ bool ConfigManagerImpl::CheckFeatureSupportExact(DWORD _features) const
 
 bool ConfigManagerImpl::ReadableDepthSupported() const
 {
-  return caps & (/*hasDF16 |*/ hasRAWZ|hasINTZ) || AllowDF24(caps)
-         || (caps & hasRESZ) && NGlobal::GetVar("enableRESZ").GetInt64();
+  // Читаемая глубина в исходном стволе была завязана на vendor-форматы
+  // (INTZ/RAWZ/RESZ). Под Vulkan/DX12 depth-буфер читается как depth SRV, но
+  // признак этого — hasDepthSRV, а НЕ наличие depth-текстуры по
+  // CheckDeviceFormat(): на D3D9-бэкенде (в т.ч. под Wine/DXVK) тот запрос
+  // отвечает «да», а прочитать D24S8 как текстуру там нечем — vendor-форматы
+  // из ствола удалены. Следствие для D3D9-пути: читаемая глубина выключена,
+  // глубина в пост-проходы идёт из DoDepthOut (шейдеры пишут её в R32F RT,
+  // см. PFRenderInterface.cpp GetRuntimePins().DoDepthOutValue) — тот же
+  // путь, что на железе без INTZ. Замер кадра: docs/
+  // NVRHI_VULKAN_VS_DXVK_ISSUES.md, проблема 10.
+  return 0 != (caps & hasDepthSRV);
 }
 
 
 bool ConfigManagerImpl::StencilSupported(ERenderFormat _depthFormat) const
 {
-  return s_stencilEnable &&(FORMAT_DF24 != _depthFormat) && (FORMAT_DF16 != _depthFormat);
+  return s_stencilEnable && (FORMAT_D24S8 == _depthFormat);
 }
 
 
 ERenderFormat ConfigManagerImpl::GetDepthFormatPreffered() const
 {
-  if( caps & hasINTZ ) {
-    DebugTrace("DepthFormat: INTZ");
-    return FORMAT_INTZ;
-  } else if( caps & hasRAWZ ) {
-    DebugTrace("DepthFormat: RAWZ");
-    return FORMAT_RAWZ;
-  } else if( AllowDF24(caps) ) {
-    DebugTrace("DepthFormat: DF16");
-    return FORMAT_DF16;
-  }
-  //else if( caps & hasDF16 )
-  //  return FOURCC_DF16;
-
+  // Vendor-форматы (INTZ/RAWZ/DF16) удалены: единый формат глубины со
+  // stencil — D24S8 (под Vulkan/DX12 -> D24_UNORM_S8_UINT). Как attachment он
+  // годится всегда, а как читаемая глубина — только при hasDepthSRV (см.
+  // ReadableDepthSupported() и строку «Readable depth:» выше).
+  DebugTrace("DepthFormat: D24S8");
   return FORMAT_D24S8;
 }
 

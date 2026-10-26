@@ -10,6 +10,7 @@
 #include <Terrain\TerrainTextureCache.h>
 
 #include "Render/ImmediateRenderer.h"
+#include "Render/renderbackend.h"   // BackendRect for SetScissorRect (PLAN_NVRHI 2.8)
 #include "Render/renderresourcemanager.h"
 #include "Render/debugrenderer.h"
 #include "Render/WaterManager.h"
@@ -17,7 +18,6 @@
 #include "Render/ShadowManager.h"
 #include "Render/uirenderer.h"
 
-#include "Render/VendorFOURCC.h"
 
 #include "Render/GlobalMasks.h"
 
@@ -74,9 +74,6 @@ static NDebug::PerformanceDebugVar render_TheRest( "TheRest", "Render", 10, 10, 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static bool s_enableDXHints = false;
-REGISTER_VAR( "DXHints", s_enableDXHints, STORAGE_NONE );
-
 DEV_VAR_STATIC bool s_forceSky = true;
 REGISTER_DEV_VAR( "sky_force", s_forceSky, STORAGE_NONE );
 
@@ -121,10 +118,6 @@ REGISTER_CMD( rnd_PFX_new, EnablePFXInstancing );
 
 static bool s_readableDepth = false;
 static bool s_stencilSupported = true;
-static bool s_useRESZ = false;
-//static const bool s_useRESZ = false;
-static bool s_EnableRESZ = false;
-REGISTER_VAR("enableRESZ", s_EnableRESZ, STORAGE_USER);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -159,7 +152,7 @@ static bool g_enableDecalUnion = true;
 
 static struct SRegister_InterfaceFactorySetter
 {
-  static Render::Interface * CreateRenderInterface(HWND hwnd) { return new Render::DeviceLostWrapper<PF_Render::Interface>(hwnd); }
+  static Render::Interface * CreateRenderInterface(HWND hwnd) { return new Render::ReallocateWrapper<PF_Render::Interface>(hwnd); }
   SRegister_InterfaceFactorySetter() { Render::Interface::RegisterFactory( &CreateRenderInterface ); }
 } interfaceFactorySetter;
 
@@ -360,7 +353,7 @@ static StretcherTwoPass stretcher(&Lanczos2);
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Interface::Interface(HWND hwnd) : 
   Render::Interface(hwnd),
-  DeviceLostHandler(HANDLERPRIORITY_LOW),
+  ReallocateHandler(HANDLERPRIORITY_LOW),
   mainBatchQueue(Render::BatchQueue::INDEX_MAIN, batchQueueSorter),
   tempBatchQueue(Render::BatchQueue::INDEX_SECONDARY, batchQueueSorter),
   shadowBatchQueue(Render::BatchQueue::INDEX_SECONDARY, batchQueueSorter),
@@ -407,20 +400,18 @@ void Interface::CreateDepthTextures(UINT _width, UINT _height, UINT _copy_width,
   depthCopyShaderName = 0;
   s_stencilSupported = true;
 
-  GetDevice()->EvictManagedResources();
+  GetRenderer()->EvictManagedResources();
 
   if( s_readableDepth )
   {
     const IConfigManager* const configManager = GetIConfigManager();
-    s_useRESZ = s_EnableRESZ && !configManager->HasINTZ() &&
-                configManager->CheckFeatureSupportExact(IConfigManager::hasRESZ|IConfigManager::hasDF24);
-    ERenderFormat format = s_useRESZ ? FORMAT_D24S8 : configManager->GetDepthFormatPreffered();
+    ERenderFormat format = configManager->GetDepthFormatPreffered();
     s_stencilSupported = configManager->StencilSupported(format);
     D3DSURFACE_DESC desc = { Render::ConvertRenderFormat(format), D3DRTYPE_SURFACE, D3DUSAGE_DEPTHSTENCIL,
                              D3DPOOL_DEFAULT, D3DMULTISAMPLE_NONE, 0, _width, _height };
     pMainDepth = ::Create<Texture2D>(desc, HANDLERPRIORITY_HIGH);
 
-    depthCopyShaderName = (FORMAT_RAWZ == format) ? "DecodeRAWZ" : "DecodeZ";
+    depthCopyShaderName = "DecodeZ";
   }
   
   pMainRT1 = Render::CreateRenderTexture2D(_copy_width, _copy_height, FORMAT_R32F);
@@ -430,7 +421,7 @@ void Interface::CreateDepthTextures(UINT _width, UINT _height, UINT _copy_width,
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 inline DXSurfaceRef Interface::GetDepthSurface()
 {
-  return s_readableDepth && !s_useRESZ ? pMainDepth->GetSurface(0) : Render::GetRenderer()->GetDepthStencilSurface();  
+  return s_readableDepth ? pMainDepth->GetSurface(0) : Render::GetRenderer()->GetDepthStencilSurface();  
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -517,17 +508,15 @@ void Interface::Stop()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Interface::DropAllSamplerStates()
 {
-  const SamplerState &stateVS = SamplerState::PRESET_CLAMP_MIP_BILINEAR();
   const SamplerState &statePS = SamplerState::IsTriLinearDisabled() ? SamplerState::PRESET_CLAMP_MIP_BILINEAR()
                                                                     : SamplerState::PRESET_CLAMP_TRILINEAR();
   const Texture2DRef &emptyTexture = GetEmptyTexture2D();
   RenderStatesManager &rsManager = *GetStatesManager();
 
+  // Отдельного VS-диапазона сэмплеров больше нет (см. Sampler::MIN_VS_SAMPLER_INDEX),
+  // поэтому один проход по общим слотам.
   for (unsigned int i = Sampler::MIN_PS_SAMPLER_INDEX; i <= 9/*Sampler::MAX_PS_SAMPLER_INDEX*/; ++i)
     rsManager.SetSampler(i, statePS, emptyTexture);
-
-  for (unsigned int i = Sampler::MIN_VS_SAMPLER_INDEX; i <= 9/*Sampler::MAX_VS_SAMPLER_INDEX*/; ++i)
-    rsManager.SetSampler(i, stateVS, emptyTexture);
 }
 
 
@@ -570,7 +559,7 @@ bool Interface::RenderDecalMask( const BatchQueue &queue, NDb::MaterialPriority 
   DXSurfaceRef surf = decalRT->GetSurface(0);
   SmartRenderer::BindRenderTargetColor(0, surf);
   SmartRenderer::BindRenderTargetColor(1, 0);
-  Render::GetDevice()->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, 0, 0, 0), 0.0f, 0);
+  GetRenderer()->ClearColorOnly(Color(0, 0, 0, 0));
 
   if ( SmartRenderer::UseMainViewport() ) // smirnov [2009/7/15]: why set it here? decals doesn't set their own viewport.
     SmartRenderer::ResetMainViewport();   // Need to find proper place for this call.
@@ -591,36 +580,31 @@ bool Interface::RenderDecalMask( const BatchQueue &queue, NDb::MaterialPriority 
     statesManager.SetSampler(3, SamplerState::PRESET_CLAMP_POINT(), pMainRT1Copy);
     decalModeValue = NDb::DECALMODEPIN_DUALDEPTH;
   }
-  else if(s_useRESZ && NDb::MATERIALPRIORITY_TERRAINDECALS == priority) {
-    const SHMatrix &proj = pScene->GetSceneConstants().projection;
-    GetRenderer()->SetPixelShaderConstantsVector4(PSHADER_LOCALCONST0, CVec4(-proj._34, proj._33, 0.0f, 0.0f));
-    decalModeValue = NDb::DECALMODEPIN_ZDECODE;
-  }
   else
     decalModeValue = NDb::DECALMODEPIN_STANDARD;
   
   // Setup states for both passes
   float decalMaskWeight = 1.0f;
-  GetDevice()->SetPixelShaderConstantF(96, &decalMaskWeight, 1);
-  GetDevice()->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, TRUE);
-  GetDevice()->SetRenderState(D3DRS_SRCBLENDALPHA, D3DBLEND_ONE);
-  GetDevice()->SetRenderState(D3DRS_DESTBLENDALPHA, D3DBLEND_ONE);
-  GetDevice()->SetSamplerState(0, D3DSAMP_BORDERCOLOR, 0);
+  GetRenderer()->SetPixelShaderConstantsFloat(c96, decalMaskWeight);
+  statesManager.SetStateDirect(D3DRS_SEPARATEALPHABLENDENABLE, TRUE);
+  statesManager.SetStateDirect(D3DRS_SRCBLENDALPHA, D3DBLEND_ONE);
+  statesManager.SetStateDirect(D3DRS_DESTBLENDALPHA, D3DBLEND_ONE);
+  statesManager.SetSamplerStateDirect(0, D3DSAMP_BORDERCOLOR, 0);
   
   // Setup states for pass 1
-  GetDevice()->SetRenderState(D3DRS_BLENDOPALPHA, D3DBLENDOP_MAX);
+  statesManager.SetStateDirect(D3DRS_BLENDOPALPHA, D3DBLENDOP_MAX);
   
   queue.Render(priority);
 
   // Render second pass (don't touch decals RGB)
   decalMaskWeight = 0.0f;
-  GetDevice()->SetPixelShaderConstantF(96, &decalMaskWeight, 1);
-  GetDevice()->SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
-  GetDevice()->SetRenderState(D3DRS_ALPHAREF, 1);
-  GetDevice()->SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_GREATEREQUAL);
-  GetDevice()->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_ALPHA);
-  GetDevice()->SetRenderState(D3DRS_BLENDOPALPHA, D3DBLENDOP_REVSUBTRACT);
-  GetDevice()->SetSamplerState(0, D3DSAMP_BORDERCOLOR, 0);
+  GetRenderer()->SetPixelShaderConstantsFloat(c96, decalMaskWeight);
+  statesManager.SetStateDirect(D3DRS_ALPHATESTENABLE, TRUE);
+  statesManager.SetStateDirect(D3DRS_ALPHAREF, 1);
+  statesManager.SetStateDirect(D3DRS_ALPHAFUNC, D3DCMP_GREATEREQUAL);
+  statesManager.SetStateDirect(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_ALPHA);
+  statesManager.SetStateDirect(D3DRS_BLENDOPALPHA, D3DBLENDOP_REVSUBTRACT);
+  statesManager.SetSamplerStateDirect(0, D3DSAMP_BORDERCOLOR, 0);
 
   queue.Render(priority);
 
@@ -628,13 +612,13 @@ bool Interface::RenderDecalMask( const BatchQueue &queue, NDb::MaterialPriority 
   SmartRenderer::BindRenderTargetColor(0, oldRT0);
 
   // Blend decals on top of original RT
-  GetDevice()->SetRenderState(D3DRS_COLORWRITEENABLE, 0xf);
-  GetDevice()->SetRenderState(D3DRS_ZENABLE, FALSE);
-  GetDevice()->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-  GetDevice()->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
-  GetDevice()->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
-  GetDevice()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-  GetDevice()->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+  statesManager.SetStateDirect(D3DRS_COLORWRITEENABLE, 0xf);
+  statesManager.SetStateDirect(D3DRS_ZENABLE, FALSE);
+  statesManager.SetStateDirect(D3DRS_ZWRITEENABLE, FALSE);
+  statesManager.SetStateDirect(D3DRS_BLENDOP, D3DBLENDOP_ADD);
+  statesManager.SetStateDirect(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
+  statesManager.SetStateDirect(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+  statesManager.SetStateDirect(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
   GetImmRenderer()->RenderScreenQuad(ImmRenderer::Params("DiffuseMap", decalRT));
 
   SmartRenderer::BindTexture(2, 0);
@@ -646,10 +630,10 @@ bool Interface::RenderDecalMask( const BatchQueue &queue, NDb::MaterialPriority 
 
   // Reset states
   statesManager.SetStateDirect(D3DRS_ZWRITEENABLE, 1);
-  GetDevice()->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
-  GetDevice()->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
-  GetDevice()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-  GetDevice()->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+  statesManager.SetStateDirect(D3DRS_ALPHATESTENABLE, FALSE);
+  statesManager.SetStateDirect(D3DRS_BLENDOP, D3DBLENDOP_ADD);
+  statesManager.SetStateDirect(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+  statesManager.SetStateDirect(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 
   return true;
 }
@@ -684,11 +668,6 @@ void Interface::RenderDecals( const BatchQueue &queue, NDb::MaterialPriority pri
     statesManager.SetSampler(3, SamplerState::PRESET_CLAMP_POINT(), pMainRT1Copy);
     decalModeValue = NDb::DECALMODEPIN_DUALDEPTH;
   }
-  else if(s_useRESZ && NDb::MATERIALPRIORITY_TERRAINDECALS == priority) {
-    const SHMatrix &proj = pScene->GetSceneConstants().projection;
-    GetRenderer()->SetPixelShaderConstantsVector4(PSHADER_LOCALCONST0, CVec4(-proj._34, proj._33, 0.0f, 0.0f));
-    decalModeValue = NDb::DECALMODEPIN_ZDECODE;
-  }
   else
     decalModeValue = NDb::DECALMODEPIN_STANDARD;
 
@@ -710,17 +689,6 @@ void Interface::RenderOpaque( const BatchQueue &queue, NDb::MaterialPriority pri
 {
   if (!g_bDrawOpaque)
     return;
-/*
-  {
-    IDirect3DSurface9 *pDS = 0;
-    HRESULT hr = GetDevice()->GetDepthStencilSurface(&pDS);
-    if( SUCCEEDED(hr) && pDS ) {
-      D3DSURFACE_DESC desc;
-      hr = pDS->GetDesc(&desc);
-      pDS->Release();
-    }
-  } */
-
   RenderSequenceMarker(priority);
 
   // by default clear stencil marks (shadow/decal), may be overridden in material
@@ -777,7 +745,9 @@ void Interface::RenderMainPassOpaque( const BatchQueue &queue )
   const bool renderingReflection = WaterManager::Get()->IsReflectionRendering();
   if(!renderingReflection)
   {
-    GetDevice()->SetScissorRect(&renderArea);
+    const BackendRect scissor = MakeBackendRect(renderArea.left, renderArea.top,
+                                                renderArea.right, renderArea.bottom);
+    GetRenderer()->SetScissorRect(&scissor);
     statesManager.SetStateDirect(D3DRS_SCISSORTESTENABLE, TRUE);
     RenderSequenceMarker("SILHOUETTE");
     RenderSilhouette(queue);
@@ -799,18 +769,13 @@ void Interface::RenderMainPassOpaque( const BatchQueue &queue )
   const bool copyDepth = s_readableDepth && !renderingReflection;
   const bool dualDepthCopy = !s_stencilSupported && !queue.IsEmpty(NDb::MATERIALPRIORITY_WATERDECALS);
   NI_ASSERT(copyDepth || !dualDepthCopy, "dualDepthCopy couldn't be true while copyDepth is false");
-  NI_ASSERT(!(s_useRESZ && dualDepthCopy), "dualDepthCopy and useRESZ couldn't be true at once");
 
   // Copy depth buffer for terrain decals (and water decals, if stencil support is absent) rendering.
-  Render::Texture2D* const pDepthTex = s_useRESZ ? pMainDepth :
-                                       dualDepthCopy ? pMainRT1Copy.GetPtr() : pMainRT1.GetPtr();
+  Render::Texture2D* const pDepthTex = dualDepthCopy ? pMainRT1Copy.GetPtr() : pMainRT1.GetPtr();
   if(copyDepth) {
     const bool hasTerrainDecals = !queue.IsEmpty(NDb::MATERIALPRIORITY_TERRAINDECALS) || !queue.IsEmpty(NDb::MATERIALPRIORITY_TERRAINDOMINATIONDECALS);
-    if(hasTerrainDecals && s_useRESZ)
-      CopyDepthRESZ();
-    else
-      if(hasTerrainDecals || dualDepthCopy)
-        CopyDepth( pDepthTex->GetSurface(0) );
+    if(hasTerrainDecals || dualDepthCopy)
+      CopyDepth( pDepthTex->GetSurface(0) );
   }
   if(!renderingReflection)
   {
@@ -828,12 +793,8 @@ void Interface::RenderMainPassOpaque( const BatchQueue &queue )
     RenderSky(queue);
 
   // Copy depth buffer for water, distortion, shadows etc.
-  if(copyDepth) {
-    if(s_useRESZ)
-      CopyDepthRESZ();
-    else
+  if(copyDepth)
     CopyDepth( pMainRT1->GetSurface(0) );
-  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1146,29 +1107,6 @@ void Interface::CopyDepth(const DXSurfaceRef& _dest)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Interface::CopyDepthRESZ()
-{
-  static const D3DXVECTOR3 vDummyPoint(0.0f, 0.0f, 0.0f);
-  static const DipDescriptor desc(RENDERPRIMITIVE_POINTLIST, 0, 0, 1, 0, 1);
-  static const float pointSizeOne = 1.0f;
-
-  // Bind destination depth-stencil texture to texture sampler 0
-  SmartRenderer::BindTexture(0, pMainDepth);
-  // Perform a dummy draw call to ensure texture sampler 0 is set before the resolve is triggered
-  RenderStatesManager& statesManager = *GetStatesManager();
-  statesManager.SetStateDirect(D3DRS_ZENABLE, FALSE);
-  statesManager.SetStateDirect(D3DRS_COLORWRITEENABLE, 0);
-  statesManager.SetStateDirect( D3DRS_POINTSIZE, (DWORD&)(pointSizeOne) );
-  SmartRenderer::DrawPrimitiveUP( desc, vDummyPoint, sizeof(D3DXVECTOR3) );
-  statesManager.SetStateDirect(D3DRS_COLORWRITEENABLE, 0x0F);
-  statesManager.SetStateDirect(D3DRS_ZENABLE, TRUE);
-  // Trigger the depth buffer resolve; after this call texture sampler 0
-  // will contain the contents of the resolve operation
-  statesManager.SetStateDirect(D3DRS_POINTSIZE, RESZ_CODE);
-
-  statesManager.SetStateDirect( D3DRS_POINTSIZE, (DWORD&)(pointSizeOne) );
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Interface::SetPostFXParams( const NDb::PostFXParams* params )
 {
   pPostFXMan->SetDBParams( params );
@@ -1191,10 +1129,10 @@ void Interface::DoPostFX(const SceneConstants & _sceneConsts)
 
     SwapRTInChain();
 
-    RECT rc = { max(x, renderArea.left), max(y, renderArea.top),
-                min(x + w, renderArea.right), min(y + h, renderArea.bottom) };
+    BackendRect rc = MakeBackendRect(max(x, renderArea.left), max(y, renderArea.top),
+                                     min(x + w, renderArea.right), min(y + h, renderArea.bottom));
     statesManager.SetStateDirect(D3DRS_SCISSORTESTENABLE, TRUE);
-    GetDevice()->SetScissorRect(&rc);
+    GetRenderer()->SetScissorRect(&rc);
 
     pPostFX->Apply( _sceneConsts, secondRTInChain, pPostFXMan->GetCoeff(), g_PostFXEnabled, g_SharpEnabled,
                     colorSaturation, disableWarFog ? 0 : pMainRT1.GetPtr(), pPostFXMan->GetPivotParams(),
@@ -1203,7 +1141,7 @@ void Interface::DoPostFX(const SceneConstants & _sceneConsts)
     rc.left = rc.top = 0;
     rc.right  = firstRTInChain->GetWidth();
     rc.bottom = firstRTInChain->GetHeight();
-    GetDevice()->SetScissorRect(&rc);
+    GetRenderer()->SetScissorRect(&rc);
 
     SmartRenderer::ResetMainViewport();
   }
@@ -1264,8 +1202,6 @@ void Interface::RenderMainScene(bool GIsEditor)
 
   // Add scene objects
   mainBatchQueue.Clear();
-  mainBatchQueue.EnableResourceManagment(s_enableDXHints);
-  mainBatchQueue.OnNextFrame();
 
   if ( pScene->NeedDebugRender() || showAABBs )
   {
@@ -1304,8 +1240,6 @@ void Interface::RenderMainScene(bool GIsEditor)
     pTerrain->RenderAOESelection_Deprecated(mainBatchQueue);
 
   ProcessSilhouettes(sceneConsts);
-
-  mainBatchQueue.ManageResources();
 
   render_Gather.Stop();
 
@@ -1488,7 +1422,7 @@ void Interface::PrepareForUI(bool _isEditor)
         stretcher.Stretch(firstRTInChain, &rcSrc, firstRTInChain, secondRTInChain);
       else
       {
-        GetDevice()->StretchRect(::Get(pSrc), &AsRect(rcSrc), ::Get(secondRTInChain->GetSurface(0)), NULL, D3DTEXF_LINEAR);
+        GetRenderer()->StretchSurfaceRect(::Get(pSrc), &AsRect(rcSrc), ::Get(secondRTInChain->GetSurface(0)), NULL, D3DTEXF_LINEAR);
         SwapRTInChain();
       }
     }
@@ -1673,18 +1607,17 @@ void Interface::SetDefaultStates()
   rsManager.SetStateDirect(D3DRS_FILLMODE, D3DFILL_SOLID);
   rsManager.SetStencilState(STENCILSTATE_IGNORE);
 
-  IDirect3DDevice9* const pDevice = GetDevice();
   // GetStatesManagerOld()->SetMipMapBias( miplodbias );
   //CRAP{ ��������� � SamplerState
   for(size_t samplerIdx = 0; samplerIdx < 16; ++samplerIdx)
   {
-    pDevice->SetSamplerState(samplerIdx, D3DSAMP_MIPMAPLODBIAS, (DWORD&)miplodbias);
+    rsManager.SetSamplerStateDirect((unsigned)samplerIdx, D3DSAMP_MIPMAPLODBIAS, (DWORD&)miplodbias);
   }
   //CRAP}
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Interface::OnDeviceReset()
+void Interface::OnResourcesReallocate()
 {
   SmartRenderer::SetDefaultRenderTarget( GetRenderer()->GetColorSurface(), GetDepthSurface() );
   SmartRenderer::BindRenderTargetDefault();
@@ -1731,7 +1664,7 @@ void Interface::InvalidateResources()
   pRT0Big = 0;
   pRT0BigCopy = 0;
   
-  GetDevice()->EvictManagedResources();
+  GetRenderer()->EvictManagedResources();
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

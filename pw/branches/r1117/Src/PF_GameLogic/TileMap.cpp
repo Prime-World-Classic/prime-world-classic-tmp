@@ -186,6 +186,7 @@ TileMap::TileMap( )
 , mapModeBase( 0 )
 , mapModeBaseDynamic( 0 )
 , mapModeCheck( 0 )
+, pPassOverride( 0 )
 {
 }
 
@@ -198,6 +199,7 @@ TileMap::TileMap( PFWorld* pWorld )
 , mapModeBase( 0 )
 , mapModeBaseDynamic( 0 )
 , mapModeCheck( 0 )
+, pPassOverride( 0 )
 {
 	SetMode(MAP_MODE_ALL);
 	BuildMarkMaps();
@@ -389,14 +391,30 @@ bool TileMap::CanUnitGo( int tileSize, int tileSizeDynamic, const SVector& tile 
   //NI_PROFILE_HEAVY_FUNCTION
 
   if ( IsPointOutsideMap( tile.x, tile.y ) )
-		return false;
-
-  const CellType& data = GetCell( tile.x, tile.y );
+		return false;  const CellType& data = GetCell( tile.x, tile.y );
   const int checkTileSize = tileSize * mapModeBase + tileSizeDynamic * mapModeBaseDynamic;
 	const int check = (data | (data - checkTileSize)) & mapModeCheck;
+  if ( check != 0 && pPassOverride && ( mapMode & MAP_MODE_ALL_STATICS ) != 0 && pPassOverride->Contains( tile ) )
+    return CanUnitGoIgnoringStatics( tileSize, tileSizeDynamic, data );   // ghost corridor: static layers do not count here
   return check == 0;
 }
 
+bool TileMap::CanUnitGoIgnoringStatics( int tileSize, int tileSizeDynamic, const CellType& data ) const
+{
+  // the same as in SetMode(), for the current mode without static layers
+  int modeBase = 0;
+  for ( int base = 1, mode = mapMode & ~MAP_MODE_ALL_STATICS; mode; base <<= LAYER_BITS, mode >>= 1 )
+  {
+    if ( mode & 1 )
+      modeBase |= base;
+  }
+  const int modeCheck       = modeBase << (LAYER_BITS-1);
+  const int modeBaseDynamic = modeBase & 0xFF00FF00;
+  modeBase                  = modeBase & 0x00FF00FF;
+
+  const int checkTileSize = tileSize * modeBase + tileSizeDynamic * modeBaseDynamic;
+  return ( (data | (data - checkTileSize)) & modeCheck ) == 0;
+}
 bool TileMap::CanUnitGoDebug( int x, int y, int mode, int tileSize ) const
 {
   if ( IsPointOutsideMap( x, y ) )

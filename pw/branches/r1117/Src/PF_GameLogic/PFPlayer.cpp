@@ -44,6 +44,7 @@ PFPlayer::PFPlayer( PFWorld * _world,
 , aiStartTimer( 0 )
 , disconnected(false)
 , leaver(false)
+, leftBattle(false)
 , timeWhenDisconnected(0)
 , behaviourTracker()
 , chatMuted(chatMuted)
@@ -53,6 +54,7 @@ PFPlayer::PFPlayer( PFWorld * _world,
 
 PFPlayer::PFPlayer()
 : chatMuted(false)
+, leftBattle(false)
 {
 
 }
@@ -75,6 +77,11 @@ void PFPlayer::SetIsPlaying(bool _isPlaying)
   if (isPlaying != _isPlaying)
   {
     isPlaying = _isPlaying;
+
+    // Back in the battle (Active/Away) - allies lose the Closed Ranks stack for this player
+    if (isPlaying)
+      leftBattle = false;
+
     if (aiForLeaversEnabled)
     {
       if (isPlaying)
@@ -174,7 +181,10 @@ void PFPlayer::SetDisconnected(const bool _disconnected, const bool _leaver)
     disconnected = _disconnected;
 
     if (disconnected)
+    {
       timeWhenDisconnected = timer::Now();
+      leftBattle = true;
+    }
   }
 
   // NOTE: игрок не может перестать быть ливером

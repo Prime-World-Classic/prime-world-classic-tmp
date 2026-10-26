@@ -4,6 +4,7 @@
 
 #include "../MeshConverter/MeshHeader.h"
 #include "smartrenderer.h"
+#include "renderbackend.h"   // kInstanceStream
 #include "InstancedMeshResource.h"
 #include <MemoryLib/UserMessage.h>
 
@@ -159,7 +160,7 @@ InstancedMeshGeometry::InstancedMeshGeometry( const H6GeometryFileHeader* pH6Geo
 	// Make vertex declaration
 	VertexFormatDescriptor formatDescriptor;
 	formatDescriptor.AssignVertexElements( fragment.vertexElementDescriptor[0], fragment.vertexElementDescriptor.size() );
-	formatDescriptor.AddVertexElement(VertexElementDescriptor(1, 0, VERTEXELEMENTTYPE_SHORT2, VERETEXELEMENTUSAGE_BLENDINDICES, 0));
+	formatDescriptor.AddVertexElement(VertexElementDescriptor(kInstanceStream, 0, VERTEXELEMENTTYPE_SHORT2, VERETEXELEMENTUSAGE_BLENDINDICES, 0));
 	pDeclaration = SmartRenderer::GetVertexFormatDeclaration(formatDescriptor);
 
 	const char*   pVBSrcData = (const char*)pH6GeometryFileHeader + pH6GeometryFileHeader->vbOffset;
@@ -184,20 +185,20 @@ void InstancedMeshGeometry::CreateBuffersHWI(char const *pVtxData, unsigned int 
   if(!pVB)
     UserMessage::ShowMessageAndTerminate(EXCEPTION_BREAKPOINT, "Can't allocate DX resources");
 
-  if( char *pBuff = LockVB<char>(Get(pVB), 0) )
+  if( char *pBuff = LockVB<char>(Get(pVB), LOCK_DEFAULT) )
 	{
 		memcpy(pBuff, pVtxData, originalVBSize);
-		pVB->Unlock();
+		BackendUnlockBuffer(Get(pVB));
 	}
 
 	// Create & fill index buffer
 	const UINT dataSize = numPrimitives * 3 * sizeof(UINT);
 	pIB = CreateIB(dataSize, RENDER_POOL_MANAGED);
 	{
-		if( UINT* const pBuff = LockIB(Get(pIB), 0) )
+		if( UINT* const pBuff = LockIB(Get(pIB), LOCK_DEFAULT) )
     {
 			memcpy(pBuff, pIdxData, dataSize);
-      pIB->Unlock();
+      BackendUnlockBuffer(Get(pIB));
 		}
 	}
 }
@@ -244,7 +245,7 @@ void InstancedMeshGeometry::Draw(InstancedPrimitive *pP)
   dd.numVertices     = numVertices;
   dd.primitiveCount  = numPrimitives;
   SmartRenderer::EnableHardwareInstancing(pP->numInstances);
-  SmartRenderer::BindInstanceVB();
+  SmartRenderer::BindInstanceCounter();
 
 	SmartRenderer::DrawIndexedPrimitive(dd);
 

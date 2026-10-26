@@ -286,6 +286,9 @@ public:
   void AddAI( PFBaseHero* hero, int lineNumber );
   void RemoveAI( PFBaseHero* hero );
 
+  // "Closed Ranks": allies of players who left the battle get a stacking status (see PFWorld.cpp)
+  void UpdateLeaverBonus();
+
   const NDb::BotsSettings * GetBotsSettings() const;
 
   void NotifyTalentCastProcessed(const NWorld::PFTalent*);

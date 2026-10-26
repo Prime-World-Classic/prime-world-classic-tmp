@@ -49,9 +49,14 @@ enum MoveFlags
 };
 
 
+// ghost mode bit (not in the DB): static obstacles stay obstacles except in the unit's ghost corridor (see PFApplGhostMove)
+const int GHOSTMOVE_CORRIDOR_FLAG = 0x100;
+class GhostCorridorScope;
+
 class MovingUnit
 {
 	friend class  PFBaseMovingUnit;
+  friend class  GhostCorridorScope;
   friend class  CollisionResolver;
 	friend struct PredictedUnitState;
 	friend struct MovingUnitsCollector;
@@ -265,9 +270,6 @@ private:
 	bool UpdatePath();
 	bool ValidatePath(bool fast);
   bool ValidatePos( CVec2 pos );
-  // ghost move restricted to a corridor (see PFApplGhostMove)
-  bool IsOutsideGhostCorridor( CVec2 const& pos );
-  bool IsStaticPathOutsideGhostCorridor( CCommonStaticPath const* pStatic );
 	bool CheckSplineControlPoint();
 	bool BypassPoint(CVec2 const& point, int pointSize, float maxOverhead);
 
@@ -303,6 +305,7 @@ private:
 	bool FindFreePlace(CVec2 const& newPosition, CVec2 const &attractPoint, float radius, float attractPower, CVec2& foundPosition, bool ignoreUnits, bool nativeTerrainOnly, int mapModeFlags = 0, bool checkLineOfSight = false);
   bool FindFreePlace2(CVec2 const& newPosition,  CVec2 const &attractPoint, float radius, CVec2& foundPosition, bool ignoreUnits, bool nativeTerrainOnly, float size = -1.0f, int mapModeFlags = 0, bool checkLineOfSight = false);
   bool CanOccupyPosition( CVec2 const& position );
+  bool FindRoadPlace( CVec2 const& position, float radius, CVec2& foundPosition );
 
 	// client notifications
 	bool IsClientUnit() const;
@@ -410,6 +413,9 @@ public:
   { return world.FindFreePlace2(newPosition, attractPoint, radius, foundPosition, ignoreUnits, nativeTerrainOnly, -1.0f, mapModeFlags, checkLineOfSight); }
   inline bool CanOccupyPosition( CVec2 const& position )
   { return world.CanOccupyPosition( position ); }
+  // nearest free place on a road (not in a small clearing inside a forest), see MovingUnit::FindRoadPlace
+  inline bool FindRoadPlace( CVec2 const& position, float radius, CVec2& foundPosition )
+  { return world.FindRoadPlace( position, radius, foundPosition ); }
 
   bool PlaceUnit( const CVec2& newPosition, bool ignoreUnits, bool nativeTerrainOnly, bool notifyClient = false );
 	void PlaceUnitWithPush( const CVec2& newPosition, float pushRadius, bool force = false, bool nativeTerrainOnly = false );

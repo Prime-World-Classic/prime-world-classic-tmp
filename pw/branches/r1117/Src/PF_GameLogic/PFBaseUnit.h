@@ -1136,9 +1136,8 @@ public:
 
   virtual const IMiscFormulaPars* FindApplicator(   const char* name, const IMiscFormulaPars* pMisc, ApplicatorSearchType searchType ) const;
   virtual int                     CountApplicators( const char* name, const IMiscFormulaPars* pMisc, ApplicatorSearchType searchType ) const;
-  // ghost move restricted to a corridor (see PFApplGhostMove)
-  bool                            HasGhostCorridor() const;
-  bool                            IsInGhostCorridor( CVec2 const& pos ) const;
+  // ghost move restricted to a corridor (see PFApplGhostMove): the corridor points and radius, empty if none
+  void                            CollectGhostCorridor( vector<CVec2> & points, float & radius ) const;
   virtual IMiscFormulaPars const* GetAblt(AbilityID abilityId) const;
   virtual const IMiscFormulaPars* FindApplicator(   const char* name, const IMiscFormulaPars* pMisc, ApplicatorSearchType searchType, int idx ) const;
 

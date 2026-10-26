@@ -1678,7 +1678,8 @@ namespace NWorld
       }
     }
 
-    ghostMoveIndex = pMovingUnit->SetGhostMode( GetDB().collisionFlags, false );
+    const int ghostMode = GetDB().collisionFlags | ( HasCorridor() ? GHOSTMOVE_CORRIDOR_FLAG : 0 );
+    ghostMoveIndex = pMovingUnit->SetGhostMode( ghostMode, false );
 
     return false;
   }
@@ -1699,17 +1700,16 @@ namespace NWorld
     }
 
     // the current place is free (no obstacles, no other units): the unit stays where it is. Placing it anyway snaps it
-    // to the tile centre, a visible jerk when a ghost move status ends (Laguna's trail, the Mana Wyrm's ethereal form)
-    if (!pMovingUnit->IsDead() && !pMovingUnit->CanOccupyPosition( pMovingUnit->GetPosition().AsVec2D() ))
+    // to the tile centre, a visible jerk when a ghost move status ends (Laguna's trail, the Mana Wyrm's ethereal form)    if (!pMovingUnit->IsDead() && !pMovingUnit->CanOccupyPosition( pMovingUnit->GetPosition().AsVec2D() ))
     {
-      // the unit may be deep inside an obstacle (Laguna walks along the jellyfish trail through a forest), while the
-      // placing below looks for a free place only ~10 m around and leaves the unit inside the obstacle if there is none:
-      // find the nearest free place (static obstacles only) in a larger radius first
-      const float exitSearchRadius = 40.0f;
+      // the unit may be deep inside an obstacle (Laguna's jellyfish trail through a forest), while the placing below looks
+      // for a free place only ~10 m around and takes any free tile, a small clearing inside the forest too: find the
+      // nearest place on a road first
+      const float roadSearchRadius = 40.0f;
       CVec2 placePos = pMovingUnit->GetPosition().AsVec2D();
-      CVec2 freePos;
-      if ( pMovingUnit->FindFreePlace( placePos, exitSearchRadius, freePos, true ) )
-        placePos = freePos;
+      CVec2 roadPos;
+      if ( pMovingUnit->FindRoadPlace( placePos, roadSearchRadius, roadPos ) )
+        placePos = roadPos;
 
       if ( GetDB().pushUnits )
       {
@@ -1718,9 +1718,9 @@ namespace NWorld
       else
       {
         pMovingUnit->TeleportTo( placePos, true, false );
-      } 
+      }
     }
-    Base::Stop();
+Base::Stop();
   }
 
 }
@@ -1729,21 +1729,11 @@ namespace NWorld
 {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  bool PFBaseUnit::HasGhostCorridor() const
+  void PFBaseUnit::CollectGhostCorridor( vector<CVec2> & points, float & radius ) const
   {
-    for ( ring::Range<PFBaseApplicator::AppliedRing> it( appliedApplicators ); it; ++it )
-    {
-      PFBaseApplicator const & appl = *it;
-      if ( appl.GetTypeId() == PFApplGhostMove::typeId && appl.IsAlive() && appl.IsEnabled()
-        && static_cast<PFApplGhostMove const &>( appl ).HasCorridor() )
-        return true;
-    }
-    return false;
-  }
+    points.clear();
+    radius = 0.0f;
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  bool PFBaseUnit::IsInGhostCorridor( CVec2 const& pos ) const
-  {
     for ( ring::Range<PFBaseApplicator::AppliedRing> it( appliedApplicators ); it; ++it )
     {
       PFBaseApplicator const & appl = *it;
@@ -1753,7 +1743,8 @@ namespace NWorld
       if ( !ghost.HasCorridor() )
         continue;
 
-      const float radius2 = ghost.GetCorridorRadius() * ghost.GetCorridorRadius();
+      if ( ghost.GetCorridorRadius() > radius )
+        radius = ghost.GetCorridorRadius();
       const CPtr<PFBaseUnit> pGhostOwner = ghost.GetAbilityOwner();
 
       for ( ring::Range<PFBaseApplicator::NamedRing> nit( namedApplicators ); nit; ++nit )
@@ -1768,15 +1759,13 @@ namespace NWorld
         {
           if ( pAncestor->GetTarget().IsPosition() )
           {
-            if ( fabs2( pAncestor->GetTarget().GetPosition().AsVec2D() - pos ) <= radius2 )
-              return true;
+            points.push_back( pAncestor->GetTarget().GetPosition().AsVec2D() );
             break;
           }
           pAncestor = IsValid( pAncestor->GetParentAppl() ) ? pAncestor->GetParentAppl().GetPtr() : 0;
         }
       }
     }
-    return false;
   }
 
 }

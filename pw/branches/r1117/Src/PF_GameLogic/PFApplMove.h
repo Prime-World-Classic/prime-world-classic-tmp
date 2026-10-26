@@ -300,9 +300,10 @@ protected:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Ghost move restricted to a corridor: if the ability has a constant named "GhostCorridor_<name>", static obstacles
-// (trees, stones, buildings) are passed only within its value (radius) from the corridor points. A corridor point is
-// the position the applicator <name> on the unit came from (Laguna: the jellyfish trail point that marks her
-// "in the trail"), see PFBaseUnit::IsInGhostCorridor and MovingUnit::IsOutsideGhostCorridor.
+// (trees, stones, buildings) stay obstacles, except within its value (radius) from the corridor points, and the path
+// finding leads the unit along the corridor like along a road. A corridor point is the position the applicator <name>
+// on the unit came from (Laguna: the jellyfish trail points around her), see PFBaseUnit::CollectGhostCorridor and
+// GhostCorridorScope in PFBaseMovingUnit.cpp.
 class PFApplGhostMove : public DBLinker<PFApplBuff, NDb::GhostMoveApplicator>
 {
   WORLD_OBJECT_METHODS(0xB74F481, PFApplGhostMove);

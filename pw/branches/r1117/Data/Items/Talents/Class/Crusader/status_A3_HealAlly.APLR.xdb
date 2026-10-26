@@ -102,9 +102,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FQ8AAAACAAAAFgAAACwAAABWYW1wUmVzU3RhcnRlZABVi+yD7AxoAAAAAItFCIsQi00Ii4KIAQAA/9DcHXsAAADf4PbERHo2i00MixGLTQyLgsgAAAD/0ItNDIsRi00Mi4LMAAAA3V34/9DcXfjf4PbEAXUJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcMAAAAAAAAAAA==</compiledString>
+					<compiledString>FQ8AAAACAAAAFwAAAC0AAABWYW1wUmVzU3RhcnRlZABVi+yD7BhWaAAAAACLRQiLEItNCIuCiAEAAP/Q3B0UAQAA3+D2xEQPiskAAABqE4tNDIsRi00Mi4IsAQAA/9APtvBqFItNDIsRi00Mi4IsAQAA/9APtsg78X4Mx0X8AQAAAOmAAAAAahOLVQyLAotNDIuQLAEAAP/SD7bwahSLRQyLEItNDIuCLAEAAP/QD7bIO/F9CcdF+AAAAADrQ4tVDIsCi00Mi5DIAAAA/9KLRQyLEItNDIuCzAAAAN1d8P/Q3F3w3+D2xEF6CcdF7AEAAADrB8dF7AAAAACLTeyJTfiLVfiJVfyDffwAdQnHRegBAAAA6wfHRegAAAAAikXoXovlXcMAAAAAAAAAAA==</compiledString>
 					<returnType>bool</returnType>
-					<sString>sender.vVampResStarted == 0 &amp;&amp; rBaseStamina &lt;= rBaseWill</sString>
+					<sString>sender.vVampResStarted == 0 &amp;&amp; !(pSecond-&gt;IsRecommended(19) &gt; pSecond-&gt;IsRecommended(20) ? 1 : pSecond-&gt;IsRecommended(19) &lt; pSecond-&gt;IsRecommended(20) ? 0 : rBaseStamina&gt;=rBaseWill)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -149,9 +149,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FQ8AAAACAAAAFgAAACwAAABWYW1wUmVzU3RhcnRlZABVi+yD7AxoAAAAAItFCIsQi00Ii4KIAQAA/9DcHXsAAADf4PbERHo2i00MixGLTQyLgsgAAAD/0ItNDIsRi00Mi4LMAAAA3V34/9DcXfjf4PbEBXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcMAAAAAAAAAAA==</compiledString>
+					<compiledString>FQ8AAAACAAAAFwAAAC0AAABWYW1wUmVzU3RhcnRlZABVi+yD7BhWaAAAAACLRQiLEItNCIuCiAEAAP/Q3B0UAQAA3+D2xEQPiskAAABqE4tNDIsRi00Mi4IsAQAA/9APtvBqFItNDIsRi00Mi4IsAQAA/9APtsg78X4Mx0X8AQAAAOmAAAAAahOLVQyLAotNDIuQLAEAAP/SD7bwahSLRQyLEItNDIuCLAEAAP/QD7bIO/F9CcdF+AAAAADrQ4tVDIsCi00Mi5DIAAAA/9KLRQyLEItNDIuCzAAAAN1d8P/Q3F3w3+D2xEF6CcdF7AEAAADrB8dF7AAAAACLTeyJTfiLVfiJVfyDffwAdAnHRegBAAAA6wfHRegAAAAAikXoXovlXcMAAAAAAAAAAA==</compiledString>
 					<returnType>bool</returnType>
-					<sString>sender.vVampResStarted == 0 &amp;&amp; rBaseStamina &gt; rBaseWill</sString>
+					<sString>sender.vVampResStarted == 0 &amp;&amp; (pSecond-&gt;IsRecommended(19) &gt; pSecond-&gt;IsRecommended(20) ? 1 : pSecond-&gt;IsRecommended(19) &lt; pSecond-&gt;IsRecommended(20) ? 0 : rBaseStamina&gt;=rBaseWill)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>

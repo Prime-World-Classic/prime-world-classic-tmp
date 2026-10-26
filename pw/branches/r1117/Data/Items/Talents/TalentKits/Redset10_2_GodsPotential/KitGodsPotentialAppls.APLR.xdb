@@ -31,9 +31,9 @@
 					<caption>KitStrOrInt2 addStr</caption>
 					<customApplyType>None</customApplyType>
 					<enabled>
-						<compiledString>FRkAAAACAAAATQAAAGMAAABHb2RzUG90ZW50aWFsU2V0X0NvdW50ZXIAVYvsg+wMi0UIixCLTQiLgrgAAAD/0ItNCIsRi00Ii4K8AAAA3V34/9DcXfjf4PbEQXoraAAAAACLTQiLEYtNCIuCiAEAAP/Q3B2FAAAA3+D2xER6CcdF9AEAAADrB8dF9AAAAACKRfSL5V3DAAAAAAAAAEA=</compiledString>
+						<compiledString>FRkAAAACAAAA4QAAAPcAAABHb2RzUG90ZW50aWFsU2V0X0NvdW50ZXIAVYvsg+wYVmoPi0UIixCLTQiLgiwBAAD/0A+28GoQi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqD4tVCIsCi00Ii5AsAQAA/9IPtvBqEItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkLgAAAD/0otFCIsQi00Ii4K8AAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IN9/AB0K2gAAAAAi0UIixCLTQiLgogBAAD/0NwdGgEAAN/g9sREegnHRegBAAAA6wfHRegAAAAAikXoXovlXcMAAAAAAAAAQA==</compiledString>
 						<returnType>bool</returnType>
-						<sString>sBaseStrength&gt;=sBaseIntellect &amp;&amp; sender.vGodsPotentialSet_Counter == 2</sString>
+						<sString>(pFirst-&gt;IsRecommended(15) &gt; pFirst-&gt;IsRecommended(16) ? 1 : pFirst-&gt;IsRecommended(15) &lt; pFirst-&gt;IsRecommended(16) ? 0 : sBaseStrength&gt;=sBaseIntellect) &amp;&amp; sender.vGodsPotentialSet_Counter == 2</sString>
 					</enabled>
 					<formulaName></formulaName>
 					<LoggingEvent>-1</LoggingEvent>
@@ -80,9 +80,9 @@
 					<caption>KitStrOrInt2 addInt</caption>
 					<customApplyType>None</customApplyType>
 					<enabled>
-						<compiledString>FRkAAAACAAAATQAAAGMAAABHb2RzUG90ZW50aWFsU2V0X0NvdW50ZXIAVYvsg+wMi0UIixCLTQiLgrgAAAD/0ItNCIsRi00Ii4K8AAAA3V34/9DcXfjf4PbEQXUraAAAAACLTQiLEYtNCIuCiAEAAP/Q3B2FAAAA3+D2xER6CcdF9AEAAADrB8dF9AAAAACKRfSL5V3DAAAAAAAAAEA=</compiledString>
+						<compiledString>FRkAAAACAAAA4QAAAPcAAABHb2RzUG90ZW50aWFsU2V0X0NvdW50ZXIAVYvsg+wYVmoPi0UIixCLTQiLgiwBAAD/0A+28GoQi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqD4tVCIsCi00Ii5AsAQAA/9IPtvBqEItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkLgAAAD/0otFCIsQi00Ii4K8AAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IN9/AB1K2gAAAAAi0UIixCLTQiLgogBAAD/0NwdGgEAAN/g9sREegnHRegBAAAA6wfHRegAAAAAikXoXovlXcMAAAAAAAAAQA==</compiledString>
 						<returnType>bool</returnType>
-						<sString>sBaseStrength&lt;sBaseIntellect &amp;&amp; sender.vGodsPotentialSet_Counter == 2</sString>
+						<sString>!(pFirst-&gt;IsRecommended(15) &gt; pFirst-&gt;IsRecommended(16) ? 1 : pFirst-&gt;IsRecommended(15) &lt; pFirst-&gt;IsRecommended(16) ? 0 : sBaseStrength&gt;=sBaseIntellect) &amp;&amp; sender.vGodsPotentialSet_Counter == 2</sString>
 					</enabled>
 					<formulaName></formulaName>
 					<LoggingEvent>-1</LoggingEvent>
@@ -129,9 +129,9 @@
 					<caption>KitStrOrInt3 addStr</caption>
 					<customApplyType>None</customApplyType>
 					<enabled>
-						<compiledString>FRkAAAACAAAATQAAAGMAAABHb2RzUG90ZW50aWFsU2V0X0NvdW50ZXIAVYvsg+wMi0UIixCLTQiLgrgAAAD/0ItNCIsRi00Ii4K8AAAA3V34/9DcXfjf4PbEQXoraAAAAACLTQiLEYtNCIuCiAEAAP/Q3B2FAAAA3+D2xER6CcdF9AEAAADrB8dF9AAAAACKRfSL5V3DAAAAAAAACEA=</compiledString>
+						<compiledString>FRkAAAACAAAA4QAAAPcAAABHb2RzUG90ZW50aWFsU2V0X0NvdW50ZXIAVYvsg+wYVmoPi0UIixCLTQiLgiwBAAD/0A+28GoQi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqD4tVCIsCi00Ii5AsAQAA/9IPtvBqEItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkLgAAAD/0otFCIsQi00Ii4K8AAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IN9/AB0K2gAAAAAi0UIixCLTQiLgogBAAD/0NwdGgEAAN/g9sREegnHRegBAAAA6wfHRegAAAAAikXoXovlXcMAAAAAAAAIQA==</compiledString>
 						<returnType>bool</returnType>
-						<sString>sBaseStrength&gt;=sBaseIntellect &amp;&amp; sender.vGodsPotentialSet_Counter == 3</sString>
+						<sString>(pFirst-&gt;IsRecommended(15) &gt; pFirst-&gt;IsRecommended(16) ? 1 : pFirst-&gt;IsRecommended(15) &lt; pFirst-&gt;IsRecommended(16) ? 0 : sBaseStrength&gt;=sBaseIntellect) &amp;&amp; sender.vGodsPotentialSet_Counter == 3</sString>
 					</enabled>
 					<formulaName></formulaName>
 					<LoggingEvent>-1</LoggingEvent>
@@ -178,9 +178,9 @@
 					<caption>KitStrOrInt3 addInt</caption>
 					<customApplyType>None</customApplyType>
 					<enabled>
-						<compiledString>FRkAAAACAAAATQAAAGMAAABHb2RzUG90ZW50aWFsU2V0X0NvdW50ZXIAVYvsg+wMi0UIixCLTQiLgrgAAAD/0ItNCIsRi00Ii4K8AAAA3V34/9DcXfjf4PbEQXUraAAAAACLTQiLEYtNCIuCiAEAAP/Q3B2FAAAA3+D2xER6CcdF9AEAAADrB8dF9AAAAACKRfSL5V3DAAAAAAAACEA=</compiledString>
+						<compiledString>FRkAAAACAAAA4QAAAPcAAABHb2RzUG90ZW50aWFsU2V0X0NvdW50ZXIAVYvsg+wYVmoPi0UIixCLTQiLgiwBAAD/0A+28GoQi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqD4tVCIsCi00Ii5AsAQAA/9IPtvBqEItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkLgAAAD/0otFCIsQi00Ii4K8AAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IN9/AB1K2gAAAAAi0UIixCLTQiLgogBAAD/0NwdGgEAAN/g9sREegnHRegBAAAA6wfHRegAAAAAikXoXovlXcMAAAAAAAAIQA==</compiledString>
 						<returnType>bool</returnType>
-						<sString>sBaseStrength&lt;sBaseIntellect &amp;&amp; sender.vGodsPotentialSet_Counter == 3</sString>
+						<sString>!(pFirst-&gt;IsRecommended(15) &gt; pFirst-&gt;IsRecommended(16) ? 1 : pFirst-&gt;IsRecommended(15) &lt; pFirst-&gt;IsRecommended(16) ? 0 : sBaseStrength&gt;=sBaseIntellect) &amp;&amp; sender.vGodsPotentialSet_Counter == 3</sString>
 					</enabled>
 					<formulaName></formulaName>
 					<LoggingEvent>-1</LoggingEvent>

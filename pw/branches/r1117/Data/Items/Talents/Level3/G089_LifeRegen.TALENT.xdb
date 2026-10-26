@@ -50,9 +50,9 @@
 		<Item href="/Items/Talents/Level3/G089_LifeRegen.TALENT" id="1321645C-146E-4330-85A3-81B70F79AD6A">
 			<ConditionFormula>
 				<condition>
-					<compiledString>FQAAAAAAAAAAVYvsg+wMi0UIixCLTQiLgrgAAAD/0ItNCIsRi00Ii4K8AAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoPi0UIixCLTQiLgiwBAAD/0A+28GoQi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqD4tVCIsCi00Ii5AsAQAA/9IPtvBqEItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkLgAAAD/0otFCIsQi00Ii4K8AAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IpF/F6L5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>sBaseStrength&gt;=sBaseIntellect</sString>
+					<sString>(pFirst-&gt;IsRecommended(15) &gt; pFirst-&gt;IsRecommended(16) ? 1 : pFirst-&gt;IsRecommended(15) &lt; pFirst-&gt;IsRecommended(16) ? 0 : sBaseStrength&gt;=sBaseIntellect)</sString>
 				</condition>
 				<name>StrOrInt</name>
 			</ConditionFormula>
@@ -60,9 +60,9 @@
 		<Item href="/Items/Talents/Level3/G089_LifeRegen.TALENT" id="C550C5EA-CC04-4EDB-99BA-F493B7AD5623">
 			<ConditionFormula>
 				<condition>
-					<compiledString>FQAAAAAAAAAAVYvsg+wMi0UIixCLTQiLgsAAAAD/0ItNCIsRi00Ii4KMAAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoEi0UIixCLTQiLgiwBAAD/0A+28GoRi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqBItVCIsCi00Ii5AsAQAA/9IPtvBqEYtFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkIwAAAD/0otFCIsQi00Ii4LAAAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/DPAg338AA+UwF6L5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>sBaseDexterity&gt;=sBaseAttackSpeed</sString>
+					<sString>!(pFirst-&gt;IsRecommended(4) &gt; pFirst-&gt;IsRecommended(17) ? 1 : pFirst-&gt;IsRecommended(4) &lt; pFirst-&gt;IsRecommended(17) ? 0 : sBaseAttackSpeed&gt;=sBaseDexterity)</sString>
 				</condition>
 				<name>DexOrAts</name>
 			</ConditionFormula>
@@ -70,9 +70,9 @@
 		<Item href="/Items/Talents/Level3/G089_LifeRegen.TALENT" id="CA5254FA-580A-411E-9C22-652CBF887965">
 			<ConditionFormula>
 				<condition>
-					<compiledString>FQAAAAAAAAAAVYvsg+wMi0UIixCLTQiLgsgAAAD/0ItNCIsRi00Ii4LMAAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoTi0UIixCLTQiLgiwBAAD/0A+28GoUi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqE4tVCIsCi00Ii5AsAQAA/9IPtvBqFItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkMgAAAD/0otFCIsQi00Ii4LMAAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IpF/F6L5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>sBaseStamina&gt;=sBaseWill</sString>
+					<sString>(pFirst-&gt;IsRecommended(19) &gt; pFirst-&gt;IsRecommended(20) ? 1 : pFirst-&gt;IsRecommended(19) &lt; pFirst-&gt;IsRecommended(20) ? 0 : sBaseStamina&gt;=sBaseWill)</sString>
 				</condition>
 				<name>StaOrWill</name>
 			</ConditionFormula>
@@ -80,9 +80,9 @@
 		<Item href="/Items/Talents/Level3/G089_LifeRegen.TALENT" id="F8045D35-1691-428C-B2B1-4511436C77EC">
 			<ConditionFormula>
 				<condition>
-					<compiledString>FQAAAAAAAAAAVYvsg+wMi0UMixCLTQyLgrgAAAD/0ItNDIsRi00Mi4K8AAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoPi0UMixCLTQyLgiwBAAD/0A+28GoQi00MixGLTQyLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqD4tVDIsCi00Mi5AsAQAA/9IPtvBqEItFDIsQi00Mi4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UMiwKLTQyLkLgAAAD/0otFDIsQi00Mi4K8AAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IpF/F6L5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>rBaseStrength&gt;=rBaseIntellect</sString>
+					<sString>(pSecond-&gt;IsRecommended(15) &gt; pSecond-&gt;IsRecommended(16) ? 1 : pSecond-&gt;IsRecommended(15) &lt; pSecond-&gt;IsRecommended(16) ? 0 : rBaseStrength&gt;=rBaseIntellect)</sString>
 				</condition>
 				<name>StrOrIntAlly</name>
 			</ConditionFormula>
@@ -90,9 +90,9 @@
 		<Item href="/Items/Talents/Level3/G089_LifeRegen.TALENT" id="36AAD270-C284-4A85-B181-5D658A3D3C6D">
 			<ConditionFormula>
 				<condition>
-					<compiledString>FQAAAAAAAAAAVYvsg+wMi0UMixCLTQyLgsAAAAD/0ItNDIsRi00Mi4KMAAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoEi0UMixCLTQyLgiwBAAD/0A+28GoRi00MixGLTQyLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqBItVDIsCi00Mi5AsAQAA/9IPtvBqEYtFDIsQi00Mi4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UMiwKLTQyLkIwAAAD/0otFDIsQi00Mi4LAAAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/DPAg338AA+UwF6L5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>rBaseDexterity&gt;=rBaseAttackSpeed</sString>
+					<sString>!(pSecond-&gt;IsRecommended(4) &gt; pSecond-&gt;IsRecommended(17) ? 1 : pSecond-&gt;IsRecommended(4) &lt; pSecond-&gt;IsRecommended(17) ? 0 : rBaseAttackSpeed&gt;=rBaseDexterity)</sString>
 				</condition>
 				<name>DexOrAtsAlly</name>
 			</ConditionFormula>
@@ -100,9 +100,9 @@
 		<Item href="/Items/Talents/Level3/G089_LifeRegen.TALENT" id="6E6F861A-D7AB-4B32-8BA7-59CF216E381E">
 			<ConditionFormula>
 				<condition>
-					<compiledString>FQAAAAAAAAAAVYvsg+wMi0UMixCLTQyLgsgAAAD/0ItNDIsRi00Mi4LMAAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoTi0UMixCLTQyLgiwBAAD/0A+28GoUi00MixGLTQyLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqE4tVDIsCi00Mi5AsAQAA/9IPtvBqFItFDIsQi00Mi4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UMiwKLTQyLkMgAAAD/0otFDIsQi00Mi4LMAAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IpF/F6L5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>rBaseStamina&gt;=rBaseWill</sString>
+					<sString>(pSecond-&gt;IsRecommended(19) &gt; pSecond-&gt;IsRecommended(20) ? 1 : pSecond-&gt;IsRecommended(19) &lt; pSecond-&gt;IsRecommended(20) ? 0 : rBaseStamina&gt;=rBaseWill)</sString>
 				</condition>
 				<name>StaOrWillAlly</name>
 			</ConditionFormula>

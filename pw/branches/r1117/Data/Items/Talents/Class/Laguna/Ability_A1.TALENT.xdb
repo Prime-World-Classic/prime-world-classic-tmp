@@ -193,9 +193,9 @@
 																						</lifeTime>
 																						<LoggingEvent>-1</LoggingEvent>
 																						<period>
-																							<compiledString>FQ0AAAABAAAAGQAAAEExX1RyYWlsVGljawBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+																							<compiledString>FQ8AAAABAAAAGwAAAEExX0luVHJhaWxUaWNrAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
 																							<returnType>float</returnType>
-																							<sString>cA1_TrailTick</sString>
+																							<sString>cA1_InTrailTick</sString>
 																						</period>
 																						<providerName></providerName>
 																						<scaleMode>ScaleIsCount</scaleMode>
@@ -293,6 +293,135 @@
 																									<compiledString>FQ8AAAABAAAAGwAAAEExX1RyYWlsUmFkaXVzAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
 																									<returnType>float</returnType>
 																									<sString>cA1_TrailRadius</sString>
+																								</range>
+																								<targetFilter>1073741827</targetFilter>
+																								<targetSelector href="" />
+																							</AreaTargetSelector>
+																						</targetSelector>
+																					</SpellPeriodicallyApplicator>
+																				</Item>
+																				<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="365D42C2-A04C-4803-83B7-6C5D363E5931">
+																					<SpellPeriodicallyApplicator>
+																						<applyTarget>ApplicatorTarget</applyTarget>
+																						<behaviorFlags>152</behaviorFlags>
+																						<caption>след: метка «точка следа рядом с Лагуной» — точки коридора для GhostCorridor (радиус cA1_TrailNearRadius)</caption>
+																						<effect>
+																							<Item href="" />
+																							<Item href="" />
+																						</effect>
+																						<enabled>
+																							<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																							<returnType>bool</returnType>
+																							<sString>true</sString>
+																						</enabled>
+																						<formulaName></formulaName>
+																						<lifeTime>
+																							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+																							<returnType>float</returnType>
+																							<sString>-1.0</sString>
+																						</lifeTime>
+																						<LoggingEvent>-1</LoggingEvent>
+																						<period>
+																							<compiledString>FQ8AAAABAAAAGwAAAEExX0luVHJhaWxUaWNrAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+																							<returnType>float</returnType>
+																							<sString>cA1_InTrailTick</sString>
+																						</period>
+																						<providerName></providerName>
+																						<scaleMode>ScaleIsCount</scaleMode>
+																						<spell href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="8887981F-D754-444A-A587-30E099A6C8D7">
+																							<Spell>
+																								<applicators>
+																									<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="9FC8B514-C399-4E58-806D-DA15BB9857A8">
+																										<StatModApplicator>
+																											<applyTarget>ApplicatorTarget</applyTarget>
+																											<behaviorFlags>0</behaviorFlags>
+																											<caption>метка: точка следа медузы рядом с Лагуной (коридор)</caption>
+																											<constraint>None</constraint>
+																											<dontUpdate>false</dontUpdate>
+																											<effect>
+																												<Item href="" />
+																												<Item href="" />
+																											</effect>
+																											<enabled>
+																												<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																												<returnType>bool</returnType>
+																												<sString>true</sString>
+																											</enabled>
+																											<formulaName>Laguna_A1_TrailNear</formulaName>
+																											<lifeTime>
+																												<compiledString>FREAAAABAAAAHQAAAEExX0luVHJhaWxMaW5nZXIAVYvsi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9Jdww==</compiledString>
+																												<returnType>float</returnType>
+																												<sString>cA1_InTrailLinger</sString>
+																											</lifeTime>
+																											<LoggingEvent>-1</LoggingEvent>
+																											<modifier>
+																												<addValue>
+																													<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+																													<returnType>float</returnType>
+																													<sString>0.0f</sString>
+																												</addValue>
+																												<multValue>
+																													<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
+																													<returnType>float</returnType>
+																													<sString>1.0f</sString>
+																												</multValue>
+																												<stat>LifeRegenerationAbsolute</stat>
+																												<topModifier>false</topModifier>
+																												<variable></variable>
+																											</modifier>
+																											<providerName></providerName>
+																											<startCondition>
+																												<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																												<returnType>bool</returnType>
+																												<sString>true</sString>
+																											</startCondition>
+																											<statModName></statModName>
+																										</StatModApplicator>
+																									</Item>
+																								</applicators>
+																								<dispatch href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="16539450-FC77-4233-8E5E-A15798C3C3FA">
+																									<DispatchImmediate>
+																										<alwaysApply>false</alwaysApply>
+																										<applyEffect>
+																											<Item href="" />
+																											<Item href="" />
+																										</applyEffect>
+																										<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
+																										<applyEffectOrientation>Default</applyEffectOrientation>
+																										<applyEffectRandomAnglePoints>0</applyEffectRandomAnglePoints>
+																										<dieAfterApply>true</dieAfterApply>
+																										<dispatchEffect>
+																											<Item href="" />
+																											<Item href="" />
+																										</dispatchEffect>
+																										<flags>1</flags>
+																										<instantApply>true</instantApply>
+																									</DispatchImmediate>
+																								</dispatch>
+																							</Spell>
+																						</spell>
+																						<startCondition>
+																							<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																							<returnType>bool</returnType>
+																							<sString>true</sString>
+																						</startCondition>
+																						<startOffset>
+																							<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+																							<returnType>float</returnType>
+																							<sString>0.0f</sString>
+																						</startOffset>
+																						<targetSelector href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="47AF1628-B7DF-4B96-9AC1-EA270CE156A8">
+																							<AreaTargetSelector>
+																								<absolutePosition>
+																									<x>0</x>
+																									<y>0</y>
+																								</absolutePosition>
+																								<flags>0</flags>
+																								<mode>Normal</mode>
+																								<range>
+																									<compiledString>FRMAAAABAAAAHwAAAEExX1RyYWlsTmVhclJhZGl1cwBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+																									<returnType>float</returnType>
+																									<sString>cA1_TrailNearRadius</sString>
 																								</range>
 																								<targetFilter>1073741827</targetFilter>
 																								<targetSelector href="" />
@@ -603,9 +732,9 @@
 																						</lifeTime>
 																						<LoggingEvent>-1</LoggingEvent>
 																						<period>
-																							<compiledString>FQ0AAAABAAAAGQAAAEExX1RyYWlsVGljawBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+																							<compiledString>FQ8AAAABAAAAGwAAAEExX0luVHJhaWxUaWNrAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
 																							<returnType>float</returnType>
-																							<sString>cA1_TrailTick</sString>
+																							<sString>cA1_InTrailTick</sString>
 																						</period>
 																						<providerName></providerName>
 																						<scaleMode>ScaleIsCount</scaleMode>
@@ -703,6 +832,135 @@
 																									<compiledString>FQ8AAAABAAAAGwAAAEExX1RyYWlsUmFkaXVzAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
 																									<returnType>float</returnType>
 																									<sString>cA1_TrailRadius</sString>
+																								</range>
+																								<targetFilter>1073741827</targetFilter>
+																								<targetSelector href="" />
+																							</AreaTargetSelector>
+																						</targetSelector>
+																					</SpellPeriodicallyApplicator>
+																				</Item>
+																				<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="4A8BBE04-E7C3-4D65-ACD7-5234E3B7A2ED">
+																					<SpellPeriodicallyApplicator>
+																						<applyTarget>ApplicatorTarget</applyTarget>
+																						<behaviorFlags>152</behaviorFlags>
+																						<caption>след: метка «точка следа рядом с Лагуной» — точки коридора для GhostCorridor (радиус cA1_TrailNearRadius)</caption>
+																						<effect>
+																							<Item href="" />
+																							<Item href="" />
+																						</effect>
+																						<enabled>
+																							<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																							<returnType>bool</returnType>
+																							<sString>true</sString>
+																						</enabled>
+																						<formulaName></formulaName>
+																						<lifeTime>
+																							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+																							<returnType>float</returnType>
+																							<sString>-1.0</sString>
+																						</lifeTime>
+																						<LoggingEvent>-1</LoggingEvent>
+																						<period>
+																							<compiledString>FQ8AAAABAAAAGwAAAEExX0luVHJhaWxUaWNrAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+																							<returnType>float</returnType>
+																							<sString>cA1_InTrailTick</sString>
+																						</period>
+																						<providerName></providerName>
+																						<scaleMode>ScaleIsCount</scaleMode>
+																						<spell href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="DE37D42F-67EC-44BB-B24E-34E63DCBCB7D">
+																							<Spell>
+																								<applicators>
+																									<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="53699E39-BDE8-4468-86D1-673EAEEA6CEC">
+																										<StatModApplicator>
+																											<applyTarget>ApplicatorTarget</applyTarget>
+																											<behaviorFlags>0</behaviorFlags>
+																											<caption>метка: точка следа медузы рядом с Лагуной (коридор)</caption>
+																											<constraint>None</constraint>
+																											<dontUpdate>false</dontUpdate>
+																											<effect>
+																												<Item href="" />
+																												<Item href="" />
+																											</effect>
+																											<enabled>
+																												<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																												<returnType>bool</returnType>
+																												<sString>true</sString>
+																											</enabled>
+																											<formulaName>Laguna_A1_TrailNear</formulaName>
+																											<lifeTime>
+																												<compiledString>FREAAAABAAAAHQAAAEExX0luVHJhaWxMaW5nZXIAVYvsi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9Jdww==</compiledString>
+																												<returnType>float</returnType>
+																												<sString>cA1_InTrailLinger</sString>
+																											</lifeTime>
+																											<LoggingEvent>-1</LoggingEvent>
+																											<modifier>
+																												<addValue>
+																													<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+																													<returnType>float</returnType>
+																													<sString>0.0f</sString>
+																												</addValue>
+																												<multValue>
+																													<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
+																													<returnType>float</returnType>
+																													<sString>1.0f</sString>
+																												</multValue>
+																												<stat>LifeRegenerationAbsolute</stat>
+																												<topModifier>false</topModifier>
+																												<variable></variable>
+																											</modifier>
+																											<providerName></providerName>
+																											<startCondition>
+																												<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																												<returnType>bool</returnType>
+																												<sString>true</sString>
+																											</startCondition>
+																											<statModName></statModName>
+																										</StatModApplicator>
+																									</Item>
+																								</applicators>
+																								<dispatch href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="DD6A01F8-0FB2-4B8A-A52B-DA7801AFD21B">
+																									<DispatchImmediate>
+																										<alwaysApply>false</alwaysApply>
+																										<applyEffect>
+																											<Item href="" />
+																											<Item href="" />
+																										</applyEffect>
+																										<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
+																										<applyEffectOrientation>Default</applyEffectOrientation>
+																										<applyEffectRandomAnglePoints>0</applyEffectRandomAnglePoints>
+																										<dieAfterApply>true</dieAfterApply>
+																										<dispatchEffect>
+																											<Item href="" />
+																											<Item href="" />
+																										</dispatchEffect>
+																										<flags>1</flags>
+																										<instantApply>true</instantApply>
+																									</DispatchImmediate>
+																								</dispatch>
+																							</Spell>
+																						</spell>
+																						<startCondition>
+																							<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																							<returnType>bool</returnType>
+																							<sString>true</sString>
+																						</startCondition>
+																						<startOffset>
+																							<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+																							<returnType>float</returnType>
+																							<sString>0.0f</sString>
+																						</startOffset>
+																						<targetSelector href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="E5DC51F8-B6EA-4CEE-A6BC-AB4F34F7B55D">
+																							<AreaTargetSelector>
+																								<absolutePosition>
+																									<x>0</x>
+																									<y>0</y>
+																								</absolutePosition>
+																								<flags>0</flags>
+																								<mode>Normal</mode>
+																								<range>
+																									<compiledString>FRMAAAABAAAAHwAAAEExX1RyYWlsTmVhclJhZGl1cwBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+																									<returnType>float</returnType>
+																									<sString>cA1_TrailNearRadius</sString>
 																								</range>
 																								<targetFilter>1073741827</targetFilter>
 																								<targetSelector href="" />
@@ -892,9 +1150,9 @@
 																											</lifeTime>
 																											<LoggingEvent>-1</LoggingEvent>
 																											<period>
-																												<compiledString>FQ0AAAABAAAAGQAAAEExX1RyYWlsVGljawBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+																												<compiledString>FQ8AAAABAAAAGwAAAEExX0luVHJhaWxUaWNrAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
 																												<returnType>float</returnType>
-																												<sString>cA1_TrailTick</sString>
+																												<sString>cA1_InTrailTick</sString>
 																											</period>
 																											<providerName></providerName>
 																											<scaleMode>ScaleIsCount</scaleMode>
@@ -992,6 +1250,135 @@
 																														<compiledString>FQ8AAAABAAAAGwAAAEExX1RyYWlsUmFkaXVzAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
 																														<returnType>float</returnType>
 																														<sString>cA1_TrailRadius</sString>
+																													</range>
+																													<targetFilter>1073741827</targetFilter>
+																													<targetSelector href="" />
+																												</AreaTargetSelector>
+																											</targetSelector>
+																										</SpellPeriodicallyApplicator>
+																									</Item>
+																									<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="98E11D7A-45CC-4D35-B119-5A2381080FCF">
+																										<SpellPeriodicallyApplicator>
+																											<applyTarget>ApplicatorTarget</applyTarget>
+																											<behaviorFlags>152</behaviorFlags>
+																											<caption>след: метка «точка следа рядом с Лагуной» — точки коридора для GhostCorridor (радиус cA1_TrailNearRadius)</caption>
+																											<effect>
+																												<Item href="" />
+																												<Item href="" />
+																											</effect>
+																											<enabled>
+																												<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																												<returnType>bool</returnType>
+																												<sString>true</sString>
+																											</enabled>
+																											<formulaName></formulaName>
+																											<lifeTime>
+																												<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+																												<returnType>float</returnType>
+																												<sString>-1.0</sString>
+																											</lifeTime>
+																											<LoggingEvent>-1</LoggingEvent>
+																											<period>
+																												<compiledString>FQ8AAAABAAAAGwAAAEExX0luVHJhaWxUaWNrAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+																												<returnType>float</returnType>
+																												<sString>cA1_InTrailTick</sString>
+																											</period>
+																											<providerName></providerName>
+																											<scaleMode>ScaleIsCount</scaleMode>
+																											<spell href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="1A7C90B7-8676-429B-AAB6-97BA84DBAD9E">
+																												<Spell>
+																													<applicators>
+																														<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="E08CDFE0-7643-4C9D-BE9F-F0B7A2BD454F">
+																															<StatModApplicator>
+																																<applyTarget>ApplicatorTarget</applyTarget>
+																																<behaviorFlags>0</behaviorFlags>
+																																<caption>метка: точка следа медузы рядом с Лагуной (коридор)</caption>
+																																<constraint>None</constraint>
+																																<dontUpdate>false</dontUpdate>
+																																<effect>
+																																	<Item href="" />
+																																	<Item href="" />
+																																</effect>
+																																<enabled>
+																																	<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																																	<returnType>bool</returnType>
+																																	<sString>true</sString>
+																																</enabled>
+																																<formulaName>Laguna_A1_TrailNear</formulaName>
+																																<lifeTime>
+																																	<compiledString>FREAAAABAAAAHQAAAEExX0luVHJhaWxMaW5nZXIAVYvsi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9Jdww==</compiledString>
+																																	<returnType>float</returnType>
+																																	<sString>cA1_InTrailLinger</sString>
+																																</lifeTime>
+																																<LoggingEvent>-1</LoggingEvent>
+																																<modifier>
+																																	<addValue>
+																																		<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+																																		<returnType>float</returnType>
+																																		<sString>0.0f</sString>
+																																	</addValue>
+																																	<multValue>
+																																		<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
+																																		<returnType>float</returnType>
+																																		<sString>1.0f</sString>
+																																	</multValue>
+																																	<stat>LifeRegenerationAbsolute</stat>
+																																	<topModifier>false</topModifier>
+																																	<variable></variable>
+																																</modifier>
+																																<providerName></providerName>
+																																<startCondition>
+																																	<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																																	<returnType>bool</returnType>
+																																	<sString>true</sString>
+																																</startCondition>
+																																<statModName></statModName>
+																															</StatModApplicator>
+																														</Item>
+																													</applicators>
+																													<dispatch href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="FE001192-1054-4E0F-88DC-4E6EF33F15D4">
+																														<DispatchImmediate>
+																															<alwaysApply>false</alwaysApply>
+																															<applyEffect>
+																																<Item href="" />
+																																<Item href="" />
+																															</applyEffect>
+																															<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
+																															<applyEffectOrientation>Default</applyEffectOrientation>
+																															<applyEffectRandomAnglePoints>0</applyEffectRandomAnglePoints>
+																															<dieAfterApply>true</dieAfterApply>
+																															<dispatchEffect>
+																																<Item href="" />
+																																<Item href="" />
+																															</dispatchEffect>
+																															<flags>1</flags>
+																															<instantApply>true</instantApply>
+																														</DispatchImmediate>
+																													</dispatch>
+																												</Spell>
+																											</spell>
+																											<startCondition>
+																												<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+																												<returnType>bool</returnType>
+																												<sString>true</sString>
+																											</startCondition>
+																											<startOffset>
+																												<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+																												<returnType>float</returnType>
+																												<sString>0.0f</sString>
+																											</startOffset>
+																											<targetSelector href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="4AA17AE2-C523-42E3-97A0-0C35B1ED9C4D">
+																												<AreaTargetSelector>
+																													<absolutePosition>
+																														<x>0</x>
+																														<y>0</y>
+																													</absolutePosition>
+																													<flags>0</flags>
+																													<mode>Normal</mode>
+																													<range>
+																														<compiledString>FRMAAAABAAAAHwAAAEExX1RyYWlsTmVhclJhZGl1cwBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+																														<returnType>float</returnType>
+																														<sString>cA1_TrailNearRadius</sString>
 																													</range>
 																													<targetFilter>1073741827</targetFilter>
 																													<targetSelector href="" />
@@ -1244,9 +1631,49 @@
 					<UnitConstant>
 						<name>A1_InTrailLinger</name>
 						<var>
-							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAADAPw==</compiledString>
+							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DzczMPg==</compiledString>
 							<returnType>float</returnType>
-							<sString>1.5f</sString>
+							<sString>0.4f</sString>
+						</var>
+					</UnitConstant>
+				</Item>
+				<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="D617934F-C187-4658-996D-A04F71654EBF">
+					<UnitConstant>
+						<name>A1_InTrailTick</name>
+						<var>
+							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DzczMPQ==</compiledString>
+							<returnType>float</returnType>
+							<sString>0.1f</sString>
+						</var>
+					</UnitConstant>
+				</Item>
+				<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="9EB22218-99A7-4297-B522-C9794313A318">
+					<UnitConstant>
+						<name>GhostCorridor_Laguna_A1_TrailNear</name>
+						<var>
+							<compiledString>FQ8AAAABAAAAGwAAAEExX1RyYWlsUmFkaXVzAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+							<returnType>float</returnType>
+							<sString>cA1_TrailRadius</sString>
+						</var>
+					</UnitConstant>
+				</Item>
+				<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="FAEA3A32-5771-493E-8006-D549ACD2CA21">
+					<UnitConstant>
+						<name>GhostCorridorLength_Laguna_A1_TrailNear</name>
+						<var>
+							<compiledString>FQYAAAABAAAAEgAAAFJhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+							<returnType>float</returnType>
+							<sString>cRange</sString>
+						</var>
+					</UnitConstant>
+				</Item>
+				<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" id="14F516AE-EFFE-4C1D-B117-0C0AC726AE45">
+					<UnitConstant>
+						<name>A1_TrailNearRadius</name>
+						<var>
+							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAADwQQ==</compiledString>
+							<returnType>float</returnType>
+							<sString>30.0f</sString>
 						</var>
 					</UnitConstant>
 				</Item>

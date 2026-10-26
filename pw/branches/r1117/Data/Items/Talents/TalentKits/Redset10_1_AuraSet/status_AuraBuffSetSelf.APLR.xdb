@@ -23,9 +23,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FSMAAAAEAAAAVwAAAG0AAAB5AAAAjwAAAEF1cmFCdWZmU2V0X0NvdW50ZXIAU3RyT3JJbnRFbmFibGUAVYvsg+wMi0UIixCLTQiLgrgAAAD/0ItNCIsRi00Ii4K8AAAA3V34/9DcXfjf4PbEQXpNaAAAAACLTQiLEYtNCIuCiAEAAP/Q3B25AAAA3+D2xAF0ImgUAAAAi00IixGLTQiLgogBAAD/0NwdsQAAAN/g9sRBdQnHRfQBAAAA6wfHRfQAAAAAikX0i+VdwwAAAAAAAAAAAAAAAAAAAEA=</compiledString>
+					<compiledString>FSMAAAAEAAAA6wAAAAEBAAANAQAAIwEAAEF1cmFCdWZmU2V0X0NvdW50ZXIAU3RyT3JJbnRFbmFibGUAVYvsg+wYVmoPi0UIixCLTQiLgiwBAAD/0A+28GoQi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqD4tVCIsCi00Ii5AsAQAA/9IPtvBqEItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkLgAAAD/0otFCIsQi00Ii4K8AAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IN9/AB0TWgAAAAAi0UIixCLTQiLgogBAAD/0NwdTgEAAN/g9sQBdCJoFAAAAItNCIsRi00Ii4KIAQAA/9DcHUYBAADf4PbEQXUJx0XoAQAAAOsHx0XoAAAAAIpF6F6L5V3DAAAAAAAAAAAAAAAAAAAAQA==</compiledString>
 					<returnType>bool</returnType>
-					<sString>sBaseStrength&gt;=sBaseIntellect &amp;&amp; (sender.vAuraBuffSet_Counter&gt;=2 || sender.vStrOrIntEnable&gt;0) </sString>
+					<sString>(pFirst-&gt;IsRecommended(15) &gt; pFirst-&gt;IsRecommended(16) ? 1 : pFirst-&gt;IsRecommended(15) &lt; pFirst-&gt;IsRecommended(16) ? 0 : sBaseStrength&gt;=sBaseIntellect) &amp;&amp; (sender.vAuraBuffSet_Counter&gt;=2 || sender.vStrOrIntEnable&gt;0)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -70,9 +70,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FSMAAAAEAAAAVwAAAG0AAAB5AAAAjwAAAEF1cmFCdWZmU2V0X0NvdW50ZXIAU3RyT3JJbnRFbmFibGUAVYvsg+wMi0UIixCLTQiLgrgAAAD/0ItNCIsRi00Ii4K8AAAA3V34/9DcXfjf4PbEQXVNaAAAAACLTQiLEYtNCIuCiAEAAP/Q3B25AAAA3+D2xAF0ImgUAAAAi00IixGLTQiLgogBAAD/0NwdsQAAAN/g9sRBdQnHRfQBAAAA6wfHRfQAAAAAikX0i+VdwwAAAAAAAAAAAAAAAAAAAEA=</compiledString>
+					<compiledString>FSMAAAAEAAAA6wAAAAEBAAANAQAAIwEAAEF1cmFCdWZmU2V0X0NvdW50ZXIAU3RyT3JJbnRFbmFibGUAVYvsg+wYVmoPi0UIixCLTQiLgiwBAAD/0A+28GoQi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqD4tVCIsCi00Ii5AsAQAA/9IPtvBqEItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkLgAAAD/0otFCIsQi00Ii4K8AAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IN9/AB1TWgAAAAAi0UIixCLTQiLgogBAAD/0NwdTgEAAN/g9sQBdCJoFAAAAItNCIsRi00Ii4KIAQAA/9DcHUYBAADf4PbEQXUJx0XoAQAAAOsHx0XoAAAAAIpF6F6L5V3DAAAAAAAAAAAAAAAAAAAAQA==</compiledString>
 					<returnType>bool</returnType>
-					<sString>sBaseStrength&lt;sBaseIntellect &amp;&amp; (sender.vAuraBuffSet_Counter&gt;=2 || sender.vStrOrIntEnable&gt;0) </sString>
+					<sString>!(pFirst-&gt;IsRecommended(15) &gt; pFirst-&gt;IsRecommended(16) ? 1 : pFirst-&gt;IsRecommended(15) &lt; pFirst-&gt;IsRecommended(16) ? 0 : sBaseStrength&gt;=sBaseIntellect) &amp;&amp; (sender.vAuraBuffSet_Counter&gt;=2 || sender.vStrOrIntEnable&gt;0)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -117,9 +117,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FSMAAAAEAAAAVwAAAG0AAAB5AAAAjwAAAEF1cmFCdWZmU2V0X0NvdW50ZXIARGV4T3JBdHNFbmFibGUAVYvsg+wMi0UIixCLTQiLgsAAAAD/0ItNCIsRi00Ii4KMAAAA3V34/9DcXfjf4PbEQXpNaAAAAACLTQiLEYtNCIuCiAEAAP/Q3B25AAAA3+D2xAF0ImgUAAAAi00IixGLTQiLgogBAAD/0NwdsQAAAN/g9sRBdQnHRfQBAAAA6wfHRfQAAAAAikX0i+VdwwAAAAAAAAAAAAAAAAAACEA=</compiledString>
+					<compiledString>FSMAAAAEAAAA6wAAAAEBAAANAQAAIwEAAEF1cmFCdWZmU2V0X0NvdW50ZXIARGV4T3JBdHNFbmFibGUAVYvsg+wYVmoEi0UIixCLTQiLgiwBAAD/0A+28GoRi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqBItVCIsCi00Ii5AsAQAA/9IPtvBqEYtFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkIwAAAD/0otFCIsQi00Ii4LAAAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IN9/AB1TWgAAAAAi0UIixCLTQiLgogBAAD/0NwdTgEAAN/g9sQBdCJoFAAAAItNCIsRi00Ii4KIAQAA/9DcHUYBAADf4PbEQXUJx0XoAQAAAOsHx0XoAAAAAIpF6F6L5V3DAAAAAAAAAAAAAAAAAAAIQA==</compiledString>
 					<returnType>bool</returnType>
-					<sString>sBaseDexterity&gt;=sBaseAttackSpeed &amp;&amp; (sender.vAuraBuffSet_Counter&gt;=3 || sender.vDexOrAtsEnable&gt;0) </sString>
+					<sString>!(pFirst-&gt;IsRecommended(4) &gt; pFirst-&gt;IsRecommended(17) ? 1 : pFirst-&gt;IsRecommended(4) &lt; pFirst-&gt;IsRecommended(17) ? 0 : sBaseAttackSpeed&gt;=sBaseDexterity) &amp;&amp; (sender.vAuraBuffSet_Counter&gt;=3 || sender.vDexOrAtsEnable&gt;0)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -164,9 +164,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FSMAAAAEAAAAVwAAAG0AAAB5AAAAjwAAAEF1cmFCdWZmU2V0X0NvdW50ZXIARGV4T3JBdHNFbmFibGUAVYvsg+wMi0UIixCLTQiLgsAAAAD/0ItNCIsRi00Ii4KMAAAA3V34/9DcXfjf4PbEQXVNaAAAAACLTQiLEYtNCIuCiAEAAP/Q3B25AAAA3+D2xAF0ImgUAAAAi00IixGLTQiLgogBAAD/0NwdsQAAAN/g9sRBdQnHRfQBAAAA6wfHRfQAAAAAikX0i+VdwwAAAAAAAAAAAAAAAAAACEA=</compiledString>
+					<compiledString>FSMAAAAEAAAA6wAAAAEBAAANAQAAIwEAAEF1cmFCdWZmU2V0X0NvdW50ZXIARGV4T3JBdHNFbmFibGUAVYvsg+wYVmoEi0UIixCLTQiLgiwBAAD/0A+28GoRi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqBItVCIsCi00Ii5AsAQAA/9IPtvBqEYtFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkIwAAAD/0otFCIsQi00Ii4LAAAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IN9/AB0TWgAAAAAi0UIixCLTQiLgogBAAD/0NwdTgEAAN/g9sQBdCJoFAAAAItNCIsRi00Ii4KIAQAA/9DcHUYBAADf4PbEQXUJx0XoAQAAAOsHx0XoAAAAAIpF6F6L5V3DAAAAAAAAAAAAAAAAAAAIQA==</compiledString>
 					<returnType>bool</returnType>
-					<sString>sBaseDexterity&lt;sBaseAttackSpeed &amp;&amp; (sender.vAuraBuffSet_Counter&gt;=3 || sender.vDexOrAtsEnable&gt;0) </sString>
+					<sString>(pFirst-&gt;IsRecommended(4) &gt; pFirst-&gt;IsRecommended(17) ? 1 : pFirst-&gt;IsRecommended(4) &lt; pFirst-&gt;IsRecommended(17) ? 0 : sBaseAttackSpeed&gt;=sBaseDexterity) &amp;&amp; (sender.vAuraBuffSet_Counter&gt;=3 || sender.vDexOrAtsEnable&gt;0)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -211,9 +211,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FSQAAAAEAAAAWAAAAG4AAAB6AAAAkAAAAEF1cmFCdWZmU2V0X0NvdW50ZXIAU3RhT3JXaWxsRW5hYmxlAFWL7IPsDItFCIsQi00Ii4LIAAAA/9CLTQiLEYtNCIuCzAAAAN1d+P/Q3F343+D2xEF6TWgAAAAAi00IixGLTQiLgogBAAD/0NwdugAAAN/g9sQBdCJoFAAAAItNCIsRi00Ii4KIAQAA/9DcHbIAAADf4PbEQXUJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcMAAAAAAAAAAAAAAAAAABBA</compiledString>
+					<compiledString>FSQAAAAEAAAA7AAAAAIBAAAOAQAAJAEAAEF1cmFCdWZmU2V0X0NvdW50ZXIAU3RhT3JXaWxsRW5hYmxlAFWL7IPsGFZqE4tFCIsQi00Ii4IsAQAA/9APtvBqFItNCIsRi00Ii4IsAQAA/9APtsg78X4Mx0X8AQAAAOmAAAAAahOLVQiLAotNCIuQLAEAAP/SD7bwahSLRQiLEItNCIuCLAEAAP/QD7bIO/F9CcdF+AAAAADrQ4tVCIsCi00Ii5DIAAAA/9KLRQiLEItNCIuCzAAAAN1d8P/Q3F3w3+D2xEF6CcdF7AEAAADrB8dF7AAAAACLTeyJTfiLVfiJVfyDffwAdE1oAAAAAItFCIsQi00Ii4KIAQAA/9DcHU8BAADf4PbEAXQiaBQAAACLTQiLEYtNCIuCiAEAAP/Q3B1HAQAA3+D2xEF1CcdF6AEAAADrB8dF6AAAAACKRehei+VdwwAAAAAAAAAAAAAAAAAAEEA=</compiledString>
 					<returnType>bool</returnType>
-					<sString>sBaseStamina&gt;=sBaseWill &amp;&amp; (sender.vAuraBuffSet_Counter&gt;=4 || sender.vStaOrWillEnable&gt;0) </sString>
+					<sString>(pFirst-&gt;IsRecommended(19) &gt; pFirst-&gt;IsRecommended(20) ? 1 : pFirst-&gt;IsRecommended(19) &lt; pFirst-&gt;IsRecommended(20) ? 0 : sBaseStamina&gt;=sBaseWill) &amp;&amp; (sender.vAuraBuffSet_Counter&gt;=4 || sender.vStaOrWillEnable&gt;0)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>
@@ -258,9 +258,9 @@
 					<Item href="" />
 				</effect>
 				<enabled>
-					<compiledString>FSQAAAAEAAAAWAAAAG4AAAB6AAAAkAAAAEF1cmFCdWZmU2V0X0NvdW50ZXIAU3RhT3JXaWxsRW5hYmxlAFWL7IPsDItFCIsQi00Ii4LIAAAA/9CLTQiLEYtNCIuCzAAAAN1d+P/Q3F343+D2xEF1TWgAAAAAi00IixGLTQiLgogBAAD/0NwdugAAAN/g9sQBdCJoFAAAAItNCIsRi00Ii4KIAQAA/9DcHbIAAADf4PbEQXUJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcMAAAAAAAAAAAAAAAAAABBA</compiledString>
+					<compiledString>FSQAAAAEAAAA7AAAAAIBAAAOAQAAJAEAAEF1cmFCdWZmU2V0X0NvdW50ZXIAU3RhT3JXaWxsRW5hYmxlAFWL7IPsGFZqE4tFCIsQi00Ii4IsAQAA/9APtvBqFItNCIsRi00Ii4IsAQAA/9APtsg78X4Mx0X8AQAAAOmAAAAAahOLVQiLAotNCIuQLAEAAP/SD7bwahSLRQiLEItNCIuCLAEAAP/QD7bIO/F9CcdF+AAAAADrQ4tVCIsCi00Ii5DIAAAA/9KLRQiLEItNCIuCzAAAAN1d8P/Q3F3w3+D2xEF6CcdF7AEAAADrB8dF7AAAAACLTeyJTfiLVfiJVfyDffwAdU1oAAAAAItFCIsQi00Ii4KIAQAA/9DcHU8BAADf4PbEAXQiaBQAAACLTQiLEYtNCIuCiAEAAP/Q3B1HAQAA3+D2xEF1CcdF6AEAAADrB8dF6AAAAACKRehei+VdwwAAAAAAAAAAAAAAAAAAEEA=</compiledString>
 					<returnType>bool</returnType>
-					<sString>sBaseStamina&lt;sBaseWill &amp;&amp; (sender.vAuraBuffSet_Counter&gt;=4 || sender.vStaOrWillEnable&gt;0) </sString>
+					<sString>!(pFirst-&gt;IsRecommended(19) &gt; pFirst-&gt;IsRecommended(20) ? 1 : pFirst-&gt;IsRecommended(19) &lt; pFirst-&gt;IsRecommended(20) ? 0 : sBaseStamina&gt;=sBaseWill) &amp;&amp; (sender.vAuraBuffSet_Counter&gt;=4 || sender.vStaOrWillEnable&gt;0)</sString>
 				</enabled>
 				<formulaName></formulaName>
 				<lifeTime>

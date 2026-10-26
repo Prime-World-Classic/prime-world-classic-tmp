@@ -299,15 +299,30 @@ protected:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Ghost move restricted to a corridor: if the ability has a constant named "GhostCorridor_<name>", static obstacles
+// (trees, stones, buildings) stay obstacles, except within its value (radius) from the corridor points, and the path
+// finding leads the unit along the corridor like along a road. A corridor point is the position the applicator <name>
+// on the unit came from (Laguna: the jellyfish trail points around her), see PFBaseUnit::CollectGhostCorridor and
+// GhostCorridorScope in PFBaseMovingUnit.cpp. The constant "GhostCorridorLength_<name>" (optional) is the length of
+// a trail laid while something flies by a straight line (the jellyfish): the corridor goes to the end of the flight
+// at once, before the trail is there.
 class PFApplGhostMove : public DBLinker<PFApplBuff, NDb::GhostMoveApplicator>
 {
   WORLD_OBJECT_METHODS(0xB74F481, PFApplGhostMove);
   ZDATA_(DBLinker)
   int ghostMoveIndex;
+  string corridorMark;
+  float corridorRadius;
+  float corridorLength;
 public:
-  ZEND int operator&( IBinSaver &f ) { f.Add(1,(DBLinker*)this); f.Add(2,&ghostMoveIndex); return 0; }
-  PFApplGhostMove(PFApplCreatePars const &cp) : Base(cp), ghostMoveIndex(-1) {}
-  PFApplGhostMove() : ghostMoveIndex(-1) {/*NI_ALWAYS_ASSERT("Should be never invoked.");*/}
+  ZEND int operator&( IBinSaver &f ) { f.Add(1,(DBLinker*)this); f.Add(2,&ghostMoveIndex); f.Add(3,&corridorMark); f.Add(4,&corridorRadius); f.Add(5,&corridorLength); return 0; }
+  PFApplGhostMove(PFApplCreatePars const &cp) : Base(cp), ghostMoveIndex(-1), corridorRadius(0.0f), corridorLength(0.0f) {}
+  PFApplGhostMove() : ghostMoveIndex(-1), corridorRadius(0.0f), corridorLength(0.0f) {/*NI_ALWAYS_ASSERT("Should be never invoked.");*/}
+
+  bool          HasCorridor() const       { return corridorRadius > 0.0f; }
+  float         GetCorridorRadius() const { return corridorRadius; }
+  float         GetCorridorLength() const { return corridorLength; }
+  string const& GetCorridorMark() const   { return corridorMark; }
 protected:
   virtual bool Start();
   virtual void Stop();

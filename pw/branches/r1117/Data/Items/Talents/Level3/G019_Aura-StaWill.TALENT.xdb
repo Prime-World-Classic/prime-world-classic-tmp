@@ -45,9 +45,9 @@
 		<Item href="/Items/Talents/Level3/G019_Aura-StaWill.TALENT" id="2E56B458-DCD5-4CC0-926E-31D6CE9C4D95">
 			<ConditionFormula>
 				<condition>
-					<compiledString>FQAAAAAAAAAAVYvsg+wMi0UIixCLTQiLgrgAAAD/0ItNCIsRi00Ii4K8AAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoPi0UIixCLTQiLgiwBAAD/0A+28GoQi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqD4tVCIsCi00Ii5AsAQAA/9IPtvBqEItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkLgAAAD/0otFCIsQi00Ii4K8AAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IpF/F6L5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>sBaseStrength&gt;=sBaseIntellect</sString>
+					<sString>(pFirst-&gt;IsRecommended(15) &gt; pFirst-&gt;IsRecommended(16) ? 1 : pFirst-&gt;IsRecommended(15) &lt; pFirst-&gt;IsRecommended(16) ? 0 : sBaseStrength&gt;=sBaseIntellect)</sString>
 				</condition>
 				<name>StrOrInt</name>
 			</ConditionFormula>
@@ -55,9 +55,9 @@
 		<Item href="/Items/Talents/Level3/G019_Aura-StaWill.TALENT" id="16094395-BAE9-4F35-9D29-59F08F9046BC">
 			<ConditionFormula>
 				<condition>
-					<compiledString>FQAAAAAAAAAAVYvsg+wMi0UIixCLTQiLgsAAAAD/0ItNCIsRi00Ii4KMAAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoEi0UIixCLTQiLgiwBAAD/0A+28GoRi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqBItVCIsCi00Ii5AsAQAA/9IPtvBqEYtFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkIwAAAD/0otFCIsQi00Ii4LAAAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/DPAg338AA+UwF6L5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>sBaseDexterity&gt;=sBaseAttackSpeed</sString>
+					<sString>!(pFirst-&gt;IsRecommended(4) &gt; pFirst-&gt;IsRecommended(17) ? 1 : pFirst-&gt;IsRecommended(4) &lt; pFirst-&gt;IsRecommended(17) ? 0 : sBaseAttackSpeed&gt;=sBaseDexterity)</sString>
 				</condition>
 				<name>DexOrAts</name>
 			</ConditionFormula>
@@ -65,9 +65,9 @@
 		<Item href="/Items/Talents/Level3/G019_Aura-StaWill.TALENT" id="557E050E-0E9E-49DD-9782-7F00C8995593">
 			<ConditionFormula>
 				<condition>
-					<compiledString>FQAAAAAAAAAAVYvsg+wMi0UIixCLTQiLgsgAAAD/0ItNCIsRi00Ii4LMAAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoTi0UIixCLTQiLgiwBAAD/0A+28GoUi00IixGLTQiLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqE4tVCIsCi00Ii5AsAQAA/9IPtvBqFItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UIiwKLTQiLkMgAAAD/0otFCIsQi00Ii4LMAAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IpF/F6L5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>sBaseStamina&gt;=sBaseWill</sString>
+					<sString>(pFirst-&gt;IsRecommended(19) &gt; pFirst-&gt;IsRecommended(20) ? 1 : pFirst-&gt;IsRecommended(19) &lt; pFirst-&gt;IsRecommended(20) ? 0 : sBaseStamina&gt;=sBaseWill)</sString>
 				</condition>
 				<name>StaOrWill</name>
 			</ConditionFormula>
@@ -75,9 +75,9 @@
 		<Item href="/Items/Talents/Level3/G019_Aura-StaWill.TALENT" id="8729463F-9F61-425F-9CCA-B308E22D653C">
 			<ConditionFormula>
 				<condition>
-					<compiledString>FQAAAAAAAAAAVYvsg+wMi0UMixCLTQyLgrgAAAD/0ItNDIsRi00Mi4K8AAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoPi0UMixCLTQyLgiwBAAD/0A+28GoQi00MixGLTQyLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqD4tVDIsCi00Mi5AsAQAA/9IPtvBqEItFDIsQi00Mi4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UMiwKLTQyLkLgAAAD/0otFDIsQi00Mi4K8AAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IpF/F6L5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>rBaseStrength&gt;=rBaseIntellect</sString>
+					<sString>(pSecond-&gt;IsRecommended(15) &gt; pSecond-&gt;IsRecommended(16) ? 1 : pSecond-&gt;IsRecommended(15) &lt; pSecond-&gt;IsRecommended(16) ? 0 : rBaseStrength&gt;=rBaseIntellect)</sString>
 				</condition>
 				<name>StrOrIntAlly</name>
 			</ConditionFormula>
@@ -85,9 +85,9 @@
 		<Item href="/Items/Talents/Level3/G019_Aura-StaWill.TALENT" id="E1D2C672-B229-4A6F-87BC-C60816D7B471">
 			<ConditionFormula>
 				<condition>
-					<compiledString>FQAAAAAAAAAAVYvsg+wMi0UMixCLTQyLgsAAAAD/0ItNDIsRi00Mi4KMAAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoEi0UMixCLTQyLgiwBAAD/0A+28GoRi00MixGLTQyLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqBItVDIsCi00Mi5AsAQAA/9IPtvBqEYtFDIsQi00Mi4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UMiwKLTQyLkIwAAAD/0otFDIsQi00Mi4LAAAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/DPAg338AA+UwF6L5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>rBaseDexterity&gt;=rBaseAttackSpeed</sString>
+					<sString>!(pSecond-&gt;IsRecommended(4) &gt; pSecond-&gt;IsRecommended(17) ? 1 : pSecond-&gt;IsRecommended(4) &lt; pSecond-&gt;IsRecommended(17) ? 0 : rBaseAttackSpeed&gt;=rBaseDexterity)</sString>
 				</condition>
 				<name>DexOrAtsAlly</name>
 			</ConditionFormula>
@@ -95,9 +95,9 @@
 		<Item href="/Items/Talents/Level3/G019_Aura-StaWill.TALENT" id="DB546BAC-160C-43C8-9544-EC4E5EFA2F33">
 			<ConditionFormula>
 				<condition>
-					<compiledString>FQAAAAAAAAAAVYvsg+wMi0UMixCLTQyLgsgAAAD/0ItNDIsRi00Mi4LMAAAA3V34/9DcXfjf4PbEQXoJx0X0AQAAAOsHx0X0AAAAAIpF9IvlXcM=</compiledString>
+					<compiledString>FQAAAAAAAAAAVYvsg+wUVmoTi0UMixCLTQyLgiwBAAD/0A+28GoUi00MixGLTQyLgiwBAAD/0A+2yDvxfgzHRfwBAAAA6YAAAABqE4tVDIsCi00Mi5AsAQAA/9IPtvBqFItFDIsQi00Mi4IsAQAA/9APtsg78X0Jx0X4AAAAAOtDi1UMiwKLTQyLkMgAAAD/0otFDIsQi00Mi4LMAAAA3V3w/9DcXfDf4PbEQXoJx0XsAQAAAOsHx0XsAAAAAItN7IlN+ItV+IlV/IpF/F6L5V3D</compiledString>
 					<returnType>bool</returnType>
-					<sString>rBaseStamina&gt;=rBaseWill</sString>
+					<sString>(pSecond-&gt;IsRecommended(19) &gt; pSecond-&gt;IsRecommended(20) ? 1 : pSecond-&gt;IsRecommended(19) &lt; pSecond-&gt;IsRecommended(20) ? 0 : rBaseStamina&gt;=rBaseWill)</sString>
 				</condition>
 				<name>StaOrWillAlly</name>
 			</ConditionFormula>

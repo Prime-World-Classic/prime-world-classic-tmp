@@ -811,9 +811,9 @@
 														<Item href="" />
 													</effect>
 													<enabled>
-														<compiledString>FSYAAAACAAAALQAAAEYAAABSYXRjYXRjaGVyX0EyX1NVUAAAAFJhdGNhdGNoZXJfQTJfU1VQAFWL7IPsFGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoFAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAD7ZN+4XJdDaLVQiLAotNCIuQQAEAAP/Si0UIixCLTQiLgkQBAADdXfD/0Nxd8N/g9sRBegnHRewBAAAA6wfHRewAAAAAikXsi+Vdww==</compiledString>
+														<compiledString>FSYAAAACAAAALgAAAEcAAABSYXRjYXRjaGVyX0EyX1NVUAAAAFJhdGNhdGNoZXJfQTJfU1VQAFWL7IPsIFZoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaBQAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AA+2TfuFyQ+EyQAAAGoTi1UIiwKLTQiLkCwBAAD/0g+28GoUi0UIixCLTQiLgiwBAAD/0A+2yDvxfgzHRfQBAAAA6YAAAABqE4tVCIsCi00Ii5AsAQAA/9IPtvBqFItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0XwAAAAAOtDi1UIiwKLTQiLkMgAAAD/0otFCIsQi00Ii4LMAAAA3V3o/9DcXejf4PbEQXoJx0XkAQAAAOsHx0XkAAAAAItN5IlN8ItV8IlV9IN99AB0CcdF4AEAAADrB8dF4AAAAACKReBei+Vdww==</compiledString>
 														<returnType>bool</returnType>
-														<sString>tal("Ratcatcher_A2_SUP") &amp;&amp; sStamina&gt;=sWill</sString>
+														<sString>tal("Ratcatcher_A2_SUP") &amp;&amp; (pFirst-&gt;IsRecommended(19) &gt; pFirst-&gt;IsRecommended(20) ? 1 : pFirst-&gt;IsRecommended(19) &lt; pFirst-&gt;IsRecommended(20) ? 0 : sBaseStamina&gt;=sBaseWill)</sString>
 													</enabled>
 													<formulaName></formulaName>
 													<lifeTime>
@@ -858,9 +858,9 @@
 														<Item href="" />
 													</effect>
 													<enabled>
-														<compiledString>FSYAAAACAAAALQAAAEYAAABSYXRjYXRjaGVyX0EyX1NVUAAAAFJhdGNhdGNoZXJfQTJfU1VQAFWL7IPsFGgAAAAAi0UIixCLTQiLgqgBAAD/0IXAdCpoFAAAAItNCIsRi00Ii4KoAQAA/9CJRfyLTfyLEYtN/ItCBP/QiEX76wTGRfsAD7ZN+4XJdDaLVQiLAotNCIuQQAEAAP/Si0UIixCLTQiLgkQBAADdXfD/0Nxd8N/g9sRBdQnHRewBAAAA6wfHRewAAAAAikXsi+Vdww==</compiledString>
+														<compiledString>FSYAAAACAAAALgAAAEcAAABSYXRjYXRjaGVyX0EyX1NVUAAAAFJhdGNhdGNoZXJfQTJfU1VQAFWL7IPsIFZoAAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaBQAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AA+2TfuFyQ+EyQAAAGoTi1UIiwKLTQiLkCwBAAD/0g+28GoUi0UIixCLTQiLgiwBAAD/0A+2yDvxfgzHRfQBAAAA6YAAAABqE4tVCIsCi00Ii5AsAQAA/9IPtvBqFItFCIsQi00Ii4IsAQAA/9APtsg78X0Jx0XwAAAAAOtDi1UIiwKLTQiLkMgAAAD/0otFCIsQi00Ii4LMAAAA3V3o/9DcXejf4PbEQXoJx0XkAQAAAOsHx0XkAAAAAItN5IlN8ItV8IlV9IN99AB1CcdF4AEAAADrB8dF4AAAAACKReBei+Vdww==</compiledString>
 														<returnType>bool</returnType>
-														<sString>tal("Ratcatcher_A2_SUP") &amp;&amp; sStamina&lt;sWill</sString>
+														<sString>tal("Ratcatcher_A2_SUP") &amp;&amp; !(pFirst-&gt;IsRecommended(19) &gt; pFirst-&gt;IsRecommended(20) ? 1 : pFirst-&gt;IsRecommended(19) &lt; pFirst-&gt;IsRecommended(20) ? 0 : sBaseStamina&gt;=sBaseWill)</sString>
 													</enabled>
 													<formulaName></formulaName>
 													<lifeTime>

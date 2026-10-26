@@ -1659,7 +1659,35 @@ namespace NWorld
 
     NI_VERIFY(NULL != pMovingUnit, "Invalid unit", return true);
 
-    ghostMoveIndex = pMovingUnit->SetGhostMode( GetDB().collisionFlags, false );
+    // corridor: the constant "GhostCorridor_<mark applicator name>" of the ability (see PFApplMove.h)
+    corridorMark.clear();
+    corridorRadius = 0.0f;
+    const char * const corridorPrefix = "GhostCorridor_";
+    const int corridorPrefixLen = (int)strlen( corridorPrefix );
+    PFAbilityData const * pData = GetAbilityData();
+    if ( pData && pData->GetDBDesc() && pData->GetDBDesc()->constants )
+    {
+      vector<NDb::Ptr<NDb::UnitConstant>> const & vars = pData->GetDBDesc()->constants->vars;
+      for ( int i = 0; i < vars.size(); ++i )
+      {
+        if ( !vars[i] || strncmp( vars[i]->name.c_str(), corridorPrefix, corridorPrefixLen ) != 0 )
+          continue;
+        corridorMark   = vars[i]->name.c_str() + corridorPrefixLen;
+        corridorRadius = pData->CalcParam( vars[i]->name.c_str(), pOwner.GetPtr(), pOwner.GetPtr(), pData );
+        break;
+      }
+    }
+    corridorLength = 0.0f;
+    if ( HasCorridor() )
+    {
+      string lengthName = "GhostCorridorLength_";
+      lengthName += corridorMark;
+      if ( pData->GetConstant( lengthName.c_str() ) )
+        corridorLength = pData->CalcParam( lengthName.c_str(), pOwner.GetPtr(), pOwner.GetPtr(), pData );
+    }
+
+    const int ghostMode = GetDB().collisionFlags | ( HasCorridor() ? GHOSTMOVE_CORRIDOR_FLAG : 0 );
+    ghostMoveIndex = pMovingUnit->SetGhostMode( ghostMode, false );
 
     return false;
   }
@@ -1680,19 +1708,124 @@ namespace NWorld
     }
 
     // the current place is free (no obstacles, no other units): the unit stays where it is. Placing it anyway snaps it
-    // to the tile centre, a visible jerk when a ghost move status ends (Laguna's trail, the Mana Wyrm's ethereal form)
-    if (!pMovingUnit->IsDead() && !pMovingUnit->CanOccupyPosition( pMovingUnit->GetPosition().AsVec2D() ))
+    // to the tile centre, a visible jerk when a ghost move status ends (Laguna's trail, the Mana Wyrm's ethereal form)    if (!pMovingUnit->IsDead() && !pMovingUnit->CanOccupyPosition( pMovingUnit->GetPosition().AsVec2D() ))
     {
+      // the unit may be deep inside an obstacle (Laguna's jellyfish trail through a forest), while the placing below looks
+      // for a free place only ~10 m around and takes any free tile, a small clearing inside the forest too: find the
+      // nearest place on a road first
+      const float roadSearchRadius = 40.0f;
+      CVec2 placePos = pMovingUnit->GetPosition().AsVec2D();
+      CVec2 roadPos;
+      if ( pMovingUnit->FindRoadPlace( placePos, roadSearchRadius, roadPos ) )
+        placePos = roadPos;
+
       if ( GetDB().pushUnits )
       {
-        pMovingUnit->PlaceUnitWithPush( pMovingUnit->GetPosition().AsVec2D(), pMovingUnit->GetObjectSize(), true, false );
+        pMovingUnit->PlaceUnitWithPush( placePos, pMovingUnit->GetObjectSize(), true, false );
       }
       else
       {
-        pMovingUnit->TeleportTo( pMovingUnit->GetPosition().AsVec2D(), true, false );
-      } 
+        pMovingUnit->TeleportTo( placePos, true, false );
+      }
     }
-    Base::Stop();
+Base::Stop();
+  }
+
+}
+
+namespace NWorld
+{
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  int PFBaseUnit::CollectGhostCorridor( vector<CVec2> & points, float & radius ) const
+  {
+    points.clear();
+    radius = 0.0f;
+
+    // a trail laid while something flies (the jellyfish): the applicator laying it is aimed at the flier's current position
+    struct FlyingTrail
+    {
+      PFBaseApplicator const * pLayer;
+      CVec2 flier;          // current position of the flier
+      CVec2 start;          // the trail point farthest from the flier: the start of the flight
+      float length;         // length of the whole flight
+    };
+    vector<FlyingTrail> flyingTrails;
+
+    for ( ring::Range<PFBaseApplicator::AppliedRing> it( appliedApplicators ); it; ++it )
+    {
+      PFBaseApplicator const & appl = *it;
+      if ( appl.GetTypeId() != PFApplGhostMove::typeId || !appl.IsAlive() || !appl.IsEnabled() )
+        continue;
+      PFApplGhostMove const & ghost = static_cast<PFApplGhostMove const &>( appl );
+      if ( !ghost.HasCorridor() )
+        continue;
+
+      if ( ghost.GetCorridorRadius() > radius )
+        radius = ghost.GetCorridorRadius();
+      const CPtr<PFBaseUnit> pGhostOwner = ghost.GetAbilityOwner();
+
+      for ( ring::Range<PFBaseApplicator::NamedRing> nit( namedApplicators ); nit; ++nit )
+      {
+        PFBaseApplicator const & mark = *nit;
+        if ( !mark.IsEnabled() || !( mark.GetAbilityOwner() == pGhostOwner ) || mark.GetApplicatorName().compare( ghost.GetCorridorMark().c_str() ) != 0 )
+          continue;
+
+        // the corridor point: the first ancestor applicator aimed at a position (the trail point)
+        PFBaseApplicator const * pAncestor = IsValid( mark.GetParentAppl() ) ? mark.GetParentAppl().GetPtr() : 0;
+        for ( int depth = 0; pAncestor && depth < 4; ++depth )
+        {
+          if ( pAncestor->GetTarget().IsPosition() )
+            break;
+          pAncestor = IsValid( pAncestor->GetParentAppl() ) ? pAncestor->GetParentAppl().GetPtr() : 0;
+        }
+        if ( !pAncestor || !pAncestor->GetTarget().IsPosition() )
+          continue;
+        const CVec2 point = pAncestor->GetTarget().GetPosition().AsVec2D();
+        points.push_back( point );
+
+        // the trail is still being laid: remember the flier (the parent of the trail point, aimed at its position)
+        PFBaseApplicator const * pLayer = IsValid( pAncestor->GetParentAppl() ) ? pAncestor->GetParentAppl().GetPtr() : 0;
+        if ( ghost.GetCorridorLength() <= 0.0f || !pLayer || !pLayer->IsAlive() || !pLayer->GetTarget().IsPosition() )
+          continue;
+        int t = 0;
+        while ( t < flyingTrails.size() && flyingTrails[t].pLayer != pLayer )
+          ++t;
+        if ( t == flyingTrails.size() )
+        {
+          FlyingTrail trail;
+          trail.pLayer = pLayer;
+          trail.flier  = pLayer->GetTarget().GetPosition().AsVec2D();
+          trail.start  = point;
+          trail.length = ghost.GetCorridorLength();
+          flyingTrails.push_back( trail );
+        }
+        else if ( fabs2( point - flyingTrails[t].flier ) > fabs2( flyingTrails[t].start - flyingTrails[t].flier ) )
+          flyingTrails[t].start = point;
+      }
+    }
+
+    // the flier goes by a straight line: the corridor goes from it to the end of the flight at once
+    int extended = 0;
+    const float step = radius * 0.5f;
+    for ( int t = 0; t < flyingTrails.size() && step > 0.0f; ++t )
+    {
+      const FlyingTrail & trail = flyingTrails[t];
+      CVec2 dir = trail.flier - trail.start;
+      const float flown = fabs( dir );
+      if ( flown < 0.5f || flown >= trail.length )
+        continue;                                   // the direction is not known yet, or the flight is over
+      dir *= 1.0f / flown;
+      for ( float d = flown + step; ; d += step )
+      {
+        const float clamped = ( d < trail.length ) ? d : trail.length;
+        points.push_back( trail.start + dir * clamped );
+        if ( clamped >= trail.length )
+          break;
+      }
+      ++extended;
+    }
+    return extended;
   }
 
 }

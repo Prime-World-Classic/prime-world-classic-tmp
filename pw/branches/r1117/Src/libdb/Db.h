@@ -240,6 +240,7 @@ public:
   static const DbResource* GetMainResource( const DbResource * resource );
 
   void SetOriginalResource( DbResource * res ) { originalResource = res; }
+  const DbResource * GetParentResource() const { return __parent.GetPtr(); }
   DbResource * GetOriginalResource() const { return originalResource; }
 
 protected:

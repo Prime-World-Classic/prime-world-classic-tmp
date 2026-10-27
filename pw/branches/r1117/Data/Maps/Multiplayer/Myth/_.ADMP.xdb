@@ -2519,96 +2519,6 @@
 			<scriptName></scriptName>
 		</Item>
 		<Item>
-			<gameObject href="/Heroes/Placeholders/TeamA.HPLH" />
-			<lockMap>true</lockMap>
-			<offset>
-				<rotationX>0</rotationX>
-				<rotationY>0</rotationY>
-				<rotationZ>0</rotationZ>
-				<scaleX>1</scaleX>
-				<scaleY>1</scaleY>
-				<scaleZ>1</scaleZ>
-				<translateX>141.9</translateX>
-				<translateY>185.2</translateY>
-				<translateZ>-0.2</translateZ>
-			</offset>
-			<player>None</player>
-			<scriptGroupName></scriptGroupName>
-			<scriptName></scriptName>
-		</Item>
-		<Item>
-			<gameObject href="/Heroes/Placeholders/TeamA.HPLH" />
-			<lockMap>true</lockMap>
-			<offset>
-				<rotationX>0</rotationX>
-				<rotationY>0</rotationY>
-				<rotationZ>0</rotationZ>
-				<scaleX>1</scaleX>
-				<scaleY>1</scaleY>
-				<scaleZ>1</scaleZ>
-				<translateX>135.4</translateX>
-				<translateY>190.4</translateY>
-				<translateZ>-0.2</translateZ>
-			</offset>
-			<player>None</player>
-			<scriptGroupName></scriptGroupName>
-			<scriptName></scriptName>
-		</Item>
-		<Item>
-			<gameObject href="/Heroes/Placeholders/TeamA.HPLH" />
-			<lockMap>true</lockMap>
-			<offset>
-				<rotationX>0</rotationX>
-				<rotationY>0</rotationY>
-				<rotationZ>0</rotationZ>
-				<scaleX>1</scaleX>
-				<scaleY>1</scaleY>
-				<scaleZ>1</scaleZ>
-				<translateX>136.0</translateX>
-				<translateY>186.2</translateY>
-				<translateZ>-0.2</translateZ>
-			</offset>
-			<player>None</player>
-			<scriptGroupName></scriptGroupName>
-			<scriptName></scriptName>
-		</Item>
-		<Item>
-			<gameObject href="/Heroes/Placeholders/TeamA.HPLH" />
-			<lockMap>true</lockMap>
-			<offset>
-				<rotationX>0</rotationX>
-				<rotationY>0</rotationY>
-				<rotationZ>0</rotationZ>
-				<scaleX>1</scaleX>
-				<scaleY>1</scaleY>
-				<scaleZ>1</scaleZ>
-				<translateX>139.5</translateX>
-				<translateY>192.6</translateY>
-				<translateZ>-0.2</translateZ>
-			</offset>
-			<player>None</player>
-			<scriptGroupName></scriptGroupName>
-			<scriptName></scriptName>
-		</Item>
-		<Item>
-			<gameObject href="/Heroes/Placeholders/TeamA.HPLH" />
-			<lockMap>true</lockMap>
-			<offset>
-				<rotationX>0</rotationX>
-				<rotationY>0</rotationY>
-				<rotationZ>0</rotationZ>
-				<scaleX>1</scaleX>
-				<scaleY>1</scaleY>
-				<scaleZ>1</scaleZ>
-				<translateX>144.0</translateX>
-				<translateY>189.8</translateY>
-				<translateZ>-0.2</translateZ>
-			</offset>
-			<player>None</player>
-			<scriptGroupName></scriptGroupName>
-			<scriptName></scriptName>
-		</Item>
-		<Item>
 			<gameObject href="/Maps/Multiplayer/Myth/Buildings/A_Tower3.TOWR" />
 			<lockMap>true</lockMap>
 			<offset>
@@ -89211,6 +89121,96 @@
 				<translateX>77.30531</translateX>
 				<translateY>235.6027</translateY>
 				<translateZ>-0.08790874</translateZ>
+			</offset>
+			<player>None</player>
+			<scriptGroupName></scriptGroupName>
+			<scriptName></scriptName>
+		</Item>
+		<Item>
+			<gameObject href="/Heroes/Placeholders/TeamA.HPLH" />
+			<lockMap>true</lockMap>
+			<offset>
+				<rotationX>0</rotationX>
+				<rotationY>0</rotationY>
+				<rotationZ>0</rotationZ>
+				<scaleX>1</scaleX>
+				<scaleY>1</scaleY>
+				<scaleZ>1</scaleZ>
+				<translateX>141.9</translateX>
+				<translateY>185.2</translateY>
+				<translateZ>-0.2</translateZ>
+			</offset>
+			<player>None</player>
+			<scriptGroupName></scriptGroupName>
+			<scriptName></scriptName>
+		</Item>
+		<Item>
+			<gameObject href="/Heroes/Placeholders/TeamA.HPLH" />
+			<lockMap>true</lockMap>
+			<offset>
+				<rotationX>0</rotationX>
+				<rotationY>0</rotationY>
+				<rotationZ>0</rotationZ>
+				<scaleX>1</scaleX>
+				<scaleY>1</scaleY>
+				<scaleZ>1</scaleZ>
+				<translateX>135.4</translateX>
+				<translateY>190.4</translateY>
+				<translateZ>-0.2</translateZ>
+			</offset>
+			<player>None</player>
+			<scriptGroupName></scriptGroupName>
+			<scriptName></scriptName>
+		</Item>
+		<Item>
+			<gameObject href="/Heroes/Placeholders/TeamA.HPLH" />
+			<lockMap>true</lockMap>
+			<offset>
+				<rotationX>0</rotationX>
+				<rotationY>0</rotationY>
+				<rotationZ>0</rotationZ>
+				<scaleX>1</scaleX>
+				<scaleY>1</scaleY>
+				<scaleZ>1</scaleZ>
+				<translateX>136.0</translateX>
+				<translateY>186.2</translateY>
+				<translateZ>-0.2</translateZ>
+			</offset>
+			<player>None</player>
+			<scriptGroupName></scriptGroupName>
+			<scriptName></scriptName>
+		</Item>
+		<Item>
+			<gameObject href="/Heroes/Placeholders/TeamA.HPLH" />
+			<lockMap>true</lockMap>
+			<offset>
+				<rotationX>0</rotationX>
+				<rotationY>0</rotationY>
+				<rotationZ>0</rotationZ>
+				<scaleX>1</scaleX>
+				<scaleY>1</scaleY>
+				<scaleZ>1</scaleZ>
+				<translateX>139.5</translateX>
+				<translateY>192.6</translateY>
+				<translateZ>-0.2</translateZ>
+			</offset>
+			<player>None</player>
+			<scriptGroupName></scriptGroupName>
+			<scriptName></scriptName>
+		</Item>
+		<Item>
+			<gameObject href="/Heroes/Placeholders/TeamA.HPLH" />
+			<lockMap>true</lockMap>
+			<offset>
+				<rotationX>0</rotationX>
+				<rotationY>0</rotationY>
+				<rotationZ>0</rotationZ>
+				<scaleX>1</scaleX>
+				<scaleY>1</scaleY>
+				<scaleZ>1</scaleZ>
+				<translateX>144.0</translateX>
+				<translateY>189.8</translateY>
+				<translateZ>-0.2</translateZ>
 			</offset>
 			<player>None</player>
 			<scriptGroupName></scriptGroupName>

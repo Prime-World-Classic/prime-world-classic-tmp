@@ -152,6 +152,15 @@
 
 #define PSHADER_SHCONSTS      c12
 
+// Альфа-тест (шаг 14): фиксированной альфа-смены в Vulkan нет, поэтому
+// D3DRS_ALPHATESTENABLE переезжает в пиксельный шейдер (BasicMaterial.hlsl).
+// x = ALPHAREF/255, y = +1 при GREATEREQUAL и -1 при LESSEQUAL
+// (renderstatesmanager.cpp:155) -> clip((a-x)*y) отбрасывает ровно то, что
+// отбросил бы states-тест. Тест выключен -> x=0,y=0 -> clip(0) не режет ничего.
+// Значение пишет шов из модели состояний перед загрузкой c-банка; c40..c95 в
+// корпусе не заняты (c30..c39 — _commonTemperature, c220 — night).
+#define PSHADER_ALPHATEST_REF c40
+
 // Terrain global
 #define TERRAIN_AMBIENT      c10
 #define TERRAIN_DIFFUSE1     c11

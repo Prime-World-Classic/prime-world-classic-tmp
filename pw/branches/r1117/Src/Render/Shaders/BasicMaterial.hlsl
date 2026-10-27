@@ -234,6 +234,9 @@ float4 diffuseColorLighting : register( BASICMAT_DIFFUSE1 );
 
 float4 opacityEmissiveReflectivitySpecPower : register( OPACITY_AND_OTHERS );
 
+// см. GlobalMasks.h PSHADER_ALPHATEST_REF: вырезание по альфе на Vulkan
+float4 alphaTestRef : register( PSHADER_ALPHATEST_REF );
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #if RenderModeValue != RENDERNORMAL
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -460,6 +463,13 @@ PS_OUT MainPass_PSMain( VS_OUT In )
   #endif
 #endif
   output.color.a = outputColor.a;
+
+  // Фиксированной альфа-смены в Vulkan нет (ALPHATESTENABLE+ALPHAREF+ALPHAFUNC),
+  // поэтому тест живёт здесь: x = ALPHAREF/255, y = +1 (GREATEREQUAL) или -1
+  // (LESSEQUAL); тест выключен -> (0,0) -> clip(0) ничего не отсекает.
+  // SM3-слой контейнера этого кода не содержит (mkshd2 перегенерирует только
+  // SPIR-V), на D3D9 остаётся фиксированный тест.
+  clip((output.color.a - alphaTestRef.x) * alphaTestRef.y);
 
 #if DO_DEPTH_OUT
 	output.z = In.PositionWSCS.w;

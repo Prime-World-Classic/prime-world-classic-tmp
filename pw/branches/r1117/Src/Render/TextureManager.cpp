@@ -292,7 +292,16 @@ static bool LoadTextureFromFileImpl( const char* fileName, UINT skipMipLevels, T
 
   pStream = 0;
 
-  NI_DX_WARN(hResult, "LoadTextureFromFileImpl()");
+  if( FAILED(hResult) )
+  {
+    // Имя файла — прямо в строке отказа: NI_VERIFY-сообщения в shipping
+    // вырезаны («cant load texture: %s» в лог не попадает), и без имени отказ
+    // опознаётся только по размеру и фазе загрузки — так в разбор ушёл
+    // Terrain/Roads/empty.dds (2x2 DXT5, см. ReadDDS.cpp: округление BC-размера).
+    char wname[288];
+    snprintf( wname, sizeof(wname), "LoadTextureFromFileImpl(%s)", fileName ? fileName : "?" );
+    NI_DX_WARN( hResult, wname );
+  }
 	NI_VERIFY( SUCCEEDED( hResult ), NStr::StrFmt( "2D texture %s loading failed", fileName ), return false; );
 
   pTexture = Create<Texture2D>(pD3DTexture);
@@ -319,7 +328,15 @@ static bool LoadTextureFromFileImpl(const char* fileName, UINT skipMipLevels, Te
     hResult = CreateTextureFromDDSFileInMemory(pStream->GetBuffer(), sizeInFile, skipMipLevels, &pBaseTex);
 
   if( SUCCEEDED(hResult) ) {
-    NI_VERIFY(pBaseTex->GetType() == D3DRTYPE_CUBETEXTURE,
+    // Тип (куб/2D) — через seam: pBaseTex — ручка бэкенда, GetType() по ней =
+    // вызов по чужой vtable под NVRHI (шаг 13.4c, см. BackendTextureInfo::cube
+    // в renderbackend.h:494). Замер до правки: 12 обращений за прогон боя
+    // (skybox-кубы MOBA), все из потока загрузки, каждое — строка «клиент
+    // позвал COM-метод по seam-ручке (слот 10, kind=1 …) — метода seam'а нет».
+    IRenderBackend::BackendTextureInfo ci;
+    const bool okCube = GetBackend() &&
+        SUCCEEDED( GetBackend()->GetTextureInfo( MakeBackendHandle<HTexture>(pBaseTex), &ci ) ) && ci.cube;
+    NI_VERIFY(okCube,
               NStr::StrFmt("Inconsistent texture %s: cubemap texture requested, yet it isn't", fileName),
               pBaseTex->Release(); return false);
     d3dtexture = static_cast<IDirect3DCubeTexture9*>(pBaseTex);

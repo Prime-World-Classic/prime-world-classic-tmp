@@ -85,6 +85,10 @@ sampler depthMapTerrain : register(s3);
 float4 diffuseMul : register( SAMPLER0_MUL );
 float4 diffuseAdd : register( SAMPLER0_ADD );
 float4 scaleOffset : register(PSHADER_LOCALCONST2);
+// см. GlobalMasks.h PSHADER_ALPHATEST_REF: вырезание по альфе на Vulkan
+// (фиксированной альфа-смены в Vulkan нет, шаг 14). Объявление — ВНЕ #if по
+// режиму декали: тест нужен всем вариантам.
+float4 alphaTestRef : register( PSHADER_ALPHATEST_REF );
 #if DecalModeValue == ZDECODE
 float2 QZnQ : register(PSHADER_LOCALCONST3);
 #endif
@@ -143,5 +147,10 @@ half4 MainPass_PSMain( VS_OUTPUT In, float2 PixelPos : VPOS ) : COLOR0
   outputColor.a = 1;
 #endif
 
+  // Альфа-тест переезжает в шейдер: x = ALPHAREF/255, y = +1 (GREATEREQUAL) или
+  // -1 (LESSEQUAL); тест выключен -> (0,0) -> clip(0) ничего не отсекает.
+  // SM3-слой контейнера этого кода не содержит (mkshd2 перегенерирует только
+  // SPIR-V), на D3D9 остаётся фиксированный тест.
+  clip((outputColor.a - alphaTestRef.x) * alphaTestRef.y);
   return outputColor;
 }

@@ -16,6 +16,9 @@ float4 diffuse2Mul : register( SAMPLER1_MUL );
 float4 diffuse2Add : register( SAMPLER1_ADD );
 
 float4 uvOffsetBoth  : register( VSHADER_LOCALCONST0 );
+// см. GlobalMasks.h PSHADER_ALPHATEST_REF: вырезание по альфе на Vulkan
+// (фиксированной альфа-смены в Vulkan нет, шаг 14)
+float4 alphaTestRef : register( PSHADER_ALPHATEST_REF );
 
 struct VS_IN
 {
@@ -89,5 +92,10 @@ half4 MainPass_PSMain( VS_OUT In, float4 PixelPos : VPOS ) : COLOR
   diffuseColor.w = EncodeBloomVal(diffuseColor.w, opacityAndEmissive.y);
 #endif
 
+  // Альфа-тест переезжает в шейдер: x = ALPHAREF/255, y = +1 (GREATEREQUAL) или
+  // -1 (LESSEQUAL); тест выключен -> (0,0) -> clip(0) ничего не отсекает.
+  // SM3-слой контейнера этого кода не содержит (mkshd2 перегенерирует только
+  // SPIR-V), на D3D9 остаётся фиксированный тест.
+  clip((diffuseColor.a - alphaTestRef.x) * alphaTestRef.y);
   return diffuseColor;
 }

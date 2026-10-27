@@ -58477,7 +58477,7 @@
     {
       "id": 204,
       "name": "gamedata062.pile",
-      "packed_size": 19061840,
+      "packed_size": 19061837,
       "source_size": 72764325,
       "files": [
         ["Maps/Multiplayer/MidOnly/_.baked_terrain", 8399188, 4105656994],
@@ -58856,7 +58856,7 @@
         ["Maps/Multiplayer/Myth/Orange.ADMPDSCR_title.txt", 20, 2496077374],
         ["Maps/Multiplayer/Myth/Orange.ADMPDSCR_title_en.txt", 14, 3127178626],
         ["Maps/Multiplayer/Myth/Orange.ADMPSTTN.xdb", 317, 901170372],
-        ["Maps/Multiplayer/Myth/PostEffect.PFXP.xdb", 1853, 1772656118],
+        ["Maps/Multiplayer/Myth/PostEffect.PFXP.xdb", 1853, 3697857727],
         ["Maps/Multiplayer/Myth/Red.ADMPDSCR.xdb", 1220, 2483822853],
         ["Maps/Multiplayer/Myth/Red.ADMPDSCR_6989876d8c8045af9b322fa7799e852e_tooltip.txt", 602, 4124976675],
         ["Maps/Multiplayer/Myth/Red.ADMPDSCR_6989876d8c8045af9b322fa7799e852e_tooltip_en.txt", 594, 2833749725],
@@ -80391,10 +80391,10 @@
     {
       "id": 223,
       "name": "gamedata081.pile",
-      "packed_size": 18959944,
-      "source_size": 19157287,
+      "packed_size": 18960270,
+      "source_size": 19157613,
       "files": [
-        ["UI/Screens/Combat/Flash/main.swf", 18913752, 1011524534],
+        ["UI/Screens/Combat/Flash/main.swf", 18914078, 2119312422],
         ["UI/Screens/Combat/FlyTexts/FlyCustomText.IMGLBL.xdb", 2053, 427458383],
         ["UI/Screens/Combat/FlyTexts/FlyCustomText.IMGLBL_captionText.txt", 28, 1101780052],
         ["UI/Screens/Combat/FlyTexts/FlyCustomText_Energy.IMGLBL.xdb", 2067, 342939488],
@@ -89467,8 +89467,8 @@
     {
       "id": 243,
       "name": "gamedata101.pile",
-      "packed_size": 447493,
-      "source_size": 4280625,
+      "packed_size": 496860,
+      "source_size": 4341792,
       "files": [
         ["UI/Styles/Icons/PingWheel/ping_wheel_s_bg_4.dds", 262272, 3609212987],
         ["UI/Styles/Icons/PingWheel/ping_wheel_s_bg_5.dds", 262272, 1685530396],
@@ -89528,7 +89528,7 @@
         ["UI/UIRoot_substitutes_123_captionText_en.txt", 18, 3663494472],
         ["UI/UIRoot_substitutes_124_captionText.txt", 16, 1486702998],
         ["UI/UIRoot_substitutes_124_captionText_en.txt", 16, 594681612],
-        ["Maps/Multiplayer/Myth/Black.ADMPDSCR.xdb", 1230, 2772602656],
+        ["Maps/Multiplayer/Myth/Black.ADMPDSCR.xdb", 1232, 1200099609],
         ["Maps/Multiplayer/Myth/Black.ADMPDSCR_c7bf89c47ab341e0811e0391a7be0b83_tooltip.txt", 636, 719707233],
         ["Maps/Multiplayer/Myth/Black.ADMPDSCR_c7bf89c47ab341e0811e0391a7be0b83_tooltip_en.txt", 656, 4137232350],
         ["Maps/Multiplayer/Myth/Black.ADMPDSCR_description.txt", 650, 3573180499],
@@ -89540,7 +89540,11 @@
         ["Creeps/DefaultStats/MidOnly/PureDamageSplit.APLR.xdb", 8976, 3543482935],
         ["Creeps/DefaultStats/MidOnly/PureDamageSplit.APLR_7fdd9f3686e64dc19ae3d2885a97727a_message.txt", 102, 567352465],
         ["Creeps/DefaultStats/MidOnly/PureDamageSplit.APLR_7fdd9f3686e64dc19ae3d2885a97727a_message_en.txt", 102, 567352465],
-        ["UI/FontStyles/TT_gold_difficulty_pve_map.IFNT.xdb", 286, 2844832336]
+        ["UI/FontStyles/TT_gold_difficulty_pve_map.IFNT.xdb", 286, 2844832336],
+        ["UI/Styles/Icons/Maps/PvEEpisode2Small_Gold.ITEX.xdb", 782, 3371947970],
+        ["UI/Styles/Icons/Maps/PvEEpisode2Small_Gold.dds", 29808, 3651994677],
+        ["UI/Styles/Icons/Maps/PvEEpisode2_Gold.ITEX.xdb", 767, 2227561229],
+        ["UI/Styles/Icons/Maps/PvEEpisode2_Gold.dds", 29808, 3651994677]
       ]
     }
   ]

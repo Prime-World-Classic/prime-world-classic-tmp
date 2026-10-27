@@ -37,6 +37,8 @@ public:
   void SetHeroRaiting(int heroId, int raiting, float deltaWin, float deltaLose, bool isNovice, const char* rankIcon, const wstring & rankName);
   void SetHeroRaitingAcc(int heroId, int raiting, float deltaWin, float deltaLose, bool isNovice, const char* rankIcon, const wstring & rankName);
 	void SetHeroPremium(int heroId, bool hasPremium, NDb::EFaction originalFraction);
+	// For the voice on the cards: an ally shown in the enemy column (TeamSidesLayout), a bot.
+	void SetHeroVoiceInfo(int heroId, bool otherSide, bool isBot);
 
   void AddModeDescription(const char * modeImage, int id) ;
 

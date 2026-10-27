@@ -1,6 +1,11 @@
 #include "stdafx.h"
 #include "VoiceOverlayController.h"
 #include "NivalInput/Binds.h"
+#include "NivalInput/InputCommandInstance.h"
+#include "NivalInput/ControlsSet.h"
+#include "NivalInput/HwInputInterface.h"
+#include "ChatController.h"
+#include "System/Texts.h"
 
 #include <winsock2.h>
 #include <stdio.h>
@@ -88,11 +93,60 @@ namespace
     ::GetWindowThreadProcessId( foreground, &processId );
     return processId == ::GetCurrentProcessId();
   }
+
+  // Virtual key of a NivalInput control (NivalInput/HwInputKeys.inl names); 0 if unknown.
+  int VirtualKeyOf( const string & name )
+  {
+    if ( name.size() == 1 )
+    {
+      const char c = name[0];
+      if ( ( c >= 'A' && c <= 'Z' ) || ( c >= '0' && c <= '9' ) )
+        return c;
+      switch ( c )
+      {
+        case '`': return VK_OEM_3;
+        case '-': return VK_OEM_MINUS;
+        case '=': return VK_OEM_PLUS;
+        case '[': return VK_OEM_4;
+        case ']': return VK_OEM_6;
+        case ';': return VK_OEM_1;
+        case '\'': return VK_OEM_7;
+        case ',': return VK_OEM_COMMA;
+        case '.': return VK_OEM_PERIOD;
+        case '/': return VK_OEM_2;
+        case '\\': return VK_OEM_5;
+      }
+      return 0;
+    }
+    if ( name.size() >= 2 && name.size() <= 3 && name[0] == 'F' && name[1] >= '1' && name[1] <= '9' )
+    {
+      const int n = atoi( name.c_str() + 1 );
+      return n >= 1 && n <= 15 ? VK_F1 + n - 1 : 0;
+    }
+    if ( name.size() == 5 && name.compare( 0, 4, "NUM_" ) == 0 && name[4] >= '0' && name[4] <= '9' )
+      return VK_NUMPAD0 + ( name[4] - '0' );
+
+    struct Named { const char * name; int vk; };
+    static const Named table[] = {
+      { "LSHIFT", VK_LSHIFT }, { "RSHIFT", VK_RSHIFT }, { "LCTRL", VK_LCONTROL }, { "RCTRL", VK_RCONTROL },
+      { "LALT", VK_LMENU }, { "RALT", VK_RMENU }, { "LWIN", VK_LWIN }, { "RWIN", VK_RWIN },
+      { "SPACE", VK_SPACE }, { "TAB", VK_TAB }, { "ENTER", VK_RETURN }, { "ESC", VK_ESCAPE },
+      { "BACKSPACE", VK_BACK }, { "CAPITAL", VK_CAPITAL }, { "UP", VK_UP }, { "DOWN", VK_DOWN },
+      { "LEFT", VK_LEFT }, { "RIGHT", VK_RIGHT }, { "HOME", VK_HOME }, { "END", VK_END },
+      { "PG_UP", VK_PRIOR }, { "PG_DOWN", VK_NEXT }, { "INSERT", VK_INSERT }, { "DELETE", VK_DELETE },
+      { "MOUSE_BUTTON0", VK_LBUTTON }, { "MOUSE_BUTTON1", VK_RBUTTON }, { "MOUSE_BUTTON2", VK_MBUTTON },
+      { "MOUSE_BUTTON3", VK_XBUTTON1 }, { "MOUSE_BUTTON4", VK_XBUTTON2 },
+    };
+    for ( int i = 0; i < sizeof( table ) / sizeof( table[0] ); ++i )
+      if ( name == table[i].name )
+        return table[i].vk;
+    return 0;
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VoiceOverlayController::VoiceOverlayController( UI::FlashContainer2 * flashWnd, const char* className ) :
+VoiceOverlayController::VoiceOverlayController( UI::FlashContainer2 * flashWnd, const char* className, bool _pollUnlockKey ) :
   FlashInterface( flashWnd, className ),
   socketHandle( INVALID_SOCKET ),
   socketFailed( false ),
@@ -102,6 +156,8 @@ VoiceOverlayController::VoiceOverlayController( UI::FlashContainer2 * flashWnd, 
   shown( false ),
   pttHeld( false ),
   unlocked( false ),
+  pollUnlockKey( _pollUnlockKey ),
+  hintShown( false ),
   hasCurrent( false )
 {
   flashWnd->AddFSListner( szOverlayCommand, this );
@@ -245,6 +301,12 @@ void VoiceOverlayController::Update( float timeDelta )
 
   ReceiveAll();
   UpdatePushToTalk();
+  if ( pollUnlockKey )
+  {
+    const bool held = IsUnlockBindHeld();
+    if ( held != unlocked )
+      SetUnlocked( held );
+  }
 
   pollTimer += timeDelta;
   silenceTime += timeDelta;
@@ -409,6 +471,7 @@ void VoiceOverlayController::ApplyState( const State & state )
     CallMethod( "SetVoiceOverlayInteractive", unlocked );
     CallMethod( "ShowVoiceOverlay", true );
     shown = true;
+    ShowUnlockHint();
     DebugLog( "show: mic %d, peers %d", state.micState, state.peers.size() );
   }
 }
@@ -434,6 +497,116 @@ bool VoiceOverlayController::IsPushToTalkHeld() const
     if ( !( ::GetAsyncKeyState( current.pttKeys[i] ) & 0x8000 ) )
       return false;
   return true;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void VoiceOverlayController::SetChat( ChatUiController * _chat )
+{
+  chat = _chat;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// "Shift", "Ctrl+Q", "Shift / Mouse4": key sets of the unlock bind; left and right modifiers merge.
+wstring VoiceOverlayController::GetUnlockKeyText()
+{
+  Input::Binds * binds = Input::BindsManager::Instance()->GetBinds();
+  if ( !binds || !binds->HwInput() )
+    return wstring( L"Shift" );
+  Input::ICommandInstance * command = binds->FindCommand( "voice_overlay_unlock_on" );
+  if ( !command )
+    return wstring( L"Shift" );
+
+  nstl::vector<wstring> variants;
+  Input::TControlsSet & sets = static_cast<Input::ICommandInstanceImplementation *>( command )->AccessControlsSet();
+  for ( Input::TControlsSet::iterator it = sets.begin(); it != sets.end(); ++it )
+  {
+    if ( !IsValid( *it ) )
+      continue;
+    vector<int> controls;
+    (*it)->GetControls( controls );
+    wstring text;
+    for ( int i = 0; i < controls.size(); ++i )
+    {
+      string name = binds->HwInput()->ControlName( controls[i] );
+      if ( name == "LSHIFT" || name == "RSHIFT" )
+        name = "Shift";
+      else if ( name == "LCTRL" || name == "RCTRL" )
+        name = "Ctrl";
+      else if ( name == "LALT" || name == "RALT" )
+        name = "Alt";
+      else if ( name.compare( 0, 12, "MOUSE_BUTTON" ) == 0 && name.size() == 13 )
+        name = NStr::StrFmt( "Mouse%d", name[12] - '0' + 1 );
+      if ( !text.empty() )
+        text += L"+";
+      text += NStr::ToUnicode( name );
+    }
+    if ( text.empty() )
+      continue;
+    bool known = false;
+    for ( int i = 0; i < variants.size() && !known; ++i )
+      known = variants[i] == text;
+    if ( !known )
+      variants.push_back( text );
+  }
+
+  wstring result;
+  for ( int i = 0; i < variants.size(); ++i )
+  {
+    if ( i )
+      result += L" / ";
+    result += variants[i];
+  }
+  return result.empty() ? wstring( L"Shift" ) : result;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void VoiceOverlayController::ShowUnlockHint()
+{
+  if ( hintShown || !IsValid( chat ) )
+    return;
+  hintShown = true;
+  const wstring key = GetUnlockKeyText();
+  wstring text;
+  if ( GetLanguageShortCode() == "en" )
+    text = wstring( L"Hold \"" ) + key + L"\" + click the voice button to mute/unmute an ally.";
+  else
+    text = wstring( L"Зажмите \"" ) + key
+      + L"\" + клик по кнопке войса, чтобы заглушить/вернуть союзника.";
+  chat->AddChatMessage( text, NDb::CHATCHANNEL_SYSTEM );
+  DebugLog( "unlock hint sent" );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// The bind lives in the adventure_screen section, which is inactive on the loading screen, so
+// its events never come there. Its keys are read here instead: any key set of the bind fully held.
+bool VoiceOverlayController::IsUnlockBindHeld()
+{
+  if ( !IsGameWindowActive() )
+    return false;
+  Input::Binds * binds = Input::BindsManager::Instance()->GetBinds();
+  if ( !binds || !binds->HwInput() )
+    return false;
+  Input::ICommandInstance * command = binds->FindCommand( "voice_overlay_unlock_on" );
+  if ( !command )
+    return false;
+  // Binds keeps only implementations (Binds::TCommands).
+  Input::TControlsSet & sets = static_cast<Input::ICommandInstanceImplementation *>( command )->AccessControlsSet();
+  for ( Input::TControlsSet::iterator it = sets.begin(); it != sets.end(); ++it )
+  {
+    if ( !IsValid( *it ) )
+      continue;
+    vector<int> controls;
+    (*it)->GetControls( controls );
+    bool all = !controls.empty();
+    for ( int i = 0; all && i < controls.size(); ++i )
+    {
+      const int vk = VirtualKeyOf( binds->HwInput()->ControlName( controls[i] ) );
+      all = vk != 0 && ( ::GetAsyncKeyState( vk ) & 0x8000 ) != 0;
+    }
+    if ( all )
+      return true;
+  }
+  return false;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

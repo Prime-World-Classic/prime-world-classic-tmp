@@ -114,6 +114,11 @@ void LoadingFlashInterface::SetHeroPremium( int heroId, bool hasPremium, NDb::EF
 	CallMethod( "SetHeroPremium", heroId, hasPremium, originalFraction);
 }
 
+void LoadingFlashInterface::SetHeroVoiceInfo( int heroId, bool otherSide, bool isBot )
+{
+  CallMethod( "SetHeroVoiceInfo", heroId, otherSide, isBot );
+}
+
 
 void LoadingFlashInterface::AddModeDescription( const char * modeImage, int id )
 {

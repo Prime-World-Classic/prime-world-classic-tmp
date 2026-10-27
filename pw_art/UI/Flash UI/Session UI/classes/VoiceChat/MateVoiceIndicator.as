@@ -73,6 +73,8 @@
 		public var mate:MateInfoBase;
 		public var peerId:int;
 		public var isMe:Boolean;
+		// Кнопка под полосками. На карточках экрана загрузки её нет: там под портретом рейтинги.
+		private var withUnderButton:Boolean;
 
 		private var glow:Sprite;
 		private var button:Sprite;
@@ -121,10 +123,11 @@
 		// Низ полосок ХП/МП (или портрета, если их нет).
 		private var statsBottom:Number = 60;
 
-		public function MateVoiceIndicator(_mate:MateInfoBase, _isMe:Boolean)
+		public function MateVoiceIndicator(_mate:MateInfoBase, _isMe:Boolean, _withUnderButton:Boolean = true)
 		{
 			mate = _mate;
 			isMe = _isMe;
+			withUnderButton = _withUnderButton;
 			Measure();
 
 			glow = CreateIcon();
@@ -509,7 +512,7 @@
 		// у себя микрофон.
 		private function DrawUnderButton():void
 		{
-			var show:Boolean = interactive && inCall;
+			var show:Boolean = withUnderButton && interactive && inCall;
 			underButton.visible = show;
 			if (!show)
 				return;

@@ -2,6 +2,8 @@
 {
 	import BaseClasses.MateInfoBase;
 	import Datas.ForceColors;
+	import Datas.PlayerStatisticData;
+	import VoiceChat.VoiceTeamOverlay;
 	import Enums.EFraction;
 	import MainScreen.SetPlayerShortName;
 	import flash.display.MovieClip;
@@ -20,6 +22,11 @@
 		private var ourFraction:int;
 		private var _shortheroname:SetPlayerShortName;
 
+		// Войс на карточках, как в бою (VoiceChat.VoiceTeamOverlay; C++ — VoiceOverlayController,
+		// созданный в PW_Client/LoadingScreenLogic). heroId -> { name, fraction, otherSide, isBot }.
+		private var voiceTeamOverlay:VoiceTeamOverlay;
+		private var voiceHeroes:Object = {};
+
 		public function LoaderInterface(_loader:LoaderMain)
 		{
 			main = _loader;
@@ -27,6 +34,11 @@
 			humanTeam = main.team_pnl;
 			elfTeam = main.enemyTeam_pnl;
 			avgForce = main.AvMight;
+			voiceTeamOverlay = new VoiceTeamOverlay(
+				VoicePlayers,
+				function(heroId:int):MateInfoBase { return IsVoiceAlly(heroId) ? GetHeroById(heroId) : null; },
+				function():int { return ourHeroId; },
+				false);
 			//var testInterface:LoaderInterfaceTest = new LoaderInterfaceTest(this, main);
 		}
 
@@ -65,6 +77,11 @@
 				teamMate = elfTeam.GenerateMateInfo(heroID, partyId);
 
 			if (teamMate == null) return;
+
+			var voiceHero:Object = voiceHeroes[heroID] || { otherSide: false, isBot: false };
+			voiceHero.name = heroName;
+			voiceHero.fraction = fraction;
+			voiceHeroes[heroID] = voiceHero;
 
 			var nick:String = "";
 			var guildName:String = "";
@@ -356,6 +373,63 @@
 		public function SetChatOff(isChatOff:Boolean):void
 		{
 			main.chatBar.chatInput_mc.chatOutput_cb.Value = isChatOff ? 1 : 0;
+		}
+
+		// Союзник в колонке врагов (Испытание на 10, C++ TeamSidesLayout) и бот — для войса.
+		public function SetHeroVoiceInfo(heroId:int, otherSide:Boolean, isBot:Boolean):void
+		{
+			var voiceHero:Object = voiceHeroes[heroId] || {};
+			voiceHero.otherSide = otherSide;
+			voiceHero.isBot = isBot;
+			voiceHeroes[heroId] = voiceHero;
+		}
+
+		// Войс на карточках (PF_GameLogic/VoiceOverlayController.cpp) — те же вызовы, что у
+		// MainInterface в бою.
+		public function ShowVoiceOverlay(show:Boolean):void
+		{
+			voiceTeamOverlay.Show(show);
+		}
+
+		public function SetVoiceOverlayPosition(x:Number, y:Number):void
+		{
+		}
+
+		public function SetVoiceOverlayInteractive(interactive:Boolean):void
+		{
+			voiceTeamOverlay.SetInteractive(interactive);
+		}
+
+		public function SetVoiceOverlayState(micState:int, meSpeaking:Boolean, myName:String, ids:Array, flags:Array, volumes:Array, names:Array):void
+		{
+			voiceTeamOverlay.SetState(micState, meSpeaking, myName, ids, flags, volumes, names);
+		}
+
+		// Союзник: своя фракция или союзник, перенесённый в колонку врагов.
+		private function IsVoiceAlly(heroId:int):Boolean
+		{
+			var voiceHero:Object = voiceHeroes[heroId];
+			if (voiceHero == null || voiceHero.name == null)
+				return false;
+			return voiceHero.otherSide || int(voiceHero.fraction) == ourFraction;
+		}
+
+		private function VoicePlayers():Array
+		{
+			var players:Array = [];
+			for (var key:String in voiceHeroes)
+			{
+				var voiceHero:Object = voiceHeroes[key];
+				if (voiceHero.name == null)
+					continue;
+				var player:PlayerStatisticData = new PlayerStatisticData();
+				player.HeroId = int(key);
+				player.PlayerName = String(voiceHero.name);
+				player.IsBot = Boolean(voiceHero.isBot);
+				player.IsEnemyTeam = !IsVoiceAlly(int(key));
+				players.push(player);
+			}
+			return players;
 		}
 	}
 }

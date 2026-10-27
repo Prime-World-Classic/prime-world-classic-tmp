@@ -8,6 +8,8 @@
 namespace NGameX
 {
 
+class ChatUiController;
+
 // Voice chat overlay in the combat UI. Voice itself (WebRTC) lives in the launcher;
 // the game polls it over a local UDP socket (127.0.0.1:34981, see launcher
 // content/modules/voiceGameBridge.js), passes the call state to main.swf
@@ -21,11 +23,17 @@ class VoiceOverlayController: public UI::FlashInterface, public UI::IFSCommandLi
   NI_DECLARE_REFCOUNT_CLASS_2( VoiceOverlayController, UI::FlashInterface, UI::IFSCommandListner )
 
 public:
-  VoiceOverlayController( UI::FlashContainer2 * flashWnd, const char* className );
+  // pollUnlockKey: read the voice_overlay_unlock keys directly instead of waiting for
+  // SetUnlocked() - for screens where the adventure_screen bind section is not active
+  // (the loading screen).
+  VoiceOverlayController( UI::FlashContainer2 * flashWnd, const char* className, bool pollUnlockKey = false );
   ~VoiceOverlayController();
 
   void Update( float timeDelta );
   void SetUnlocked( bool unlocked );
+  // When the voice first appears on this screen, a hint with the player's own unlock key goes
+  // to this chat as a local system message (seen only by this player).
+  void SetChat( ChatUiController * chat );
   // Smart cast switched on the action bar: the launcher saves it into the build (back end).
   void NotifySmartCast( const char * talentId, bool on );
 
@@ -70,6 +78,9 @@ private:
   void HideOverlay();
   void UpdatePushToTalk();
   bool IsPushToTalkHeld() const;
+  static bool IsUnlockBindHeld();
+  static wstring GetUnlockKeyText();
+  void ShowUnlockHint();
 
   UINT_PTR socketHandle;
   bool socketFailed;
@@ -79,6 +90,9 @@ private:
   bool shown;
   bool pttHeld;
   bool unlocked;
+  bool pollUnlockKey;
+  Weak<ChatUiController> chat;
+  bool hintShown;
   State current;
   bool hasCurrent;
 };

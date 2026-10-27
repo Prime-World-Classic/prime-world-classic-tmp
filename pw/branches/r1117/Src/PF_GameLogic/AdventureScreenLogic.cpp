@@ -402,6 +402,7 @@ void AdventureScreenLogic::SetOwner( NGameX::AdventureScreen * owner, const NDb:
   }
 
   voiceOverlayController = new VoiceOverlayController( flashWnd, "mainInterface" );
+  voiceOverlayController->SetChat( chatController );
 
   InitErrorMessages(flashInterface, uiData);
 

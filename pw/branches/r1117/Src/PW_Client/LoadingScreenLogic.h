@@ -51,6 +51,7 @@ namespace NGameX
   class LoadingStatusHandler;
   class AdventureTooltip;
   class ChatUiController;
+  class VoiceOverlayController;
   class IgnoreListStorage;
   class IgnoreListController;
   class HeroRankCalculator;
@@ -173,6 +174,9 @@ private:
   Strong<UI::PreferencesProcessor>  preferencesProcessor; 
   Strong<LoadingHeroes> loadingHeroes;
   Weak<NGameX::ChatUiController> chatController;
+  // The battle voice (launcher call) on the loading cards: speaking glow, mute buttons
+  // with the unlock key, push-to-talk.
+  Strong<NGameX::VoiceOverlayController> voiceController;
   Strong<NGameX::HeroRankCalculator>        rankCalculator;
   Strong<NGameX::HeroRankCalculator>        rankMMCalculator;
 

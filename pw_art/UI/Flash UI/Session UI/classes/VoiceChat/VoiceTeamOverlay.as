@@ -20,6 +20,7 @@
 		private var playersSource:Function;
 		private var mateSource:Function;
 		private var ourIdSource:Function;
+		private var withUnderButton:Boolean;
 
 		// heroId -> MateVoiceIndicator
 		private var indicators:Object = {};
@@ -29,12 +30,14 @@
 		private var lastState:Array = null;
 
 		// playersSource(): Array of PlayerStatisticData; mateSource(heroId): MateInfoBase
-		// союзника или null; ourIdSource(): int — наш heroId.
-		public function VoiceTeamOverlay(_playersSource:Function, _mateSource:Function, _ourIdSource:Function)
+		// союзника или null; ourIdSource(): int — наш heroId. withUnderButton: false на экране
+		// загрузки (LoaderSources.LoaderInterface) — под карточкой там рейтинги.
+		public function VoiceTeamOverlay(_playersSource:Function, _mateSource:Function, _ourIdSource:Function, _withUnderButton:Boolean = true)
 		{
 			playersSource = _playersSource;
 			mateSource = _mateSource;
 			ourIdSource = _ourIdSource;
+			withUnderButton = _withUnderButton;
 		}
 
 		public function Show(show:Boolean):void
@@ -131,7 +134,7 @@
 			}
 			if (indicator == null && mate != null)
 			{
-				indicator = new MateVoiceIndicator(mate, isMe);
+				indicator = new MateVoiceIndicator(mate, isMe, withUnderButton);
 				indicator.SetInteractive(interactive);
 				indicators[heroId] = indicator;
 			}

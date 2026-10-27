@@ -12,6 +12,7 @@
 #include "PF_GameLogic/DBGameLogic.h"
 #include "PF_GameLogic/DBHeroesList.h"
 #include "PF_GameLogic/ChatController.h"
+#include "PF_GameLogic/VoiceOverlayController.h"
 #include "PF_GameLogic/IgnoreListController.h"
 #include "PF_GameLogic/AdventureTooltip.h"
 #include "PF_GameLogic/FlashFSCommands.h"
@@ -160,6 +161,8 @@ LoadingScreenLogic::~LoadingScreenLogic()
 
   flashWnd->RemoveFSListner(FlashFSCommands::ConvertToString(FlashFSCommands::ModeDescriptionTooltip));
   flashWnd->RemoveFSListner(FlashFSCommands::ConvertToString(FlashFSCommands::ExitLoadingScreen));
+  if ( voiceController )
+    flashWnd->RemoveFSListner( "VoiceOverlayCmd" );
 }
 
 
@@ -175,6 +178,13 @@ void LoadingScreenLogic::OnLoadedScreenLayout()
   //flashWnd->Show(false);
   NI_ASSERT(IsValid(flashWnd), "doesnt have FlashScreen in children, will crush!");
   flashInterface = new LoadingFlashInterface( flashWnd, "LoaderWindowInterface" );
+  // Not for a spectator or the tutorial: no own call there. The unlock bind section is not
+  // active on this screen, so the controller reads its keys itself.
+  if ( !isSpectator && !isTutorial )
+  {
+    NGameX::VoiceOverlayController::EnsureDefaultUnlockBind();
+    voiceController = new NGameX::VoiceOverlayController( flashWnd, "LoaderWindowInterface", true );
+  }
 
   preferencesProcessor = new UI::PreferencesProcessor( flashWnd, "PreferencesInterface" );
   preferencesProcessor->SetAdvancedPageEnabled( false ); // pwl.swf has no "Advanced" page
@@ -264,6 +274,8 @@ void LoadingScreenLogic::SetChat( const Strong<NGameX::IPlayerIdMapper>& playerI
     chatController->SetSpectatorMode();
 
   chatController->AddChatUI(flashWnd, flashInterface, muted, leaver, leaverParty);
+  if ( voiceController )
+    voiceController->SetChat( chatController );
 
   if (_ignoreListStorage)
   {
@@ -323,6 +335,9 @@ void LoadingScreenLogic::Step( float deltaTime )
 
   if (chatController)
     chatController->Update();
+
+  if ( voiceController )
+    voiceController->Update( deltaTime );
 
   if (tooltip && tooltip->IsVisible())
     tooltip->SetLocation(lastMousePosition.x , lastMousePosition.y);
@@ -399,6 +414,7 @@ void LoadingScreenLogic::AddPlayer( int userId, const NCore::PlayerStartInfo& in
 
 
     loadingHeroes->AddUser(userId , botNickname, isMale, info.teamID, info.originalTeamID, heroInfo, flagIcon, flagTooltip, heroInfo.skinId, heroInfo.leagueIndex, otherSide);
+    flashInterface->SetHeroVoiceInfo(userId, otherSide, true);
     recalcTeamForce(heroInfo);
     loadingHeroes->AddBot(userId);
     flashInterface->SetHeroLevel(userId, 1);
@@ -479,6 +495,7 @@ void LoadingScreenLogic::AddPlayer( int userId, const NCore::PlayerStartInfo& in
 
     const wstring& name = useHeroName ? GetHeroNameByPlayerInfo(info, advMapDescription) : info.nickname;
     loadingHeroes->AddUser(info.userID, name, isMale, info.teamID, info.originalTeamID, heroInfo, flagIcon, flagTooltip, skinId, leagueIdx, otherSide);
+    flashInterface->SetHeroVoiceInfo(info.userID, otherSide, false);
     recalcTeamForce(heroInfo);
   }
 }

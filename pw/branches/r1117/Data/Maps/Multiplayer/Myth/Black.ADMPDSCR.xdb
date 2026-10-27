@@ -6,13 +6,13 @@
 	<description textref="/Maps/Multiplayer/Myth/Black.ADMPDSCR_description.txt" />
 	<FirstWinVisualInfo href="/UI/Content/FWODpve" />
 	<FWODGroup>pve</FWODGroup>
-	<image href="/UI/Styles/Icons/Maps/PvEEpisode2_Red.ITEX" />
+	<image href="/UI/Styles/Icons/Maps/PvEEpisode2_Gold.ITEX" />
 	<mapSettings href="/Maps/Multiplayer/Myth/Black.ADMPSTTN" />
 	<matchmakingSettings href="/Server/Coop1/_Red.MAPMMAKING" />
 	<MinusPointsPerFullGame>false</MinusPointsPerFullGame>
 	<modeVisualDescription href="/Maps/Multiplayer/Myth/Black.ADMPDSCR" id="C7BF89C4-7AB3-41E0-811E-0391A7BE0B83">
 		<AdvMapModeDescription>
-			<icon href="/UI/Styles/Icons/Maps/PvEEpisode2Small_Red.ITEX" />
+			<icon href="/UI/Styles/Icons/Maps/PvEEpisode2Small_Gold.ITEX" />
 			<tooltip textref="/Maps/Multiplayer/Myth/Black.ADMPDSCR_c7bf89c47ab341e0811e0391a7be0b83_tooltip.txt" />
 		</AdvMapModeDescription>
 	</modeVisualDescription>

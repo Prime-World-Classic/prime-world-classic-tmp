@@ -1,0 +1,428 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<StatusApplicator>
+	<BackLink DBID="/Maps/Multiplayer/Myth/Abilities/GoldStartBonus.ABLT" Count="1" />
+	<applicators>
+		<Item href="/Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR" id="3062135F-FFE0-414C-B4CA-4BB56C0D650C">
+			<StatModApplicator>
+				<applyTarget>ApplicatorTarget</applyTarget>
+				<behaviorFlags>216</behaviorFlags>
+				<caption>+50% к здоровью в начале боя, через 60 с за 10 минут сходит до 0</caption>
+				<constraint>None</constraint>
+				<dontUpdate>false</dontUpdate>
+				<effect>
+					<Item href="" />
+					<Item href="" />
+				</effect>
+				<enabled>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</enabled>
+				<formulaName></formulaName>
+				<lifeTime>
+					<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+					<returnType>float</returnType>
+					<sString>-1.0</sString>
+				</lifeTime>
+				<LoggingEvent>-1</LoggingEvent>
+				<modifier>
+					<addValue>
+						<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+						<returnType>float</returnType>
+						<sString>0</sString>
+					</addValue>
+					<multValue>
+						<compiledString>FQkAAAAEAAAAIgAAACoAAABJAAAATwAAAGR1cmF0aW9uAFWL7IPsCItFEIsQi00Qi0JI/9CJRfxR2QV5AAAA2RwkaAAAAACLTfyLEYtN/ItCVP/QUdkcJOg5AAAAg8QI3A1xAAAA3DVpAAAA2ejewdld+NlF+IvlXcMAAAAAAADwPwAAAAAAwIJAAAAAAAAA4D8AABZEVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
+						<returnType>float</returnType>
+						<sString>1.0 + 0.5 * min(appl.parent.GetVariable("duration"), 600.0) / 600.0</sString>
+					</multValue>
+					<stat>Life</stat>
+					<topModifier>true</topModifier>
+					<variable></variable>
+				</modifier>
+				<providerName></providerName>
+				<startCondition>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</startCondition>
+				<statModName></statModName>
+			</StatModApplicator>
+		</Item>
+		<Item href="/Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR" id="617E5306-19F0-4C6B-9C85-9F2EA004E650">
+			<StatModApplicator>
+				<applyTarget>ApplicatorTarget</applyTarget>
+				<behaviorFlags>216</behaviorFlags>
+				<caption>+50% к энергии в начале боя, через 60 с за 10 минут сходит до 0</caption>
+				<constraint>None</constraint>
+				<dontUpdate>false</dontUpdate>
+				<effect>
+					<Item href="" />
+					<Item href="" />
+				</effect>
+				<enabled>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</enabled>
+				<formulaName></formulaName>
+				<lifeTime>
+					<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+					<returnType>float</returnType>
+					<sString>-1.0</sString>
+				</lifeTime>
+				<LoggingEvent>-1</LoggingEvent>
+				<modifier>
+					<addValue>
+						<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+						<returnType>float</returnType>
+						<sString>0</sString>
+					</addValue>
+					<multValue>
+						<compiledString>FQkAAAAEAAAAIgAAACoAAABJAAAATwAAAGR1cmF0aW9uAFWL7IPsCItFEIsQi00Qi0JI/9CJRfxR2QV5AAAA2RwkaAAAAACLTfyLEYtN/ItCVP/QUdkcJOg5AAAAg8QI3A1xAAAA3DVpAAAA2ejewdld+NlF+IvlXcMAAAAAAADwPwAAAAAAwIJAAAAAAAAA4D8AABZEVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
+						<returnType>float</returnType>
+						<sString>1.0 + 0.5 * min(appl.parent.GetVariable("duration"), 600.0) / 600.0</sString>
+					</multValue>
+					<stat>Energy</stat>
+					<topModifier>true</topModifier>
+					<variable></variable>
+				</modifier>
+				<providerName></providerName>
+				<startCondition>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</startCondition>
+				<statModName></statModName>
+			</StatModApplicator>
+		</Item>
+		<Item href="/Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR" id="3D89616E-61CF-4F24-8206-B6616C31F32A">
+			<StatModApplicator>
+				<applyTarget>ApplicatorTarget</applyTarget>
+				<behaviorFlags>216</behaviorFlags>
+				<caption>+50% к силе в начале боя, через 60 с за 10 минут сходит до 0</caption>
+				<constraint>None</constraint>
+				<dontUpdate>false</dontUpdate>
+				<effect>
+					<Item href="" />
+					<Item href="" />
+				</effect>
+				<enabled>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</enabled>
+				<formulaName></formulaName>
+				<lifeTime>
+					<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+					<returnType>float</returnType>
+					<sString>-1.0</sString>
+				</lifeTime>
+				<LoggingEvent>-1</LoggingEvent>
+				<modifier>
+					<addValue>
+						<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+						<returnType>float</returnType>
+						<sString>0</sString>
+					</addValue>
+					<multValue>
+						<compiledString>FQkAAAAEAAAAIgAAACoAAABJAAAATwAAAGR1cmF0aW9uAFWL7IPsCItFEIsQi00Qi0JI/9CJRfxR2QV5AAAA2RwkaAAAAACLTfyLEYtN/ItCVP/QUdkcJOg5AAAAg8QI3A1xAAAA3DVpAAAA2ejewdld+NlF+IvlXcMAAAAAAADwPwAAAAAAwIJAAAAAAAAA4D8AABZEVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
+						<returnType>float</returnType>
+						<sString>1.0 + 0.5 * min(appl.parent.GetVariable("duration"), 600.0) / 600.0</sString>
+					</multValue>
+					<stat>Strength</stat>
+					<topModifier>true</topModifier>
+					<variable></variable>
+				</modifier>
+				<providerName></providerName>
+				<startCondition>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</startCondition>
+				<statModName></statModName>
+			</StatModApplicator>
+		</Item>
+		<Item href="/Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR" id="43C2F43A-08A2-4E95-B636-ED6D3DE58D76">
+			<StatModApplicator>
+				<applyTarget>ApplicatorTarget</applyTarget>
+				<behaviorFlags>216</behaviorFlags>
+				<caption>+50% к разуму в начале боя, через 60 с за 10 минут сходит до 0</caption>
+				<constraint>None</constraint>
+				<dontUpdate>false</dontUpdate>
+				<effect>
+					<Item href="" />
+					<Item href="" />
+				</effect>
+				<enabled>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</enabled>
+				<formulaName></formulaName>
+				<lifeTime>
+					<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+					<returnType>float</returnType>
+					<sString>-1.0</sString>
+				</lifeTime>
+				<LoggingEvent>-1</LoggingEvent>
+				<modifier>
+					<addValue>
+						<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+						<returnType>float</returnType>
+						<sString>0</sString>
+					</addValue>
+					<multValue>
+						<compiledString>FQkAAAAEAAAAIgAAACoAAABJAAAATwAAAGR1cmF0aW9uAFWL7IPsCItFEIsQi00Qi0JI/9CJRfxR2QV5AAAA2RwkaAAAAACLTfyLEYtN/ItCVP/QUdkcJOg5AAAAg8QI3A1xAAAA3DVpAAAA2ejewdld+NlF+IvlXcMAAAAAAADwPwAAAAAAwIJAAAAAAAAA4D8AABZEVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
+						<returnType>float</returnType>
+						<sString>1.0 + 0.5 * min(appl.parent.GetVariable("duration"), 600.0) / 600.0</sString>
+					</multValue>
+					<stat>Intellect</stat>
+					<topModifier>true</topModifier>
+					<variable></variable>
+				</modifier>
+				<providerName></providerName>
+				<startCondition>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</startCondition>
+				<statModName></statModName>
+			</StatModApplicator>
+		</Item>
+		<Item href="/Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR" id="D2206272-9548-440D-B634-9EFD6EBFEAEC">
+			<StatModApplicator>
+				<applyTarget>ApplicatorTarget</applyTarget>
+				<behaviorFlags>216</behaviorFlags>
+				<caption>+50% к проворству в начале боя, через 60 с за 10 минут сходит до 0</caption>
+				<constraint>None</constraint>
+				<dontUpdate>false</dontUpdate>
+				<effect>
+					<Item href="" />
+					<Item href="" />
+				</effect>
+				<enabled>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</enabled>
+				<formulaName></formulaName>
+				<lifeTime>
+					<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+					<returnType>float</returnType>
+					<sString>-1.0</sString>
+				</lifeTime>
+				<LoggingEvent>-1</LoggingEvent>
+				<modifier>
+					<addValue>
+						<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+						<returnType>float</returnType>
+						<sString>0</sString>
+					</addValue>
+					<multValue>
+						<compiledString>FQkAAAAEAAAAIgAAACoAAABJAAAATwAAAGR1cmF0aW9uAFWL7IPsCItFEIsQi00Qi0JI/9CJRfxR2QV5AAAA2RwkaAAAAACLTfyLEYtN/ItCVP/QUdkcJOg5AAAAg8QI3A1xAAAA3DVpAAAA2ejewdld+NlF+IvlXcMAAAAAAADwPwAAAAAAwIJAAAAAAAAA4D8AABZEVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
+						<returnType>float</returnType>
+						<sString>1.0 + 0.5 * min(appl.parent.GetVariable("duration"), 600.0) / 600.0</sString>
+					</multValue>
+					<stat>AttackSpeed</stat>
+					<topModifier>true</topModifier>
+					<variable></variable>
+				</modifier>
+				<providerName></providerName>
+				<startCondition>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</startCondition>
+				<statModName></statModName>
+			</StatModApplicator>
+		</Item>
+		<Item href="/Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR" id="ECF90EAE-3B50-479E-9726-2E92B653B7B6">
+			<StatModApplicator>
+				<applyTarget>ApplicatorTarget</applyTarget>
+				<behaviorFlags>216</behaviorFlags>
+				<caption>+50% к хитрости в начале боя, через 60 с за 10 минут сходит до 0</caption>
+				<constraint>None</constraint>
+				<dontUpdate>false</dontUpdate>
+				<effect>
+					<Item href="" />
+					<Item href="" />
+				</effect>
+				<enabled>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</enabled>
+				<formulaName></formulaName>
+				<lifeTime>
+					<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+					<returnType>float</returnType>
+					<sString>-1.0</sString>
+				</lifeTime>
+				<LoggingEvent>-1</LoggingEvent>
+				<modifier>
+					<addValue>
+						<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+						<returnType>float</returnType>
+						<sString>0</sString>
+					</addValue>
+					<multValue>
+						<compiledString>FQkAAAAEAAAAIgAAACoAAABJAAAATwAAAGR1cmF0aW9uAFWL7IPsCItFEIsQi00Qi0JI/9CJRfxR2QV5AAAA2RwkaAAAAACLTfyLEYtN/ItCVP/QUdkcJOg5AAAAg8QI3A1xAAAA3DVpAAAA2ejewdld+NlF+IvlXcMAAAAAAADwPwAAAAAAwIJAAAAAAAAA4D8AABZEVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
+						<returnType>float</returnType>
+						<sString>1.0 + 0.5 * min(appl.parent.GetVariable("duration"), 600.0) / 600.0</sString>
+					</multValue>
+					<stat>Dexterity</stat>
+					<topModifier>true</topModifier>
+					<variable></variable>
+				</modifier>
+				<providerName></providerName>
+				<startCondition>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</startCondition>
+				<statModName></statModName>
+			</StatModApplicator>
+		</Item>
+		<Item href="/Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR" id="58400FC6-2680-40FA-9DAA-9980FD40AFAC">
+			<StatModApplicator>
+				<applyTarget>ApplicatorTarget</applyTarget>
+				<behaviorFlags>216</behaviorFlags>
+				<caption>+50% к стойкости в начале боя, через 60 с за 10 минут сходит до 0</caption>
+				<constraint>None</constraint>
+				<dontUpdate>false</dontUpdate>
+				<effect>
+					<Item href="" />
+					<Item href="" />
+				</effect>
+				<enabled>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</enabled>
+				<formulaName></formulaName>
+				<lifeTime>
+					<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+					<returnType>float</returnType>
+					<sString>-1.0</sString>
+				</lifeTime>
+				<LoggingEvent>-1</LoggingEvent>
+				<modifier>
+					<addValue>
+						<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+						<returnType>float</returnType>
+						<sString>0</sString>
+					</addValue>
+					<multValue>
+						<compiledString>FQkAAAAEAAAAIgAAACoAAABJAAAATwAAAGR1cmF0aW9uAFWL7IPsCItFEIsQi00Qi0JI/9CJRfxR2QV5AAAA2RwkaAAAAACLTfyLEYtN/ItCVP/QUdkcJOg5AAAAg8QI3A1xAAAA3DVpAAAA2ejewdld+NlF+IvlXcMAAAAAAADwPwAAAAAAwIJAAAAAAAAA4D8AABZEVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
+						<returnType>float</returnType>
+						<sString>1.0 + 0.5 * min(appl.parent.GetVariable("duration"), 600.0) / 600.0</sString>
+					</multValue>
+					<stat>Stamina</stat>
+					<topModifier>true</topModifier>
+					<variable></variable>
+				</modifier>
+				<providerName></providerName>
+				<startCondition>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</startCondition>
+				<statModName></statModName>
+			</StatModApplicator>
+		</Item>
+		<Item href="/Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR" id="87663A40-452B-4CE7-8E58-7A4F5C22DD76">
+			<StatModApplicator>
+				<applyTarget>ApplicatorTarget</applyTarget>
+				<behaviorFlags>216</behaviorFlags>
+				<caption>+50% к воле в начале боя, через 60 с за 10 минут сходит до 0</caption>
+				<constraint>None</constraint>
+				<dontUpdate>false</dontUpdate>
+				<effect>
+					<Item href="" />
+					<Item href="" />
+				</effect>
+				<enabled>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</enabled>
+				<formulaName></formulaName>
+				<lifeTime>
+					<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACAvw==</compiledString>
+					<returnType>float</returnType>
+					<sString>-1.0</sString>
+				</lifeTime>
+				<LoggingEvent>-1</LoggingEvent>
+				<modifier>
+					<addValue>
+						<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
+						<returnType>float</returnType>
+						<sString>0</sString>
+					</addValue>
+					<multValue>
+						<compiledString>FQkAAAAEAAAAIgAAACoAAABJAAAATwAAAGR1cmF0aW9uAFWL7IPsCItFEIsQi00Qi0JI/9CJRfxR2QV5AAAA2RwkaAAAAACLTfyLEYtN/ItCVP/QUdkcJOg5AAAAg8QI3A1xAAAA3DVpAAAA2ejewdld+NlF+IvlXcMAAAAAAADwPwAAAAAAwIJAAAAAAAAA4D8AABZEVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
+						<returnType>float</returnType>
+						<sString>1.0 + 0.5 * min(appl.parent.GetVariable("duration"), 600.0) / 600.0</sString>
+					</multValue>
+					<stat>Will</stat>
+					<topModifier>true</topModifier>
+					<variable></variable>
+				</modifier>
+				<providerName></providerName>
+				<startCondition>
+					<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</startCondition>
+				<statModName></statModName>
+			</StatModApplicator>
+		</Item>
+	</applicators>
+	<applyTarget>ApplicatorTarget</applyTarget>
+	<behaviorFlags>216</behaviorFlags>
+	<caption>Благословение Ивы (Золотое испытание): x1.5 первые 60 с, затем линейно до x1.0 за 600 с; счётчик — оставшийся %</caption>
+	<customCounter>
+		<compiledString>FQkAAAAEAAEAEAAAABgAAAA3AAAAPQAAAEgAAABkdXJhdGlvbgBVi+xRUdkFdQAAANkcJGgAAAAAi0UQixCLTRCLQlT/0FHZHCToRwAAAIPECNwNbQAAANw1ZQAAAIPsCN0cJOiu////g8QI2V382UX8UdkcJOhDAAAAg8QEi+VdwwAAAAAAwIJAAAAAAAAASUAAABZEVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdw7gBAAAAD6L3wgAAAAR0B/MPLEQkBMPpAAAAAFWL7IPsDNlFCNl9/A+3RfwNAAwAAIlF+Nlt+Ntd9Nlt/ItF9IvlXcM=</compiledString>
+		<returnType>int</returnType>
+		<sString>f2l(ceil(50.0 * min(appl.GetVariable("duration"), 600.0) / 600.0))</sString>
+	</customCounter>
+	<customProgress>
+		<compiledString>FQkAAAADAAAAEAAAABgAAAA3AAAAZHVyYXRpb24AVYvsUVHZBU0AAADZHCRoAAAAAItFEIsQi00Qi0JU/9BR2Rwk6B8AAACDxAjcNUUAAADZXfzZRfyL5V3DAAAAAADAgkAAABZEVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
+		<returnType>float</returnType>
+		<sString>min(appl.GetVariable("duration"), 600.0) / 600.0</sString>
+	</customProgress>
+	<description textref="/Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR_description.txt" />
+	<dispellPriority>NonDispellable</dispellPriority>
+	<effect>
+		<Item href="" />
+		<Item href="" />
+	</effect>
+	<enabled>
+		<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+		<returnType>bool</returnType>
+		<sString>true</sString>
+	</enabled>
+	<flags>64</flags>
+	<formulaName>GoldStartBonus</formulaName>
+	<image href="/UI/Styles/Icons/Statuses/Neutral/defensive_aura.ITEX" />
+	<lifeTime>
+		<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAAAlRA==</compiledString>
+		<returnType>float</returnType>
+		<sString>660.0</sString>
+	</lifeTime>
+	<LoggingEvent>-1</LoggingEvent>
+	<name textref="/Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR_name.txt" />
+	<power>0</power>
+	<providerName></providerName>
+	<stackableAcrossUnits>Unstackable</stackableAcrossUnits>
+	<stackCount>0</stackCount>
+	<startCondition>
+		<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>
+		<returnType>bool</returnType>
+		<sString>true</sString>
+	</startCondition>
+	<statusPosition>0</statusPosition>
+	<stopBehaviour>StopByTime</stopBehaviour>
+	<unstackableWith href="" />
+</StatusApplicator>

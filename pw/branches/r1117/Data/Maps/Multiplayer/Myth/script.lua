@@ -298,6 +298,17 @@ function Main()
 		LuaSetUnitStat( allyHeroes[i], StatMoveSpeed, LuaGetUnitStat( allyHeroes[i], StatMoveSpeed ) * 1.1 )
 		LuaSetUnitStat( allyHeroes[i], StatEnergyRegeneration, 0.6 )		
 	end	
+
+	-- Золотая сложность (GOLD_DIFFICULTY из Bootstrap_Black.lua): союзные башни x1.5, как чудь,
+	-- а союзным героям статус «Благословение Ивы» — x1.5 первые 60 с, потом за 10 минут сходит на нет
+	if GOLD_DIFFICULTY then
+		for i=1, #towers do
+			LuaApplyPassiveAbility( towers[i], "goldTowerBonus" )
+		end
+		for i=1, #allyHeroes do
+			LuaApplyPassiveAbility( allyHeroes[i], "goldStartBonus" )
+		end
+	end
 	
 	
 	IvaSetup() -- Настройки Ивы

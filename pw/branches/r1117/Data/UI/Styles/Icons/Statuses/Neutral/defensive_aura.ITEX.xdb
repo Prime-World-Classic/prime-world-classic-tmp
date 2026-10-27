@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <UITexture>
 	<BackLink DBID="/Creeps/Champions/Champion1/Def_Aura.APLR" Count="1" />
+	<BackLink DBID="/Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR" Count="1" />
 	<generatedFileName></generatedFileName>
 	<importOnlyShape>false</importOnlyShape>
 	<mipLevels>0</mipLevels>

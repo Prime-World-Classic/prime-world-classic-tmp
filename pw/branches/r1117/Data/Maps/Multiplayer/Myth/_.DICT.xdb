@@ -167,5 +167,13 @@
 			<key>ivaCommingDeadEvent</key>
 			<resource href="/Maps/Multiplayer/Myth/Abilities/ivaCommingDeadEvent.APLR" />
 		</Item>
+		<Item>
+			<key>goldStartBonus</key>
+			<resource href="/Maps/Multiplayer/Myth/Abilities/GoldStartBonus.ABLT" />
+		</Item>
+		<Item>
+			<key>goldTowerBonus</key>
+			<resource href="/Maps/Multiplayer/Myth/Abilities/GoldTowerBonus.ABLT" />
+		</Item>
 	</resources>
 </DictionaryPreloadingResources>

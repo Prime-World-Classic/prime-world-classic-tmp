@@ -1133,6 +1133,8 @@ struct NvrhiBackendImpl
   // вывод в Vulkan не уходит, при этом счётчики drawSkip* остаются нулевыми —
   // без pipeFail такой вывод неотличим от «клиент не рисует».
   unsigned pipeFail;
+  // Сколько терминаторов D3D9 (UNUSED/stream 0xFF) срезано из раскладок.
+  unsigned ilTerminators;
   // Какая именно ветка FindOrCreatePipeline вернула пустой пайплайн
   // (раскладка / framebuffer / createGraphicsPipeline / не задан vs|ps|lay|rt).
   const char* pipeFailReason;
@@ -1193,7 +1195,7 @@ struct NvrhiBackendImpl
       flushesSinceIdle(0),
       slabBytes(64u * 1024u * 1024u),
       slabCreated(0), slabHoleReuses(0), slabAllocFail(0), slabFreed(0),
-      drawSkipPrim(0), drawSkipVs(0), drawSkipPs(0), drawSkipRt(0), pipeFail(0), pipeFailReason("?"),
+      drawSkipPrim(0), drawSkipVs(0), drawSkipPs(0), drawSkipRt(0), pipeFail(0), ilTerminators(0), pipeFailReason("?"),
       drawsBack(0), drawsOff(0),
       rtSetNull(0), rtSetForeign(0), rtSetOwn(0), rtSetEmpty(0), rtViewportReset(0),
       clearLoadFrame(1u), clearLoadDone(0), clearLoadLogged(0),
@@ -3281,9 +3283,9 @@ void NvrhiBackend::DumpStats(const char* pTag) const
   DebugTrace("VkClearLoad%s: явных clear'ов при первой привязке цели: %u (кадр %u)",
              pTag ? pTag : "", d.clearLoadDone, d.clearLoadFrame);
   DebugTrace("VkDraw%s: пропуски вывода: примитив=%u нет VS=%u нет PS=%u нет RT=%u "
-             "пайплайн-отказ=%u",
+             "пайплайн-отказ=%u терминаторов срезано=%u",
              pTag ? pTag : "", d.drawSkipPrim, d.drawSkipVs, d.drawSkipPs, d.drawSkipRt,
-             d.pipeFail);
+             d.pipeFail, d.ilTerminators);
   {
     // DumpStats работает с const-ссылкой, поэтому бэк-индекс считается здесь
     // руками (BackSurfaceIndex требует неконстантного доступа).
@@ -10203,7 +10205,24 @@ HRESULT NvrhiBackend::CreateInputLayout(const VertexFormatDescriptor& descr, HIn
   NvrhiBackendImpl& d = *m_pImpl;
   NvrhiBackendImpl::LayoutObj lo;
   const unsigned n = descr.GetVertexElementsCount();
-  for (unsigned i = 0; i < n; ++i) lo.elems.push_back(descr.GetVertexElement(i));
+  for (unsigned i = 0; i < n; ++i)
+  {
+    const VertexElementDescriptor& e = descr.GetVertexElement(i);
+    // Терминатор D3D9-декларации (D3DDECLTYPE_UNUSED, stream 0xFF) — НЕ атрибут.
+    // Он приходит вместе с массивом элементов из .stat/.h6 и из runtime-
+    // деклараций, и в шве отравлял всю раскладку: VtxFormat(UNUSED) = UNKNOWN,
+    // BuildInputLayout возвращал пустую, FindOrCreatePipeline — пустой
+    // пайплайн, DrawImpl выходил без вывода. Замер (Vulkan-контур, обзор
+    // арсенала зелёных): lay=16 = (s0 o0 t2 u0)(s0 o12 t4 u10 i0)(s0 o16 t4 u10
+    // i1)(s0 o20 t3 u5)(s255 o0 t17 u0) — последние скобки и есть терминатор;
+    // из-за него исчезали все 1248 выводов дорог за прогон, молча.
+    if (e.type == VERTEXELEMENTTYPE_UNUSED || e.stream == 0xFFu)
+    {
+      ++d.ilTerminators;
+      continue;
+    }
+    lo.elems.push_back(e);
+  }
   d.layoutObjs.push_back(lo);
   pOut->p = NewHandle(&d, (unsigned)d.layoutObjs.size() - 1u, hkLayout);
   return S_OK;

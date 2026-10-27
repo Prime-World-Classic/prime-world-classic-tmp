@@ -58477,8 +58477,8 @@
     {
       "id": 204,
       "name": "gamedata062.pile",
-      "packed_size": 19061837,
-      "source_size": 72764325,
+      "packed_size": 19061863,
+      "source_size": 72764573,
       "files": [
         ["Maps/Multiplayer/MidOnly/_.baked_terrain", 8399188, 4105656994],
         ["Maps/Multiplayer/MidOnly/_.heightmap", 4326416, 4153686113],
@@ -58982,7 +58982,7 @@
         ["Maps/Multiplayer/Myth/_.ADMPSTTN.xdb", 5211, 3512603161],
         ["Maps/Multiplayer/Myth/_.ADMPSTTN_customBattleStartAnnouncement_announcementText.txt", 34, 60201764],
         ["Maps/Multiplayer/Myth/_.ADMPSTTN_customBattleStartAnnouncement_announcementText_en.txt", 30, 3044949391],
-        ["Maps/Multiplayer/Myth/_.DICT.xdb", 5332, 801292361],
+        ["Maps/Multiplayer/Myth/_.DICT.xdb", 5580, 372002209],
         ["Maps/Multiplayer/Myth/_.LTEN.xdb", 2394, 1948143729],
         ["Maps/Multiplayer/Myth/_.TERN.xdb", 238390, 2697041686],
         ["Maps/Multiplayer/Myth/_.baked_terrain", 12818716, 1765363205],
@@ -59005,8 +59005,8 @@
     {
       "id": 205,
       "name": "gamedata063.pile",
-      "packed_size": 21184816,
-      "source_size": 67086708,
+      "packed_size": 21184962,
+      "source_size": 67087218,
       "files": [
         ["Maps/Multiplayer/Myth/__1541e3262cc5415fa6a0a29b02960b25.road", 36920, 350172510],
         ["Maps/Multiplayer/Myth/__15d18e9e254a4ec7a44cbc8cbfae557f.road", 12728, 36017549],
@@ -59123,7 +59123,7 @@
         ["Maps/Multiplayer/Myth/quests.QUESTS_quests_8_text_en.txt", 76, 3452230526],
         ["Maps/Multiplayer/Myth/quests.QUESTS_quests_9_text.txt", 62, 1587592242],
         ["Maps/Multiplayer/Myth/quests.QUESTS_quests_9_text_en.txt", 60, 2183478287],
-        ["Maps/Multiplayer/Myth/script.lua", 80855, 2511716064],
+        ["Maps/Multiplayer/Myth/script.lua", 81365, 580891724],
         ["Maps/Multiplayer/Myth/spawnersMP.lua", 3890, 1035021528],
         ["Maps/Multiplayer/PFmap/Miscs/_A3.SBLD.xdb", 230, 2359656863],
         ["Maps/Multiplayer/PFmap/Mod1/Test_PVP_1x1.ADMPDSCR.xdb", 1709, 631725290],
@@ -80391,10 +80391,10 @@
     {
       "id": 223,
       "name": "gamedata081.pile",
-      "packed_size": 18960349,
-      "source_size": 19157692,
+      "packed_size": 18960375,
+      "source_size": 19157718,
       "files": [
-        ["UI/Screens/Combat/Flash/main.swf", 18914157, 1967035922],
+        ["UI/Screens/Combat/Flash/main.swf", 18914183, 859593933],
         ["UI/Screens/Combat/FlyTexts/FlyCustomText.IMGLBL.xdb", 2053, 427458383],
         ["UI/Screens/Combat/FlyTexts/FlyCustomText.IMGLBL_captionText.txt", 28, 1101780052],
         ["UI/Screens/Combat/FlyTexts/FlyCustomText_Energy.IMGLBL.xdb", 2067, 342939488],
@@ -80507,10 +80507,10 @@
     {
       "id": 224,
       "name": "gamedata082.pile",
-      "packed_size": 26387761,
-      "source_size": 93141603,
+      "packed_size": 26387779,
+      "source_size": 93141621,
       "files": [
-        ["UI/Screens/Loading/Flash/pwl.swf", 9737315, 3846075516],
+        ["UI/Screens/Loading/Flash/pwl.swf", 9737333, 3724540896],
         ["UI/Screens/Loading/LoadingScreen.xdb", 8148, 2023108415],
         ["UI/Screens/Loading/LoadingScreen_a16201965d0a4e9e8be4442b00fce3ab_properties_0_propertyValue.txt", 8, 2566725925],
         ["UI/Screens/Loading/LoadingScreen_a16201965d0a4e9e8be4442b00fce3ab_properties_0_propertyValue_en.txt", 8, 497969355],
@@ -85669,8 +85669,8 @@
     {
       "id": 232,
       "name": "gamedata090.pile",
-      "packed_size": 28303898,
-      "source_size": 57638322,
+      "packed_size": 28303935,
+      "source_size": 57638406,
       "files": [
         ["UI/Styles/Icons/Marketing/hero-on-sale-adorn.dds", 1614692, 126973881],
         ["UI/Styles/Icons/Marketing/hero-on-sale-doct.dds", 1614692, 591108398],
@@ -85986,7 +85986,7 @@
         ["UI/Styles/Icons/Statuses/Neutral/beastburning.ITEX.xdb", 858, 2308419706],
         ["UI/Styles/Icons/Statuses/Neutral/brothershoulder.ITEX.xdb", 948, 185880389],
         ["UI/Styles/Icons/Statuses/Neutral/brothershoulder.dds", 21972, 477306724],
-        ["UI/Styles/Icons/Statuses/Neutral/defensive_aura.ITEX.xdb", 801, 2872354718],
+        ["UI/Styles/Icons/Statuses/Neutral/defensive_aura.ITEX.xdb", 885, 3742828717],
         ["UI/Styles/Icons/Statuses/Neutral/defensive_aura.dds", 21972, 2693966004],
         ["UI/Styles/Icons/Statuses/Neutral/dragon_buff.ITEX.xdb", 1375, 1053090326],
         ["UI/Styles/Icons/Statuses/Neutral/dragon_buff.dds", 21972, 968543950],
@@ -89467,8 +89467,8 @@
     {
       "id": 243,
       "name": "gamedata101.pile",
-      "packed_size": 496860,
-      "source_size": 4341792,
+      "packed_size": 503152,
+      "source_size": 4376620,
       "files": [
         ["UI/Styles/Icons/PingWheel/ping_wheel_s_bg_4.dds", 262272, 3609212987],
         ["UI/Styles/Icons/PingWheel/ping_wheel_s_bg_5.dds", 262272, 1685530396],
@@ -89529,10 +89529,10 @@
         ["UI/UIRoot_substitutes_124_captionText.txt", 16, 1486702998],
         ["UI/UIRoot_substitutes_124_captionText_en.txt", 16, 594681612],
         ["Maps/Multiplayer/Myth/Black.ADMPDSCR.xdb", 1232, 1200099609],
-        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_c7bf89c47ab341e0811e0391a7be0b83_tooltip.txt", 636, 719707233],
-        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_c7bf89c47ab341e0811e0391a7be0b83_tooltip_en.txt", 656, 4137232350],
-        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_description.txt", 650, 3573180499],
-        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_description_en.txt", 658, 1017897057],
+        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_c7bf89c47ab341e0811e0391a7be0b83_tooltip.txt", 836, 3836581999],
+        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_c7bf89c47ab341e0811e0391a7be0b83_tooltip_en.txt", 902, 3230135636],
+        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_description.txt", 850, 2067664458],
+        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_description_en.txt", 904, 1369388934],
         ["Maps/Multiplayer/Myth/Black.ADMPDSCR_title.txt", 36, 2500387229],
         ["Maps/Multiplayer/Myth/Black.ADMPDSCR_title_en.txt", 22, 4097920324],
         ["Maps/Multiplayer/Myth/Black.ADMPSTTN.xdb", 315, 1349217726],
@@ -89544,7 +89544,14 @@
         ["UI/Styles/Icons/Maps/PvEEpisode2Small_Gold.ITEX.xdb", 782, 3371947970],
         ["UI/Styles/Icons/Maps/PvEEpisode2Small_Gold.dds", 29808, 3651994677],
         ["UI/Styles/Icons/Maps/PvEEpisode2_Gold.ITEX.xdb", 767, 2227561229],
-        ["UI/Styles/Icons/Maps/PvEEpisode2_Gold.dds", 29808, 3651994677]
+        ["UI/Styles/Icons/Maps/PvEEpisode2_Gold.dds", 29808, 3651994677],
+        ["Maps/Multiplayer/Myth/Abilities/GoldStartBonus.ABLT.xdb", 2547, 2205665068],
+        ["Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR.xdb", 17766, 3634435549],
+        ["Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR_description.txt", 844, 469263102],
+        ["Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR_description_en.txt", 942, 828266468],
+        ["Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR_name.txt", 36, 123081306],
+        ["Maps/Multiplayer/Myth/Abilities/GoldStartBonus.APLR_name_en.txt", 30, 2849648053],
+        ["Maps/Multiplayer/Myth/Abilities/GoldTowerBonus.ABLT.xdb", 11771, 3250572981]
       ]
     }
   ]

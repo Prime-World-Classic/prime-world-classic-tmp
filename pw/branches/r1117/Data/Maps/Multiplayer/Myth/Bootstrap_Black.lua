@@ -13,23 +13,23 @@
  -- Золотая сложность. Файлы карты остаются Black.*: этот путь передаёт бэкенд (режим 4).
  RED_DIFFICULTY = true -- всё, что включено на красной, работает и на золотой
  GOLD_DIFFICULTY = true
- INIT_CREEP_STAT_MODIFIER = 3.625 -- красная (1.45) x2.5: все статы чуди x2.5
+ INIT_CREEP_STAT_MODIFIER = 2.175 -- красная (1.45) x1.5: все статы чуди x1.5
 
   -- Тут были оранжевые талантсеты с 9 звездами
  
   ENEMY_HERO_REFINE_RATE = 1
  STATS_WEREWOLF = { stats = {StatLife, StatStrength, StatIntellect, StatStamina, StatWill, StatDexterity, StatAttackSpeed, StatEnergy }, 
-  bonus = {16755, 705, 312, 278, 270, 160, 462, 125} }
+  bonus = {10053, 423, 188, 166, 162, 96, 278, 75} }
  STATS_FAIRY = { stats = {StatLife, StatStrength, StatIntellect, StatStamina, StatWill, StatDexterity, StatAttackSpeed, StatEnergy }, 
-  bonus = {17968, 250, 680, 415, 288, 458, 58, 2030}} 
+  bonus = {10780, 150, 408, 249, 172, 274, 34, 1218}} 
  STATS_NAGA = { stats = {StatLife, StatStrength, StatIntellect, StatStamina, StatWill, StatDexterity, StatAttackSpeed, StatEnergy }, 
-  bonus = {19292, 385, 250, 212, 780, 205, 185, 2388} }
+  bonus = {11576, 231, 150, 128, 468, 123, 111, 1432} }
  STATS_WITCHDOCTOR = { stats = {StatLife, StatStrength, StatIntellect, StatStamina, StatWill, StatDexterity, StatAttackSpeed, StatEnergy }, 
-  bonus = {17298, 250, 835, 290, 242, 470, 140, 2038} }
+  bonus = {10378, 150, 501, 174, 146, 282, 84, 1222} }
  STATS_MANAWYRM = { stats = {StatLife, StatStrength, StatIntellect, StatStamina, StatWill, StatDexterity, StatAttackSpeed, StatEnergy }, 
-  bonus = {13350, 250, 872, 222, 280, 380, 25, 7105} }
+  bonus = {8010, 150, 524, 134, 168, 228, 15, 4263} }
  STATS_HUNTER = { stats = {StatLife, StatStrength, StatIntellect, StatStamina, StatWill, StatDexterity, StatAttackSpeed, StatEnergy }, 
-  bonus = {16392, 802, 250, 380, 338, 425, 50, 345} }
+  bonus = {9836, 482, 150, 228, 202, 255, 30, 207} }
 
 ENEMY_HERO_STATS_BONUS = { stats = {StatLife, StatStrength, StatIntellect, StatStamina, StatWill, StatDexterity, StatAttackSpeed, StatEnergy }, 
 						   bonus = {0,     0, 			0,			   0,	 		0,		  0, 			 0, 			 0 } }

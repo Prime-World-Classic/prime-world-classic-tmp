@@ -9169,10 +9169,21 @@ HRESULT NvrhiBackend::DrawImpl(ERenderPrimitiveType type, bool indexed, unsigned
     {
       s_pf[s_pfN++] = key;
       char det[420];
-      snprintf(det, sizeof(det), "причина=%s | vs=%u ps=%u lay=%u rt=%u ds=%u type=%u vtx=%u prim=%u mat=%s",
+      // цели вывода — без них отказ createGraphicsPipeline неотличим от
+      // несовпадения формата цвета и глубины (VUID-...-Attachment-07902 и пр.)
+      unsigned rw = 0, rh = 0, rf = 0, rb = 0, dw = 0, dh = 0, df = 0;
+      if (d.curRt < d.surfaces.size())
+      { rw = d.surfaces[d.curRt].w; rh = d.surfaces[d.curRt].h;
+        rf = (unsigned)d.surfaces[d.curRt].seamFormat; rb = d.surfaces[d.curRt].backBuffer ? 1u : 0u; }
+      if (d.curDs < d.surfaces.size())
+      { dw = d.surfaces[d.curDs].w; dh = d.surfaces[d.curDs].h;
+        df = (unsigned)d.surfaces[d.curDs].seamFormat; }
+      snprintf(det, sizeof(det),
+               "причина=%s | vs=%u ps=%u lay=%u type=%u vtx=%u prim=%u | rt#%u %ux%u fmt=%u back=%u "
+               "| ds#%u %ux%u fmt=%u | mat=%s",
                d.pipeFailReason ? d.pipeFailReason : "?",
-               d.curVs, d.curPs, d.curLayout, d.curRt, d.curDs, (unsigned)type,
-               vtx, primitiveCount,
+               d.curVs, d.curPs, d.curLayout, (unsigned)type, vtx, primitiveCount,
+               d.curRt, rw, rh, rf, rb, d.curDs, dw, dh, df,
                ::GetLastDipMaterial() ? ::GetLastDipMaterial() : "-");
       int dn = (int)strlen(det);
       if (dn < 0 || dn >= (int)sizeof(det) - 24) dn = (int)sizeof(det) - 24;

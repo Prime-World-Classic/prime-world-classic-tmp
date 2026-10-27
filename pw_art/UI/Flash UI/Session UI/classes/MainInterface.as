@@ -240,7 +240,7 @@
 				
 				if (spectatorMode)
 				{
-					switch (player.Fraction)
+					switch (player.ColumnFraction) // OtherSide: союзник в колонке врагов (и в повторе)
 					{
 					case EFraction.HUMAN_FACTION:
 						mateInfos = friendlyTeamController;

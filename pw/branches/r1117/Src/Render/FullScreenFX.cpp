@@ -271,7 +271,13 @@ void FullScreenFX::Apply(const SceneConstants &viewSceneConsts, Texture2D *pText
 
   /////////////////////////////////////////////////////////////////////////////
   // Set material pins and textures
-  s_MaterialHolder.SetPins(colorCorrectPinValue, doSharp && pCoeffTexture, pBloomTexture, pDepthTexture, useCoeffTexture);
+  // Последний пин — R2VBPin: при PRESENT шейдер берёт веса природы из вершинного
+  // потока Input.Weights (Render-to-VB), которого после удаления R2VB нет — веса
+  // нулевые, InScale = 1/(InMax-InMin) = 1/0, и при включённых пост-эффектах карты
+  // с postEffect (ARAM, DEFENSE, Coop1, Myth) рисовались чёрными. Веса всегда
+  // читаются из coeffMap (tex2Dlod), поэтому пин выключен. До a639d8319 он
+  // включался только при pCoeffTexture->UsingR2VB().
+  s_MaterialHolder.SetPins(colorCorrectPinValue, doSharp && pCoeffTexture, pBloomTexture, pDepthTexture, false);
 
   FullScreenMaterial* const pMaterial = s_MaterialHolder.GetMaterial();
 

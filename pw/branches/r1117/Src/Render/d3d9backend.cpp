@@ -3,6 +3,7 @@
 #include "renderflagsconverter.h"
 #include "dxutils.h"   // GetD3DPoolAndUsagesParamaters + PoolType (D3D9-реализация знает про D3D9)
 #include "renderstatesmanager.h"  // VerifyShadowAgainstDevice (проверка полноты модели)
+#include "GlobalMasks.h"          // POSTFX_COEFFSAMPLERINDEX (вершинная выборка coeffMap)
 #include "System/Compatibility.h"   // IsRunnedUnderWine / IsRunnedUnderCrossOverWine (mip-цепочка)
 #include "rdcapmarker.h"            // маркер RenderDoc-капчи (env PW_VK_RDCAP*), общий с nvrhibackend
 
@@ -243,7 +244,17 @@ HRESULT D3D9Backend::SetPixelShader(HShader shader) {
 }
 
 HRESULT D3D9Backend::SetTexture(unsigned samplerIndex, HTexture texture) {
-  return pDevice->SetTexture(samplerIndex, static_cast<IDirect3DBaseTexture9*>(texture.p));
+  IDirect3DBaseTexture9* pTexture = static_cast<IDirect3DBaseTexture9*>(texture.p);
+  // vs_3_0 читает сэмплер sN не из слота N пиксельной стадии, а из
+  // D3DVERTEXTEXTURESAMPLER0 + N: в D3D9 у вершинной стадии свои слоты (257..260).
+  // Единственная выборка в VS — coeffMap у FullScreenMaterial (GlobalMasks.h:
+  // POSTFX_COEFFSAMPLERINDEX). Без копии в вершинный слот VS читал нули, веса
+  // нормалей природы обнулялись, и цветокоррекция карт с postEffect (ARAM,
+  // ARAM_SNOW, DEFENSE, Coop1, Myth) давала чёрную сцену. Vulkan/DX12 этого
+  // разделения не знают, там правка не нужна.
+  if (samplerIndex == POSTFX_COEFFSAMPLERINDEX)
+    pDevice->SetTexture(D3DVERTEXTEXTURESAMPLER0 + samplerIndex, pTexture);
+  return pDevice->SetTexture(samplerIndex, pTexture);
 }
 
 HRESULT D3D9Backend::SetRenderTarget(unsigned index, HSurface surface) {

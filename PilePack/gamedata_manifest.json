@@ -80391,10 +80391,10 @@
     {
       "id": 223,
       "name": "gamedata081.pile",
-      "packed_size": 18958792,
-      "source_size": 19156135,
+      "packed_size": 18959944,
+      "source_size": 19157287,
       "files": [
-        ["UI/Screens/Combat/Flash/main.swf", 18912600, 3845766357],
+        ["UI/Screens/Combat/Flash/main.swf", 18913752, 1011524534],
         ["UI/Screens/Combat/FlyTexts/FlyCustomText.IMGLBL.xdb", 2053, 427458383],
         ["UI/Screens/Combat/FlyTexts/FlyCustomText.IMGLBL_captionText.txt", 28, 1101780052],
         ["UI/Screens/Combat/FlyTexts/FlyCustomText_Energy.IMGLBL.xdb", 2067, 342939488],

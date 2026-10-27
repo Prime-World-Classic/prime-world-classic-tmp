@@ -52,8 +52,18 @@
 		public function SetInteractive(value:Boolean):void
 		{
 			interactive = value;
+			// Ошибка на одном портрете не должна оставлять остальные в прежнем виде:
+			// иначе кнопки появляются по одной на каждое нажатие клавиши.
 			for each (var indicator:MateVoiceIndicator in indicators)
-				indicator.SetInteractive(value);
+			{
+				try
+				{
+					indicator.SetInteractive(value);
+				}
+				catch (e:Error)
+				{
+				}
+			}
 			Reapply();
 		}
 

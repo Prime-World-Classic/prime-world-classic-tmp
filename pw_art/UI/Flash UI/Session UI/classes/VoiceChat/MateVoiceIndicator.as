@@ -580,12 +580,11 @@
 
 			if (labelTextSize != textSize)
 			{
-				labelTextSize = textSize;
-				var format:TextFormat = labelText.defaultTextFormat;
-				format.size = textSize;
-				labelText.defaultTextFormat = format;
+				// Геттер defaultTextFormat движок не реализует (null) — формат собираем заново.
+				labelText.defaultTextFormat = CreateFormat(textSize, LABEL_TEXT_COLOR);
 				labelText.width = Math.round(width + 40);
 				labelText.height = textSize + 12;
+				labelTextSize = textSize;
 			}
 			labelText.text = text;
 			labelText.textColor = (flags & 2) != 0 ? 0x949BA4 : LABEL_TEXT_COLOR;
@@ -684,20 +683,24 @@
 			FSCommands.Send(VoiceTeamOverlay.COMMAND, "vol " + peerId + " " + (e.delta > 0 ? 5 : -5));
 		}
 
-		private static function CreateText(size:int, color:uint, fieldWidth:Number):TextField
+		private static function CreateFormat(size:int, color:uint):TextFormat
 		{
 			var format:TextFormat = new TextFormat();
 			format.font = "DejaVu LGC Sans";
 			format.size = size;
 			format.color = color;
+			return format;
+		}
 
+		private static function CreateText(size:int, color:uint, fieldWidth:Number):TextField
+		{
 			var text:TextField = new TextField();
 			text.selectable = false;
 			text.mouseEnabled = false;
 			text.multiline = false;
 			text.wordWrap = false;
 			text.autoSize = TextFieldAutoSize.NONE;
-			text.defaultTextFormat = format;
+			text.defaultTextFormat = CreateFormat(size, color);
 			text.width = fieldWidth;
 			text.height = size + 8;
 			text.text = "";

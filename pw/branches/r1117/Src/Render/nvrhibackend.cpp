@@ -82,6 +82,10 @@ struct VkApiGuard
 
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
+// Определена в глобальном пространстве имён (multishader.cpp:353), как её же
+// читает трасса Dip'ов в smartrenderer.cpp.
+extern const char *GetLastDipMaterial();
+
 namespace Render
 {
 
@@ -1125,6 +1129,13 @@ struct NvrhiBackendImpl
   // без них «вывод=0» неотличим от «клиент вообще не рисует» (замер
   // 2026-10-16: 202 DrawImpl, 0 пайплайнов, в логе ни одной строки об отказе).
   unsigned drawSkipPrim, drawSkipVs, drawSkipPs, drawSkipRt;
+  // Вывод дошёл до DrawImpl, но пайплайн не создан (отказ FindOrCreatePipeline):
+  // вывод в Vulkan не уходит, при этом счётчики drawSkip* остаются нулевыми —
+  // без pipeFail такой вывод неотличим от «клиент не рисует».
+  unsigned pipeFail;
+  // Какая именно ветка FindOrCreatePipeline вернула пустой пайплайн
+  // (раскладка / framebuffer / createGraphicsPipeline / не задан vs|ps|lay|rt).
+  const char* pipeFailReason;
   // Шаг 13.4e: вывод в бэк-буфер отдельно от вывода в offscreen. Кадр чёрный при
   // 119 000 успешных draw'ов — значит сцены в бэк-буфере нет вовсе, и надо
   // отличить «не чего рисовать» от «рисуем не туда».
@@ -1182,7 +1193,7 @@ struct NvrhiBackendImpl
       flushesSinceIdle(0),
       slabBytes(64u * 1024u * 1024u),
       slabCreated(0), slabHoleReuses(0), slabAllocFail(0), slabFreed(0),
-      drawSkipPrim(0), drawSkipVs(0), drawSkipPs(0), drawSkipRt(0),
+      drawSkipPrim(0), drawSkipVs(0), drawSkipPs(0), drawSkipRt(0), pipeFail(0), pipeFailReason("?"),
       drawsBack(0), drawsOff(0),
       rtSetNull(0), rtSetForeign(0), rtSetOwn(0), rtSetEmpty(0), rtViewportReset(0),
       clearLoadFrame(1u), clearLoadDone(0), clearLoadLogged(0),
@@ -3269,8 +3280,10 @@ void NvrhiBackend::DumpStats(const char* pTag) const
   DebugTrace("VkRtVp%s: привязок слота 0 со сбросом вьюпорта/сциссора в размер цели: %u", pTag ? pTag : "", d.rtViewportReset);
   DebugTrace("VkClearLoad%s: явных clear'ов при первой привязке цели: %u (кадр %u)",
              pTag ? pTag : "", d.clearLoadDone, d.clearLoadFrame);
-  DebugTrace("VkDraw%s: пропуски вывода: примитив=%u нет VS=%u нет PS=%u нет RT=%u",
-             pTag ? pTag : "", d.drawSkipPrim, d.drawSkipVs, d.drawSkipPs, d.drawSkipRt);
+  DebugTrace("VkDraw%s: пропуски вывода: примитив=%u нет VS=%u нет PS=%u нет RT=%u "
+             "пайплайн-отказ=%u",
+             pTag ? pTag : "", d.drawSkipPrim, d.drawSkipVs, d.drawSkipPs, d.drawSkipRt,
+             d.pipeFail);
   {
     // DumpStats работает с const-ссылкой, поэтому бэк-индекс считается здесь
     // руками (BackSurfaceIndex требует неконстантного доступа).
@@ -5976,15 +5989,35 @@ static int FindOrCreateResMap(NvrhiBackendImpl& d)
 // не начинает рисовать инверсные сравнения. Для fill/cull/адресации/фильтров
 // перечисления разные — они переводятся таблицей.
 
+// Каждая РАЗНАЯ проблема состояния печатается один раз, с материалом и seam-
+// индексом PS. Прежний вариант «первые 8 вхождений» в бою давал 8 одинаковых
+// строк без имени: например, непереносимый ALPHATESTENABLE у 1203 материалов
+// контента выглядел как 8 строк, а 0 строк и 8 — неразличимо (замер: в сцене
+// арсенала 6 разных alphaRef — 127, 60, 80, 90, 160, 180 — и все они прятались
+// за лимитом). Общий счётчик d.stateUnsupported считается по-прежнему по всем
+// вхождениям.
 static void NoteStateIssue(NvrhiBackendImpl& d, const char* what, unsigned value)
 {
   ++d.stateUnsupported;
-  if (d.stateUnsupported <= 8u)
-  {
-    char det[96];
-    snprintf(det, sizeof(det), "%s = %u", what, value);
-    VkNote("Состояния: аналога у Vulkan нет", false, det);
-  }
+  static unsigned long long s_seen[64];
+  static unsigned s_seenN = 0u;
+  const unsigned long long key =
+      ((unsigned long long)(size_t)what * 0x9e3779b97f4a7c15ull)
+    ^ ((unsigned long long)value * 0x100000001b3ull)
+    ^ ((unsigned long long)d.curPs << 40);
+  for (unsigned k = 0u; k < s_seenN; ++k)
+    if (s_seen[k] == key)
+      return;
+  if (s_seenN >= 64u)
+    return;
+  s_seen[s_seenN++] = key;
+
+  char det[192];
+  snprintf(det, sizeof(det), "%s = %u | ps=%u vs=%u mat=%s", what, value,
+           d.curPs, d.curVs,
+           ::GetLastDipMaterial() ? ::GetLastDipMaterial() : "-");
+  if ((int)strlen(det) >= (int)sizeof(det)) det[sizeof(det) - 2] = 0;
+  VkNote("Состояния: аналога у Vulkan нет", false, det);
 }
 
 static_assert((unsigned)nvrhi::ComparisonFunc::Never == D3DCMP_NEVER &&
@@ -6920,13 +6953,16 @@ nvrhi::GraphicsPipelineHandle FindOrCreatePipeline(NvrhiBackendImpl& d, ERenderP
     if (ppFb)
     {
       nvrhi::FramebufferHandle fb = FindOrCreateFb(d, d.curRt, effDs);
-      if (!fb) return nvrhi::GraphicsPipelineHandle();
+      if (!fb) { d.pipeFailReason = "fb(кэш-попадание)"; return nvrhi::GraphicsPipelineHandle(); }
       *ppFb = fb;   // владеет кэш framebuffer'ов (RefCountPtr::operator& -> T**)
     }
     return p.pipe;
   }
   if (d.curVs == kNoRes || d.curPs == kNoRes || d.curLayout == kNoRes || d.curRt == kNoRes)
+  {
+    d.pipeFailReason = "нет vs|ps|lay|rt";
     return nvrhi::GraphicsPipelineHandle();
+  }
 
   nvrhi::InputLayoutHandle il;
   // раскладка живёт в кэше по (индекс, подпись шагов) и в пайплайн её обязан
@@ -6935,10 +6971,10 @@ nvrhi::GraphicsPipelineHandle FindOrCreatePipeline(NvrhiBackendImpl& d, ERenderP
   // БЕСШТРИХОВЫМ — вершинные атрибуты читаются нулями, геометрия вырождается
   // молча (замер 2026-10-15: 0 пикселей при пайплайне 1/1 и выводе 1)
   il = BuildInputLayout(d, d.curLayout, lsig, d.curVs);
-  if (!il) { VK_TRACE("il ОТКАЗ"); return nvrhi::GraphicsPipelineHandle(); }
+  if (!il) { d.pipeFailReason = "раскладка (BuildInputLayout)"; VK_TRACE("il ОТКАЗ"); return nvrhi::GraphicsPipelineHandle(); }
   VK_TRACE("il ok");
 
-  if (d.curRt >= d.surfaces.size()) return nvrhi::GraphicsPipelineHandle();
+  if (d.curRt >= d.surfaces.size()) { d.pipeFailReason = "rt вне диапазона"; return nvrhi::GraphicsPipelineHandle(); }
 
   // Разделяющий эксперимент (шаг 14): поток встал ровно внутри
   // d.nvrhiDevice->createFramebuffer (кольцо: `fb >` без `fb <`; nvidia-smi
@@ -6959,7 +6995,7 @@ nvrhi::GraphicsPipelineHandle FindOrCreatePipeline(NvrhiBackendImpl& d, ERenderP
     }
   }
   nvrhi::FramebufferHandle fb = FindOrCreateFb(d, d.curRt, effDs);
-  if (!fb) return nvrhi::GraphicsPipelineHandle();
+  if (!fb) { d.pipeFailReason = "fb"; return nvrhi::GraphicsPipelineHandle(); }
 
   nvrhi::GraphicsPipelineDesc pd;
   pd.setPrimType(PrimType(type)).setInputLayout(il)
@@ -9093,8 +9129,48 @@ HRESULT NvrhiBackend::DrawImpl(ERenderPrimitiveType type, bool indexed, unsigned
   VK_TRACE("ssbo ok");
 
   nvrhi::IFramebuffer* fbRaw = 0;
+  d.pipeFailReason = "createGraphicsPipeline";
   nvrhi::GraphicsPipelineHandle pipe = FindOrCreatePipeline(d, type, &fbRaw);
-  if (!pipe) { VK_TRACE("pipe НЕ создан"); return E_FAIL; }
+  if (!pipe)
+  {
+    ++d.pipeFail;
+    // Причина отказа ищется по паре (ps,vs,раскладка,цель): печатаем один раз на
+    // комбинацию, иначе 1203 материала с одним и тем же отказом забивают лог.
+    static unsigned long long s_pf[64];
+    static unsigned s_pfN = 0u;
+    const unsigned long long key =
+        ((unsigned long long)d.curVs << 40) ^ ((unsigned long long)d.curPs << 20)
+      ^ ((unsigned long long)d.curLayout << 52) ^ ((unsigned long long)d.curRt << 4)
+      ^ (unsigned long long)(unsigned)type;
+    bool seen = false;
+    for (unsigned k = 0u; k < s_pfN; ++k)
+      if (s_pf[k] == key) { seen = true; break; }
+    if (!seen && s_pfN < 64u)
+    {
+      s_pf[s_pfN++] = key;
+      char det[420];
+      snprintf(det, sizeof(det), "причина=%s | vs=%u ps=%u lay=%u rt=%u ds=%u type=%u vtx=%u prim=%u mat=%s",
+               d.pipeFailReason ? d.pipeFailReason : "?",
+               d.curVs, d.curPs, d.curLayout, d.curRt, d.curDs, (unsigned)type,
+               vtx, primitiveCount,
+               ::GetLastDipMaterial() ? ::GetLastDipMaterial() : "-");
+      int dn = (int)strlen(det);
+      if (dn < 0 || dn >= (int)sizeof(det) - 24) dn = (int)sizeof(det) - 24;
+      // состав вершинной декларации: именно по нему видно, что в список
+      // элементов попал терминатор D3D9 (t17 = VERTEXELEMENTTYPE_UNUSED)
+      if (d.curLayout < d.layoutObjs.size())
+      {
+        const NvrhiBackendImpl::LayoutObj& lo = d.layoutObjs[d.curLayout];
+        for (unsigned q = 0u; q < lo.elems.size() && q < 8u && dn < (int)sizeof(det) - 24; ++q)
+          dn += snprintf(det + dn, sizeof(det) - dn, " (s%u o%u t%u u%u i%u)",
+                         lo.elems[q].stream, lo.elems[q].offset, (unsigned)lo.elems[q].type,
+                         (unsigned)lo.elems[q].usage, lo.elems[q].usageIndex);
+      }
+      if ((int)strlen(det) >= (int)sizeof(det)) det[sizeof(det) - 2] = 0;
+      VkNote("Пайплайн не создан", false, det);
+    }
+    VK_TRACE("pipe НЕ создан"); return E_FAIL;
+  }
   VK_TRACE("pipe ok");
 
   nvrhi::GraphicsState gs;

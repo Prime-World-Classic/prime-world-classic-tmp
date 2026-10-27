@@ -8794,6 +8794,24 @@ HRESULT NvrhiBackend::DrawImpl(ERenderPrimitiveType type, bool indexed, unsigned
   // грязного диапазона и без пропуска по совпадению: проверяет, не читает ли
   // шейдер устаревшие байты c-банка (пропуск сверяет только байты последней
   // загрузки, без смещения).
+  // Альфа-тест переезжает в шейдер (PSHADER_ALPHATEST_REF = PS c40): у Vulkan
+  // аналога D3DRS_ALPHATESTENABLE нет, и материал рисовался без вырезания
+  // (замер: сплошные квады растительности, 6,3 % кадра обзора арсенала зелёных
+  // при max|D| 76,7 против d3d9). Пишем на КАЖДЫЙ вывод — и при выключенном
+  // тесте тоже, иначе в банке остаётся значение предыдущего вывода.
+  {
+    const float atv[4] = {
+      d.model.alphaTestEnable ? (float)d.model.alphaRef / 255.0f : 0.0f,
+      (d.model.alphaTestEnable && d.model.alphaFunc == D3DCMP_LESSEQUAL) ? -1.0f
+                                                                        : (d.model.alphaTestEnable ? 1.0f : 0.0f),
+      0.0f, 0.0f };
+    if (0 != memcmp(m_constShadow[csPixel] + 40 * 4, atv, sizeof(atv)))
+    {
+      memcpy(m_constShadow[csPixel] + 40 * 4, atv, sizeof(atv));
+      MarkConstDirty(d, csPixel, 40u, 1u);
+    }
+  }
+
   static int s_uboAlways = -1;
   if (s_uboAlways < 0) { const char* eUa = getenv("PW_VK_UBO_ALWAYS"); s_uboAlways = (eUa && *eUa) ? atoi(eUa) : 0; }
   for (int s = 0; s < csConstStageCount; ++s)

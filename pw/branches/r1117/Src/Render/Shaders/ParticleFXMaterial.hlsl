@@ -172,12 +172,20 @@ VS_OUTPUT MainPass_VSMain(VS_INPUT Input, out float4 PositionCS : POSITION)
   return Output;
 }
 
+// см. GlobalMasks.h PSHADER_ALPHATEST_REF: вырезание по альфе на Vulkan
+// (фиксированной альфа-смены в Vulkan нет, шаг 14)
+float4 alphaTestRef : register( PSHADER_ALPHATEST_REF );
 #if(NewParticlesValue == TRUE)
 half4 MainPass_PSMain(VS_OUTPUT Input, float4 PixelPos : VPOS) : COLOR
 {
   half4 color = saturate(Input.Color0 * tex2D(diffuseMapSampler, Input.UV) + Input.Color1);
   color.rgb *= saturate(color.a + Input.UV.z);
   color.a *= Input.UV.w;
+  // Альфа-тест переезжает в шейдер: x = ALPHAREF/255, y = +1 (GREATEREQUAL) или
+  // -1 (LESSEQUAL); тест выключен -> (0,0) -> clip(0) ничего не отсекает.
+  // SM3-слой контейнера этого кода не содержит (mkshd2 перегенерирует только
+  // SPIR-V), на D3D9 остаётся фиксированный тест.
+  clip((color.a - alphaTestRef.x) * alphaTestRef.y);
   return color;
 }
 
@@ -201,6 +209,11 @@ half4 MainPass_PSMain(VS_OUTPUT Input, float4 PixelPos : VPOS) : COLOR
   color = half4(lerp(backbuffer, backbufferMAD, color.a), color.a);
 #endif
 
+  // Альфа-тест переезжает в шейдер: x = ALPHAREF/255, y = +1 (GREATEREQUAL) или
+  // -1 (LESSEQUAL); тест выключен -> (0,0) -> clip(0) ничего не отсекает.
+  // SM3-слой контейнера этого кода не содержит (mkshd2 перегенерирует только
+  // SPIR-V), на D3D9 остаётся фиксированный тест.
+  clip((color.a - alphaTestRef.x) * alphaTestRef.y);
   return color;
 }
 

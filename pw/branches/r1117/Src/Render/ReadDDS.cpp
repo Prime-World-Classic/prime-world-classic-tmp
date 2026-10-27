@@ -134,8 +134,13 @@ static void GetSurfaceInfo( UINT width, UINT height, D3DFORMAT fmt, UINT* pNumBy
 
   if( fmt == D3DFMT_DXT1 || fmt == D3DFMT_DXT2 || fmt == D3DFMT_DXT3 || fmt == D3DFMT_DXT4 || fmt == D3DFMT_DXT5 )
   {
-    const UINT numBlocksWide =  width ? Max(1u, width/4) : 0;
-    const UINT numBlocksHigh = height ? Max(1u, height/4 ) : 0;
+    // Блоков — С ЗАКРУГЛЕНИЕМ ВВЕРХ: файл хранит ceil(size/4) строк блоков
+    // (замер по Data/UI/Styles/Minigame02/PicturesMask.dds 430x432 DXT5: 9 mip,
+    // байты сходятся с размером файла только при ceil; floor даёт 107x107 вместо
+    // 108x108 и сдвигает все mip после первого). У кратных 4 ceil == floor, поэтому
+    // остальные .dds контента это не трогает.
+    const UINT numBlocksWide =  width ? Max(1u, (width  + 3) / 4) : 0;
+    const UINT numBlocksHigh = height ? Max(1u, (height + 3) / 4) : 0;
     const UINT numBytesPerBlock = (fmt == D3DFMT_DXT1) ? 8 : 16;
 
     rowBytes = numBlocksWide * numBytesPerBlock;
@@ -430,6 +435,25 @@ static HRESULT CreateTextureFromDDS(const DDS_HEADER* pHeader, const BYTE* pBitD
   NI_VERIFY(!(pHeader->dwHeaderFlags & DDS_HEADER_FLAGS_VOLUME), "Volume textures are not supported yet", return E_FAIL);
 
   D3DFORMAT fmt = GetD3D9Format(pHeader->ddspf);
+
+  // D3D9 не создаёт блок-сжатую текстуру с размером не кратным размеру блока
+  // (IDirect3DDevice9::CreateTexture -> D3DERR_INVALIDCALL 0x8876086C), а контент
+  // такие файлы содержит: 7 .dds из 8012 по извлечённому baseline (поиск — скил
+  // pw-render-ab, references/ab-grafli.md). В сцене MOBA работает
+  // Terrain/Roads/empty.dds 2x2 DXT5 (все тексели (255,255,255,0) — «пусто», лента
+  // дороги с ней обязана быть невидима); его несёт Terrain/Roads/empty.MTRL,
+  // который _.ADMP назначает materialB/materialN лентам дорог. До удаления
+  // D3DX-фолбэка такие файлы вытягивал D3DXCreateTextureFromFileInMemoryEx, он тоже
+  // округляет до блока; без округления загрузка падает, а LoadTextureFromFile
+  // подставляет дефолтную Tech/Default/DefaultTexture.dds — в кадре шахматное поле
+  // с буквами R/G/B. Округление байтово нейтрально: GetSurfaceInfo считает блоки как
+  // ceil(size/4), поэтому rowBytes/numRows у 2x2 и у 4x4 одинаковы и Fill копирует
+  // ровно те же байты.
+  if( fmt == D3DFMT_DXT1 || fmt == D3DFMT_DXT2 || fmt == D3DFMT_DXT3 || fmt == D3DFMT_DXT4 || fmt == D3DFMT_DXT5 )
+  {
+    width  = Max(4u, ((width  + 3) / 4) * 4);
+    height = Max(4u, ((height + 3) / 4) * 4);
+  }
 
   // skip LODs
   UINT start = 0;

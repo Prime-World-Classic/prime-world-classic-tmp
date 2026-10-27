@@ -503,6 +503,10 @@ bool VoiceOverlayController::IsPushToTalkHeld() const
 void VoiceOverlayController::SetChat( ChatUiController * _chat )
 {
   chat = _chat;
+  // The loading screen gets its chat later than the first launcher answer: the voice may
+  // already be on screen, and the hint skipped then goes out now.
+  if ( shown )
+    ShowUnlockHint();
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -565,13 +569,15 @@ void VoiceOverlayController::ShowUnlockHint()
   if ( hintShown || !IsValid( chat ) )
     return;
   hintShown = true;
-  const wstring key = GetUnlockKeyText();
+  // The key stands out in its own color: chat lines keep '<style:#RRGGBB>' runs
+  // (UI/Flash/GameSWFIntegration/Natives/text/TextField.cpp RemoveHTMLTags).
+  const wstring key = wstring( L"<style:#7FE7FF>\"" ) + GetUnlockKeyText() + L"\"</style>";
   wstring text;
   if ( GetLanguageShortCode() == "en" )
-    text = wstring( L"Hold \"" ) + key + L"\" + click the voice button to mute/unmute an ally.";
+    text = wstring( L"Hold " ) + key + L" + click the voice button to mute/unmute an ally.";
   else
-    text = wstring( L"\u0417\u0430\u0436\u043c\u0438\u0442\u0435 \"" ) + key
-      + L"\" + \u043a\u043b\u0438\u043a \u043f\u043e \u043a\u043d\u043e\u043f\u043a\u0435 \u0432\u043e\u0439\u0441\u0430, \u0447\u0442\u043e\u0431\u044b \u0437\u0430\u0433\u043b\u0443\u0448\u0438\u0442\u044c/\u0432\u0435\u0440\u043d\u0443\u0442\u044c \u0441\u043e\u044e\u0437\u043d\u0438\u043a\u0430.";
+    text = wstring( L"\u0417\u0430\u0436\u043c\u0438\u0442\u0435 " ) + key
+      + L" + \u043a\u043b\u0438\u043a \u043f\u043e \u043a\u043d\u043e\u043f\u043a\u0435 \u0432\u043e\u0439\u0441\u0430, \u0447\u0442\u043e\u0431\u044b \u0437\u0430\u0433\u043b\u0443\u0448\u0438\u0442\u044c/\u0432\u0435\u0440\u043d\u0443\u0442\u044c \u0441\u043e\u044e\u0437\u043d\u0438\u043a\u0430.";
   chat->AddChatMessage( text, NDb::CHATCHANNEL_SYSTEM );
   DebugLog( "unlock hint sent" );
 }

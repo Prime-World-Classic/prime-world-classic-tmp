@@ -368,9 +368,18 @@ void RoadSceneObject::BuildAABB()
     {
       DXVertexBufferRef pVB = pGeometry->primitives[i]->GetVertexBuffer();
       NI_VERIFY(Get(pVB), "NULL vertex buffer", return);
-      D3DVERTEXBUFFER_DESC vbDesc;
-      pVB->GetDesc(&vbDesc);
-      unsigned numVertices = vbDesc.Size / sizeof(RoadGeometryBuilder::RoadGeometryVertex);
+      // Размер буфера — через seam. Ручка бэкенда, GetDesc по ней = вызов по чужой
+      // vtable под NVRHI (тот же шаг 13.4c, что уже закрыт в StaticMesh.cpp): под
+      // Vulkan-контуром GetDesc возвращал мусор, numVertices оказывался 0,
+      // worldAABB оставался пустым (Init2Empty) — и лента дорог отсекалась
+      // фрустумом: ProcessByFrustumProc::operator() не пропускал объект дальше,
+      // RoadSceneObject::Render не вызывался, в капче не было ни одного рисунка
+      // RoadMaterial. Молча: NI_VERIFY-сообщения в shipping вырезаны.
+      unsigned vbSize = 0;
+      NI_VERIFY(SUCCEEDED(Render::GetBackend()->GetBufferInfo(
+                  Render::MakeBackendHandle<Render::HBuffer>(Get(pVB)), &vbSize)) && vbSize,
+                "NULL vertex buffer", return);
+      unsigned numVertices = vbSize / sizeof(RoadGeometryBuilder::RoadGeometryVertex);
 
       RoadGeometryBuilder::RoadGeometryVertex const* pVertex = Render::LockVB<RoadGeometryBuilder::RoadGeometryVertex>(Get(pVB), Render::LOCK_READONLY);
       NI_VERIFY(pVertex, "Unable to lock road vertices for reading", return);

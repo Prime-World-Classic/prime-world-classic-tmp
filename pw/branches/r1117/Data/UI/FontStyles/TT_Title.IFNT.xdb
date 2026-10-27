@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <UIFontStyle parent="/UI/FontStyles/TT_Body.IFNT">
 	<BackLink DBID="/UI/UIRoot" Count="8" />
+	<BackLink DBID="/UI/FontStyles/TT_gold_difficulty_pve_map.IFNT" Count="1" />
 	<BackLink DBID="/UI/FontStyles/TT_red_difficulty_pve_map.IFNT" Count="1" />
 	<BackLink DBID="/UI/FontStyles/TT_talent_rar.IFNT" Count="1" />
 	<BackLink DBID="/UI/FontStyles/TT_talent_rar_0.IFNT" Count="1" />

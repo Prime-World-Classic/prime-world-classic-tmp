@@ -641,6 +641,7 @@
 		<Item href="/UI/FontStyles/castle_guildofficer.IFNT" />
 		<Item href="/UI/FontStyles/castle_guildprivate.IFNT" />
 		<Item href="/UI/FontStyles/TT_red_difficulty_pve_map.IFNT" />
+		<Item href="/UI/FontStyles/TT_gold_difficulty_pve_map.IFNT" />
 		<Item href="/UI/UIRoot" id="E9E40234-E3BA-447B-8112-8A97538F6D50">
 			<UIFontStyle parent="/UI/FontStyles/TT_Bonus.IFNT">
 				<primaryColor>

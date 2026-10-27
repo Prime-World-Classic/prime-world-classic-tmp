@@ -26,7 +26,9 @@
 	// - кнопка нажимается только с зажатой клавишей voice_overlay_unlock (иначе клики проходят
 	//   к портрету; с ней кнопки крупнее и ярче): у союзника — заглушить/включить, у себя —
 	//   микрофон. Пока клавиша зажата,
-	//   под кнопкой союзника видна громкость, колесо над портретом её меняет.
+	//   под кнопкой союзника видна громкость, колесо над портретом её меняет;
+	// - с зажатой клавишей под полосками ХП/МП ещё одна круглая кнопка такого же вида, крупнее:
+	//   у союзника — заглушить/включить (звук или перечёркнутый красный звук), у себя — микрофон.
 	// Уровень и полоски важнее: свечение кладётся в слой под ними.
 	//
 	// Размеры текста не берём у движка: у созданных кодом TextField он держит
@@ -65,6 +67,8 @@
 		// Дуга громкости союзника (vol_010..vol_100, 64x64): её внешний радиус — 23.2/17 радиуса
 		// кнопки и 31 px из 32 в текстуре.
 		private static const ARC_FRACTION:Number = 23.2 / 17 * 32 / 31;
+		// Кнопка под полосками — 42% портрета (как прежняя кнопка под полосками).
+		private static const UNDER_FRACTION:Number = 0.42;
 
 		public var mate:MateInfoBase;
 		public var peerId:int;
@@ -75,6 +79,10 @@
 		private var arcIcon:Sprite;
 		private var plateIcon:Sprite;
 		private var buttonIcon:Sprite;
+		// Кнопка под полосками (только с зажатой клавишей).
+		private var underButton:Sprite;
+		private var underPlate:Sprite;
+		private var underIcon:Sprite;
 		// Громкость под кнопкой. Движок не рисует graphics самого Sprite (видны только дети) —
 		// подложка рисуется в дочерний Shape.
 		private var label:Sprite;
@@ -87,6 +95,7 @@
 		private var notInVoice:Boolean = false;
 		private var interactive:Boolean = false;
 		private var hovered:Boolean = false;
+		private var underHovered:Boolean = false;
 		private var flags:int = 0;
 		private var volume:int = 50;
 		private var micState:int = 0;
@@ -103,6 +112,8 @@
 		private var buttonSize:Number = 20;
 		private var buttonCenterX:Number = 0;
 		private var buttonCenterY:Number = 0;
+		// Низ полосок ХП/МП (или портрета, если их нет).
+		private var statsBottom:Number = 60;
 
 		public function MateVoiceIndicator(_mate:MateInfoBase, _isMe:Boolean)
 		{
@@ -130,6 +141,16 @@
 			button.addChild(buttonIcon);
 			mate.addChild(button);
 
+			underButton = new Sprite();
+			underButton.visible = false;
+			underButton.mouseChildren = false;
+			underPlate = CreateIcon();
+			SetIconImage(underPlate, "plate_gold");
+			underButton.addChild(underPlate);
+			underIcon = CreateIcon();
+			underButton.addChild(underIcon);
+			mate.addChild(underButton);
+
 			label = new Sprite();
 			label.visible = false;
 			label.mouseEnabled = false;
@@ -141,12 +162,15 @@
 			mate.addChild(label);
 
 			SetButtonMouse();
-			button.addEventListener(MouseEvent.MOUSE_DOWN, OnButtonDown);
-			button.addEventListener(MouseEvent.MOUSE_UP, StopEvent);
-			button.addEventListener(MouseEvent.CLICK, StopEvent);
-			button.addEventListener(MouseEvent.DOUBLE_CLICK, StopEvent);
-			button.addEventListener(MouseEvent.MOUSE_OVER, OnButtonOver);
-			button.addEventListener(MouseEvent.MOUSE_OUT, OnButtonOut);
+			for each (var target:Sprite in [button, underButton])
+			{
+				target.addEventListener(MouseEvent.MOUSE_DOWN, OnButtonDown);
+				target.addEventListener(MouseEvent.MOUSE_UP, StopEvent);
+				target.addEventListener(MouseEvent.CLICK, StopEvent);
+				target.addEventListener(MouseEvent.DOUBLE_CLICK, StopEvent);
+				target.addEventListener(MouseEvent.MOUSE_OVER, OnButtonOver);
+				target.addEventListener(MouseEvent.MOUSE_OUT, OnButtonOut);
+			}
 
 			// Колесо приходит самому верхнему объекту под курсором: у портрета это
 			// mouseCatcher, если он есть, иначе сам портрет.
@@ -154,6 +178,7 @@
 			if (mate.mouseCatcher != null)
 				mate.mouseCatcher.addEventListener(MouseEvent.MOUSE_WHEEL, OnWheel);
 			button.addEventListener(MouseEvent.MOUSE_WHEEL, OnWheel);
+			underButton.addEventListener(MouseEvent.MOUSE_WHEEL, OnWheel);
 		}
 
 		public function Dispose():void
@@ -162,7 +187,7 @@
 			mate.removeEventListener(MouseEvent.MOUSE_WHEEL, OnWheel);
 			if (mate.mouseCatcher != null)
 				mate.mouseCatcher.removeEventListener(MouseEvent.MOUSE_WHEEL, OnWheel);
-			for each (var child:DisplayObject in [glow, button, label])
+			for each (var child:DisplayObject in [glow, button, underButton, label])
 			{
 				if (child.parent != null)
 					child.parent.removeChild(child);
@@ -214,13 +239,14 @@
 				return;
 			interactive = value;
 			if (!interactive)
-				hovered = false;
+				hovered = underHovered = false;
 			Redraw();
 		}
 
 		private function Redraw():void
 		{
 			DrawButton();
+			DrawUnderButton();
 			DrawLabel();
 			SetButtonMouse();
 			UpdateAnimation();
@@ -321,6 +347,13 @@
 				if (frameSize < 10)
 					frameSize = 60;
 			}
+			statsBottom = frameY + frameSize;
+			for each (var barName:String in ["healthBar_mc", "manaBar_mc"])
+			{
+				var bar:DisplayObject = Child(barName);
+				if (bar != null && bar.visible)
+					statsBottom = Math.max(statsBottom, Finite(bar.y + BarHeight(bar), statsBottom));
+			}
 			buttonSize = Math.round(Math.max(20, frameSize * BUTTON_FRACTION));
 			buttonCenterX = frameX + frameSize * (1 + BUTTON_OUTSET) - buttonSize / 2;
 			buttonCenterY = frameY - frameSize * BUTTON_OUTSET + buttonSize / 2;
@@ -348,6 +381,23 @@
 			catch (e:Error)
 			{
 			}
+		}
+
+		// Высота полоски без её текстов: у Components.Bar внутри TextField'ы, и движок
+		// раздувает bar.height до их рамки по умолчанию (~100) — кнопка уезжала вниз.
+		private function BarHeight(bar:DisplayObject):Number
+		{
+			var limit:Number = Math.max(4, frameSize * 0.25);
+			var value:Number = NaN;
+			try
+			{
+				value = Number(Object(bar).BarHeight) * Finite(bar.scaleY, 1);
+			}
+			catch (e:Error)
+			{
+			}
+			value = Finite(value, limit);
+			return value > 0 && value < limit ? value : limit;
 		}
 
 		private function RingIndex():int
@@ -444,6 +494,39 @@
 			ApplyHover();
 		}
 
+		// Кнопка под полосками: что произойдёт по нажатию — у союзника звук (заглушён — красный),
+		// у себя микрофон.
+		private function DrawUnderButton():void
+		{
+			var show:Boolean = interactive && inCall;
+			underButton.visible = show;
+			if (!show)
+				return;
+
+			Measure();
+
+			var icon:String;
+			if (isMe)
+				icon = micState == 1 ? "v_mic" : (micState == 2 ? "v_mic_off" : "v_mic_none");
+			else
+				icon = (flags & 2) != 0 ? "v_spk_off" : "v_spk_on";
+			SetIconImage(underIcon, icon);
+
+			var plateSize:Number = Math.round(Math.max(24, frameSize * UNDER_FRACTION));
+			var size:Number = plateSize / PLATE_FRACTION;
+			for each (var layer:Sprite in [underPlate, underIcon])
+			{
+				layer.scaleX = layer.scaleY = size / ICON_TEX;
+				layer.x = 0;
+				layer.y = 0;
+			}
+			underButton.scaleX = underButton.scaleY = 1;
+			underButton.x = Math.round(frameX + frameSize / 2 - size / 2);
+			// край текстуры прозрачный (круг — PLATE_FRACTION её стороны): круг на 3 px ниже полосок
+			underButton.y = Math.round(statsBottom + 3 - (size - plateSize) / 2);
+			underButton.alpha = isMe && micState == 0 ? 0.75 : 1;
+		}
+
 		private function DrawLabel():void
 		{
 			var show:Boolean = interactive && inCall && !isMe;
@@ -487,9 +570,12 @@
 		private function SetButtonMouse():void
 		{
 			var active:Boolean = interactive && inCall;
-			button.mouseEnabled = active;
-			button.buttonMode = active;
-			button.useHandCursor = active;
+			for each (var target:Sprite in [button, underButton])
+			{
+				target.mouseEnabled = active;
+				target.buttonMode = active;
+				target.useHandCursor = active;
+			}
 		}
 
 		// С зажатой клавишей кнопки подрастают и светлеют — видно, что их можно нажать.
@@ -502,17 +588,25 @@
 		{
 			var k:Number = !interactive || !inCall ? 1 : (hovered ? 1.4 : 1.15);
 			button.transform.colorTransform = new ColorTransform(k, k, k, 1, 0, 0, 0, 0);
+			k = !interactive || !inCall ? 1 : (underHovered ? 1.4 : 1.15);
+			underButton.transform.colorTransform = new ColorTransform(k, k, k, 1, 0, 0, 0, 0);
 		}
 
 		private function OnButtonOver(e:MouseEvent):void
 		{
-			hovered = true;
+			if (e.currentTarget == underButton)
+				underHovered = true;
+			else
+				hovered = true;
 			ApplyHover();
 		}
 
 		private function OnButtonOut(e:MouseEvent):void
 		{
-			hovered = false;
+			if (e.currentTarget == underButton)
+				underHovered = false;
+			else
+				hovered = false;
 			ApplyHover();
 		}
 

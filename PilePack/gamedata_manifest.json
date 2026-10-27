@@ -2271,8 +2271,8 @@
     {
       "id": 158,
       "name": "gamedata016.pile",
-      "packed_size": 19593550,
-      "source_size": 51620316,
+      "packed_size": 19593597,
+      "source_size": 51620775,
       "files": [
         ["Creeps/Champions/Champion4/FXDeathWood.part", 21504, 1682580258],
         ["Creeps/Champions/Champion4/FXDeathdecal_Wave.stat", 2048, 1041279379],
@@ -2308,7 +2308,7 @@
         ["Creeps/DefaultStats/MidOnly/ManaShield.APLR.xdb", 5753, 2224838845],
         ["Creeps/DefaultStats/MidOnly/OnlyMid_Siege.STCN.xdb", 7026, 3017821484],
         ["Creeps/DefaultStats/MidOnly/OnlyMid_SuperSiegeTargeting.UNTP.xdb", 3221, 2432041352],
-        ["Creeps/DefaultStats/MidOnly/SiegeStatuses_MidOnly.ABLT.xdb", 37120, 1755557405],
+        ["Creeps/DefaultStats/MidOnly/SiegeStatuses_MidOnly.ABLT.xdb", 37579, 3798484093],
         ["Creeps/DefaultStats/MidOnly/SiegeStatuses_MidOnly.ABLT_0c30bcf8d81349fbafa229b96d9afec9_description.txt", 418, 1158706813],
         ["Creeps/DefaultStats/MidOnly/SiegeStatuses_MidOnly.ABLT_0c30bcf8d81349fbafa229b96d9afec9_description_en.txt", 356, 1801658531],
         ["Creeps/DefaultStats/MidOnly/SiegeStatuses_MidOnly.ABLT_0c30bcf8d81349fbafa229b96d9afec9_name.txt", 38, 361305707],
@@ -58477,7 +58477,7 @@
     {
       "id": 204,
       "name": "gamedata062.pile",
-      "packed_size": 19061810,
+      "packed_size": 19061840,
       "source_size": 72764325,
       "files": [
         ["Maps/Multiplayer/MidOnly/_.baked_terrain", 8399188, 4105656994],
@@ -58954,7 +58954,7 @@
         ["Maps/Multiplayer/Myth/Violet.ADMPDSCR_title.txt", 20, 2496077374],
         ["Maps/Multiplayer/Myth/Violet.ADMPDSCR_title_en.txt", 14, 3127178626],
         ["Maps/Multiplayer/Myth/Violet.ADMPSTTN.xdb", 317, 4245790237],
-        ["Maps/Multiplayer/Myth/_.ADMP.xdb", 2440472, 3323292115],
+        ["Maps/Multiplayer/Myth/_.ADMP.xdb", 2440472, 2136655082],
         ["Maps/Multiplayer/Myth/_.ADMPDSCR.xdb", 6326, 3298688930],
         ["Maps/Multiplayer/Myth/_.ADMPDSCRGR.xdb", 367, 1762456791],
         ["Maps/Multiplayer/Myth/_.ADMPDSCR_5a73f116121d42939912746d971ce8e8_enemies_0_nickname.txt", 12, 3930401127],
@@ -76307,8 +76307,8 @@
     {
       "id": 222,
       "name": "gamedata080.pile",
-      "packed_size": 13918626,
-      "source_size": 25864667,
+      "packed_size": 13918661,
+      "source_size": 25864826,
       "files": [
         ["Terrain/Tiles/Forest_B.dds", 174904, 1257157485],
         ["Terrain/Tiles/Forest_CTF.dds", 174904, 4292716507],
@@ -79595,7 +79595,7 @@
         ["UI/Events/CommonEvents/EventDamageDealed.UIEV.xdb", 5371, 2693357050],
         ["UI/Events/CommonEvents/EventDamageDealed_Energy.UIEV.xdb", 22713, 2414640091],
         ["UI/Events/CommonEvents/EventDamageDealed_Material.UIEV.xdb", 25243, 2795621985],
-        ["UI/Events/CommonEvents/EventDamageDealed_toSiege_MO.UIEV.xdb", 918, 1757032412],
+        ["UI/Events/CommonEvents/EventDamageDealed_toSiege_MO.UIEV.xdb", 999, 3869043494],
         ["UI/Events/CommonEvents/EventEnergy.UIEV.xdb", 2359, 519242937],
         ["UI/Events/CommonEvents/EventEnergyBurn.UIEV.xdb", 1535, 4161348048],
         ["UI/Events/CommonEvents/EventGetGold.UIEV.xdb", 784, 167457601],
@@ -79795,7 +79795,7 @@
         ["UI/FontStyles/TT_Players_Name.IFNT.xdb", 824, 1487175573],
         ["UI/FontStyles/TT_Reward.IFNT.xdb", 826, 4159265938],
         ["UI/FontStyles/TT_Shortcut.IFNT.xdb", 827, 2785150547],
-        ["UI/FontStyles/TT_Title.IFNT.xdb", 840, 316622869],
+        ["UI/FontStyles/TT_Title.IFNT.xdb", 918, 1321411631],
         ["UI/FontStyles/TT_Title_Rang.IFNT.xdb", 212, 2861690486],
         ["UI/FontStyles/TT_error_message.IFNT.xdb", 283, 3006492646],
         ["UI/FontStyles/TT_force_small_0.IFNT.xdb", 341, 1748536938],
@@ -80391,10 +80391,10 @@
     {
       "id": 223,
       "name": "gamedata081.pile",
-      "packed_size": 18958792,
-      "source_size": 19156135,
+      "packed_size": 18959944,
+      "source_size": 19157287,
       "files": [
-        ["UI/Screens/Combat/Flash/main.swf", 18912600, 3845766357],
+        ["UI/Screens/Combat/Flash/main.swf", 18913752, 1011524534],
         ["UI/Screens/Combat/FlyTexts/FlyCustomText.IMGLBL.xdb", 2053, 427458383],
         ["UI/Screens/Combat/FlyTexts/FlyCustomText.IMGLBL_captionText.txt", 28, 1101780052],
         ["UI/Screens/Combat/FlyTexts/FlyCustomText_Energy.IMGLBL.xdb", 2067, 342939488],
@@ -88579,8 +88579,8 @@
     {
       "id": 240,
       "name": "gamedata098.pile",
-      "packed_size": 20865005,
-      "source_size": 38840054,
+      "packed_size": 20865013,
+      "source_size": 38840119,
       "files": [
         ["UI/Styles/Tutorial/tutorial_8_adornia.dds", 1691156, 3042114487],
         ["UI/Styles/Tutorial/tutorial_8_doct.dds", 1691156, 157847806],
@@ -88615,7 +88615,7 @@
         ["UI/Textures_default/FrameTest.ITEX.xdb", 917, 3140573554],
         ["UI/Textures_default/FrameTest.MTRL.xdb", 1748, 3056599320],
         ["UI/Textures_default/FrameTest.dds", 53388, 3483229],
-        ["UI/UIRoot.xdb", 69757, 464578552],
+        ["UI/UIRoot.xdb", 69822, 2885110587],
         ["UI/UIRoot_substitutes_0_captionText.txt", 11646, 64820142],
         ["UI/UIRoot_substitutes_0_captionText_en.txt", 11608, 2447366804],
         ["UI/UIRoot_substitutes_100_captionText.txt", 3504, 3117182849],
@@ -89467,8 +89467,8 @@
     {
       "id": 243,
       "name": "gamedata101.pile",
-      "packed_size": 444224,
-      "source_size": 4271063,
+      "packed_size": 447493,
+      "source_size": 4280625,
       "files": [
         ["UI/Styles/Icons/PingWheel/ping_wheel_s_bg_4.dds", 262272, 3609212987],
         ["UI/Styles/Icons/PingWheel/ping_wheel_s_bg_5.dds", 262272, 1685530396],
@@ -89529,14 +89529,18 @@
         ["UI/UIRoot_substitutes_124_captionText.txt", 16, 1486702998],
         ["UI/UIRoot_substitutes_124_captionText_en.txt", 16, 594681612],
         ["Maps/Multiplayer/Myth/Black.ADMPDSCR.xdb", 1230, 2772602656],
-        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_c7bf89c47ab341e0811e0391a7be0b83_tooltip.txt", 630, 2162676104],
-        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_c7bf89c47ab341e0811e0391a7be0b83_tooltip_en.txt", 654, 1198889147],
-        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_description.txt", 646, 736853527],
-        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_description_en.txt", 658, 1481825340],
-        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_title.txt", 34, 1092294707],
-        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_title_en.txt", 24, 2868742752],
+        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_c7bf89c47ab341e0811e0391a7be0b83_tooltip.txt", 636, 719707233],
+        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_c7bf89c47ab341e0811e0391a7be0b83_tooltip_en.txt", 656, 4137232350],
+        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_description.txt", 650, 3573180499],
+        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_description_en.txt", 658, 1017897057],
+        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_title.txt", 36, 2500387229],
+        ["Maps/Multiplayer/Myth/Black.ADMPDSCR_title_en.txt", 22, 4097920324],
         ["Maps/Multiplayer/Myth/Black.ADMPSTTN.xdb", 315, 1349217726],
-        ["Maps/Multiplayer/Myth/Bootstrap_Black.lua", 2074, 4219800617]
+        ["Maps/Multiplayer/Myth/Bootstrap_Black.lua", 2158, 881554150],
+        ["Creeps/DefaultStats/MidOnly/PureDamageSplit.APLR.xdb", 8976, 3543482935],
+        ["Creeps/DefaultStats/MidOnly/PureDamageSplit.APLR_7fdd9f3686e64dc19ae3d2885a97727a_message.txt", 102, 567352465],
+        ["Creeps/DefaultStats/MidOnly/PureDamageSplit.APLR_7fdd9f3686e64dc19ae3d2885a97727a_message_en.txt", 102, 567352465],
+        ["UI/FontStyles/TT_gold_difficulty_pve_map.IFNT.xdb", 286, 2844832336]
       ]
     }
   ]

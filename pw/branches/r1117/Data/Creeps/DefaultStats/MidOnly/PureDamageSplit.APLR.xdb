@@ -1,0 +1,194 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TriggerApplicator>
+	<BackLink DBID="/Creeps/DefaultStats/MidOnly/SiegeStatuses_MidOnly.ABLT" Count="1" />
+	<actionsCount>
+		<compiledString></compiledString>
+		<returnType>int</returnType>
+		<sString>0</sString>
+	</actionsCount>
+	<applyTarget>ApplicatorTarget</applyTarget>
+	<behaviorFlags>0</behaviorFlags>
+	<caption> - PureDamageSplit: чистый урон от врагов делится на физический и магический</caption>
+	<effect>
+		<Item href="" />
+		<Item href="" />
+	</effect>
+	<enabled>
+		<compiledString></compiledString>
+		<returnType>bool</returnType>
+		<sString>true</sString>
+	</enabled>
+	<formulaName>PureDamageSplit</formulaName>
+	<lifeTime>
+		<compiledString></compiledString>
+		<returnType>float</returnType>
+		<sString>-1.0</sString>
+	</lifeTime>
+	<LoggingEvent>-1</LoggingEvent>
+	<playAck>false</playAck>
+	<processor href="/Creeps/DefaultStats/MidOnly/PureDamageSplit.APLR" id="CC1895C9-D077-472E-A697-E4C10AEEFBB7">
+		<EventProcessorDamageTransformer>
+			<abilityFilter>
+				<abilitiesList />
+				<abilityCondition>
+					<compiledString></compiledString>
+					<returnType>bool</returnType>
+					<sString>true</sString>
+				</abilityCondition>
+				<abilityCostMode>Energy</abilityCostMode>
+				<exceptThis>false</exceptThis>
+				<flags>1073743103</flags>
+				<onlySingleTarget>false</onlySingleTarget>
+			</abilityFilter>
+			<add>
+				<compiledString></compiledString>
+				<returnType>float</returnType>
+				<sString>0.0f</sString>
+			</add>
+			<applyTarget>ApplicatorTarget</applyTarget>
+			<checkSender>0</checkSender>
+			<damageTypeFilter>19</damageTypeFilter>
+			<flags>0</flags>
+			<matchTargetInverted>false</matchTargetInverted>
+			<mul>
+				<compiledString>FQoAAAABAAAAEQAAAHJhd0RhbWFnZQBVi+yD7AxoAAAAAItFEIsQi00Qi0JU/9CLTQyLEYtNDIsC3V34/9DcXfjf4PbEQXUH2e7ZXfTrBdno2V302UX0i+VdwwAAgD8AAAAA</compiledString>
+				<returnType>float</returnType>
+				<sString>appl.GetVariable("rawDamage") &lt; rLife ? 0.0f : 1.0f</sString>
+			</mul>
+			<objectFilter>2040319</objectFilter>
+			<senderMatchTarget>ApplicatorTarget</senderMatchTarget>
+			<spell href="/Creeps/DefaultStats/MidOnly/PureDamageSplit.APLR" id="EFC19ED1-1224-43A6-A9FB-795F7E6CEE39">
+				<Spell>
+					<applicators>
+						<Item href="/Creeps/DefaultStats/MidOnly/PureDamageSplit.APLR" id="960BA9A9-F96D-4259-AAEF-EF4E21E90B1A">
+							<VariableProxyApplicator>
+								<applicators>
+									<Item>
+										<applicator href="/Creeps/DefaultStats/MidOnly/PureDamageSplit.APLR" id="B30CEA49-0359-4AAE-ADC6-C39B3CB6567E">
+											<DamageApplicator>
+												<applyTarget>ApplicatorTarget</applyTarget>
+												<cancelInvisibility>false</cancelInvisibility>
+												<caption>физическая часть чистого урона</caption>
+												<damage>
+													<compiledString>FSsAAAADAAAAWgAAAGwAAACFAAAAZGFtYWdlQ29udmVydGVkAFB1cmVEYW1hZ2VfTWF0ZXJpYWxQZXJjZW50AFWL7IPsFItFEIsQi00Qi0JI/9CJRfyLTfyLEYtN/ItCSP/QiUX4i00MUYtVCFJoEAAAAItFEIsQi00Qi0JQ/9BoAAAAAItN+IsRi034i0JU3V3w/9DcTfDcDZMAAADZXezZReyL5V3DAAAAQOF6hD8=</compiledString>
+													<returnType>float</returnType>
+													<sString>appl.parent.parent.GetVariable("damageConverted") * cPureDamage_MaterialPercent * 0.01f</sString>
+												</damage>
+												<damageMode>4</damageMode>
+												<damageType>Material</damageType>
+												<enabled>
+													<compiledString></compiledString>
+													<returnType>bool</returnType>
+													<sString>true</sString>
+												</enabled>
+												<formulaName>PureSplit_Material</formulaName>
+												<LoggingEvent>-1</LoggingEvent>
+												<providerName></providerName>
+												<timeLimiter>-1</timeLimiter>
+												<uiEvent href="" />
+											</DamageApplicator>
+										</applicator>
+										<variableNames>
+											<Item>damageDealed</Item>
+										</variableNames>
+									</Item>
+									<Item>
+										<applicator href="/Creeps/DefaultStats/MidOnly/PureDamageSplit.APLR" id="7AC6060D-41D6-47A3-B1C6-E8CEF691EDBF">
+											<DamageApplicator>
+												<applyTarget>ApplicatorTarget</applyTarget>
+												<cancelInvisibility>false</cancelInvisibility>
+												<caption>магическая часть чистого урона</caption>
+												<damage>
+													<compiledString>FSsAAAADAAAAWgAAAG0AAAB2AAAAZGFtYWdlQ29udmVydGVkAFB1cmVEYW1hZ2VfTWF0ZXJpYWxQZXJjZW50AFWL7IPsFItFEIsQi00Qi0JI/9CJRfyLTfyLEYtN/ItCSP/QiUX4i00MUYtVCFJoEAAAAItFEIsQi00Qi0JQ/9DcDZ8AAADZ6N7haAAAAACLTfiLEYtN+ItCVN1d8P/Q3E3w2V3s2UXsi+VdwwAAAAAAAPA/AAAAQOF6hD8=</compiledString>
+													<returnType>float</returnType>
+													<sString>appl.parent.parent.GetVariable("damageConverted") * (1.0f - cPureDamage_MaterialPercent * 0.01f)</sString>
+												</damage>
+												<damageMode>4</damageMode>
+												<damageType>Energy</damageType>
+												<enabled>
+													<compiledString></compiledString>
+													<returnType>bool</returnType>
+													<sString>true</sString>
+												</enabled>
+												<formulaName>PureSplit_Energy</formulaName>
+												<LoggingEvent>-1</LoggingEvent>
+												<providerName></providerName>
+												<timeLimiter>-1</timeLimiter>
+												<uiEvent href="" />
+											</DamageApplicator>
+										</applicator>
+										<variableNames>
+											<Item>damageDealed</Item>
+										</variableNames>
+									</Item>
+									<Item>
+										<applicator href="/Creeps/DefaultStats/MidOnly/PureDamageSplit.APLR" id="7FDD9F36-86E6-4DC1-9AE3-D2885A97727A">
+											<UIMessageApplicator>
+												<applyTarget>ApplicatorTarget</applyTarget>
+												<caption>вывести суммарный урон цветом чистого</caption>
+												<enabled>
+													<compiledString>FT4AAAADAAAAZQAAAHcAAACQAAAAUHVyZVNwbGl0X01hdGVyaWFsOmRhbWFnZURlYWxlZABQdXJlU3BsaXRfRW5lcmd5OmRhbWFnZURlYWxlZABVi+yD7BSLRRCLEItNEItCSP/QiUX8i00QixGLTRCLQkj/0IlF+GggAAAAi034ixGLTfiLQlT/0GgAAAAAi038ixGLTfyLQlTdXfD/0NxF8NwdsgAAAN/g9sRBdQnHRewBAAAA6wfHRewAAAAAikXsi+VdwwAAAAAAAAAA</compiledString>
+													<returnType>bool</returnType>
+													<sString>($ParentApplVariable("PureSplit_Material:damageDealed") + $ParentApplVariable("PureSplit_Energy:damageDealed")) &gt; 0</sString>
+												</enabled>
+												<formulaName></formulaName>
+												<LoggingEvent>-1</LoggingEvent>
+												<message textref="/Creeps/DefaultStats/MidOnly/PureDamageSplit.APLR_7fdd9f3686e64dc19ae3d2885a97727a_message.txt" />
+												<providerName></providerName>
+												<uiEvent href="/UI/Events/CommonEvents/EventDamageDealed_toSiege_MO.UIEV" />
+												<value>
+													<compiledString>FT4AAAACAAAAZQAAAHcAAABQdXJlU3BsaXRfTWF0ZXJpYWw6ZGFtYWdlRGVhbGVkAFB1cmVTcGxpdF9FbmVyZ3k6ZGFtYWdlRGVhbGVkAFWL7IPsFItFEIsQi00Qi0JI/9CJRfyLTRCLEYtNEItCSP/QiUX4aCAAAACLTfiLEYtN+ItCVP/QaAAAAACLTfyLEYtN/ItCVN1d8P/Q3EXw2V3s2UXsi+Vdww==</compiledString>
+													<returnType>float</returnType>
+													<sString>$ParentApplVariable("PureSplit_Material:damageDealed") + $ParentApplVariable("PureSplit_Energy:damageDealed")</sString>
+												</value>
+											</UIMessageApplicator>
+										</applicator>
+										<variableNames />
+									</Item>
+								</applicators>
+								<applyTarget>ApplicatorTarget</applyTarget>
+								<caption>чистый урон: половина физ., половина маг., одна цифра</caption>
+								<enabled>
+									<compiledString></compiledString>
+									<returnType>bool</returnType>
+									<sString>true</sString>
+								</enabled>
+								<formulaName></formulaName>
+								<LoggingEvent>-1</LoggingEvent>
+								<providerName></providerName>
+							</VariableProxyApplicator>
+						</Item>
+					</applicators>
+					<dispatch href="/Creeps/DefaultStats/MidOnly/PureDamageSplit.APLR" id="C0E5277A-C79D-4136-82FB-CDA55A36D4AB">
+						<DispatchImmediate>
+							<alwaysApply>false</alwaysApply>
+							<applyEffect>
+								<Item href="" />
+								<Item href="" />
+							</applyEffect>
+							<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
+							<applyEffectOrientation>Default</applyEffectOrientation>
+							<applyEffectRandomAnglePoints>0</applyEffectRandomAnglePoints>
+							<dieAfterApply>true</dieAfterApply>
+							<dispatchEffect>
+								<Item href="" />
+								<Item href="" />
+							</dispatchEffect>
+							<flags>0</flags>
+							<instantApply>true</instantApply>
+						</DispatchImmediate>
+					</dispatch>
+				</Spell>
+			</spell>
+			<treatDelegatedByDelegator>false</treatDelegatedByDelegator>
+		</EventProcessorDamageTransformer>
+	</processor>
+	<providerName></providerName>
+	<startCondition>
+		<compiledString></compiledString>
+		<returnType>bool</returnType>
+		<sString>true</sString>
+	</startCondition>
+	<useAbilityCooldown>false</useAbilityCooldown>
+	<useAbilityOwnerMana>false</useAbilityOwnerMana>
+</TriggerApplicator>

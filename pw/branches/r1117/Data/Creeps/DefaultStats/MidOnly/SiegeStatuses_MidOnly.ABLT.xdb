@@ -155,6 +155,16 @@
 						</var>
 					</UnitConstant>
 				</Item>
+				<Item href="/Creeps/DefaultStats/MidOnly/SiegeStatuses_MidOnly.ABLT" id="452192FE-1AA7-4BCC-AD59-EF56C3F5248F">
+					<UnitConstant>
+						<name>PureDamage_MaterialPercent</name>
+						<var>
+							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAABIQg==</compiledString>
+							<returnType>float</returnType>
+							<sString>50</sString>
+						</var>
+					</UnitConstant>
+				</Item>
 				<Item href="/Creeps/DefaultStats/MidOnly/SiegeStatuses_MidOnly.ABLT" id="8F968415-2043-462A-A262-52F9FA805289">
 					<UnitConstant>
 						<name>RangeToEnemy</name>
@@ -428,6 +438,7 @@
 					<Item href="/GameLogic/GeneralApplicators/Uncontrollable.APLR" />
 					<Item href="/GameLogic/GeneralApplicators/Immune2Control.APLR" />
 					<Item href="/Creeps/DefaultStats/MidOnly/ManaShield.APLR" />
+					<Item href="/Creeps/DefaultStats/MidOnly/PureDamageSplit.APLR" />
 					<Item href="/Creeps/DefaultStats/MidOnly/SiegeStatuses_MidOnly.ABLT" id="66E0C159-F4AA-4F42-8A59-CB79EF7ACA6D">
 						<TriggerApplicator>
 							<actionsCount>

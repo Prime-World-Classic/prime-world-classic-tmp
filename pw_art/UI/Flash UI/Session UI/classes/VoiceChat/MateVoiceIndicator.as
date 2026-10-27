@@ -79,6 +79,12 @@
 		private var arcIcon:Sprite;
 		private var plateIcon:Sprite;
 		private var buttonIcon:Sprite;
+		// Область попадания мыши. Движок ищет объект под курсором по детям
+		// (DisplayObjectContainerObject::GetTopMostObject): значки с mouseEnabled = false
+		// для него пустое место, и кнопка из одних значков не нажимается. Попадание по
+		// заливке не зависит от её прозрачности — рисуем невидимый квадрат.
+		private var buttonHit:Shape;
+		private var underHit:Shape;
 		// Кнопка под полосками (только с зажатой клавишей).
 		private var underButton:Sprite;
 		private var underPlate:Sprite;
@@ -132,6 +138,8 @@
 			button = new Sprite();
 			button.visible = false;
 			button.mouseChildren = false;
+			buttonHit = new Shape();
+			button.addChild(buttonHit);
 			arcIcon = CreateIcon();
 			arcIcon.visible = false;
 			button.addChild(arcIcon);
@@ -144,6 +152,8 @@
 			underButton = new Sprite();
 			underButton.visible = false;
 			underButton.mouseChildren = false;
+			underHit = new Shape();
+			underButton.addChild(underHit);
 			underPlate = CreateIcon();
 			SetIconImage(underPlate, "plate_gold");
 			underButton.addChild(underPlate);
@@ -488,6 +498,7 @@
 				arcIcon.alpha = (flags & 2) != 0 ? 0.35 : 1;
 			}
 
+			DrawHitArea(buttonHit, size, ShownButtonSize());
 			button.x = Math.round(buttonCenterX - size / 2);
 			button.y = Math.round(buttonCenterY - size / 2);
 			button.alpha = buttonAlpha;
@@ -520,11 +531,24 @@
 				layer.x = 0;
 				layer.y = 0;
 			}
+			DrawHitArea(underHit, size, plateSize);
 			underButton.scaleX = underButton.scaleY = 1;
 			underButton.x = Math.round(frameX + frameSize / 2 - size / 2);
 			// край текстуры прозрачный (круг — PLATE_FRACTION её стороны): круг на 3 px ниже полосок
 			underButton.y = Math.round(statsBottom + 3 - (size - plateSize) / 2);
 			underButton.alpha = isMe && micState == 0 ? 0.75 : 1;
+		}
+
+		// Невидимый квадрат по кругу кнопки (круг диаметром plateSize в центре текстуры size).
+		private static function DrawHitArea(hit:Shape, size:Number, plateSize:Number):void
+		{
+			var side:Number = Finite(plateSize, 20);
+			var offset:Number = Finite((size - side) / 2, 0);
+			var g:* = hit.graphics;
+			g.clear();
+			g.beginFill(0x000000, 0);
+			g.drawRect(offset, offset, side, side);
+			g.endFill();
 		}
 
 		private function DrawLabel():void
@@ -635,6 +659,8 @@
 			if (!interactive || !inCall)
 				return;
 			e.stopPropagation();
+			// Bin\voice_overlay.log: видно, что нажатие дошло до кнопки.
+			FSCommands.Send(VoiceTeamOverlay.COMMAND, "dbg click " + (e.currentTarget == underButton ? "under " : "corner ") + (isMe ? "me" : "peer " + peerId));
 			if (isMe)
 				FSCommands.Send(VoiceTeamOverlay.COMMAND, "mic");
 			else

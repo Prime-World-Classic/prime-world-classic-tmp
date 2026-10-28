@@ -24,10 +24,17 @@ namespace Network
 namespace rdp_transport
 {
 
+// See RdpLoginClient.cpp: shortens the login operation timeout for the
+// reconnect attempts that walk the pool. -1 (or 0) restores the configured
+// `login_timeout`.
+void SetLoginOperationTimeoutOverride( float seconds );
+
+
 namespace ELoginClientState
 {
   enum Enum { Connecting, WaitingReply, Ready, Failed };
 }
+
 
 
 class PacketWriter;

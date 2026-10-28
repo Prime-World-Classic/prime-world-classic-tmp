@@ -152,6 +152,37 @@ const wchar_t* GetServerIpW(int index)
   return g_dynamicServerIpsW[index].c_str();
 }
 
+// Pool rotation (see Shared/ServerIps.h). Normalized into [0, count): the
+// address getters wrap anyway, but keeping the stored index in range makes the
+// reconnect walk (and its log lines) readable.
+int GetUsedServer()
+{
+  int count = GetServerIpCount();
+  if (count <= 0)
+    return 0;
+  int index = usedServer % count;
+  if (index < 0)
+    index += count;
+  return index;
+}
+
+void SetUsedServer(int index)
+{
+  int count = GetServerIpCount();
+  if (count <= 0)
+    return;
+  index %= count;
+  if (index < 0)
+    index += count;
+  usedServer = index;
+}
+
+int NextUsedServer()
+{
+  SetUsedServer(usedServer + 1);
+  return usedServer;
+}
+
 static int g_serverBasePort = 27300;
 
 void SetServerBasePort(int basePort)

@@ -13,6 +13,8 @@
 bool g_needNotifyLobbyClients = false;
 string g_selectedHeroes[10];
 
+extern std::string g_protocolToken;   // launcher protocol token (session + player key)
+
 namespace lobby
 {
 
@@ -44,6 +46,16 @@ void ClientPW::OnStatusChange( EClientStatus::Enum newStatus )
 
     if ( !InSocialMode() )
       GotoFirstLobbyScreen();
+
+    // Fast reconnect: no lobby screen is shown (GotoFirstLobbyScreen returns
+    // early), so nobody would re-issue the web join and the client would sit on
+    // an idle lobby channel forever. Ask the lobby to re-attach this uid to the
+    // session it is still running in (ConnectToWebLobby -> ReconnectToCustomGame).
+    if ( fastReconnectCtxPw )
+    {
+      MessageTrace( "Fast reconnect: queueing web session re-join..." );
+      RequestWebJoin( g_protocolToken.c_str() );
+    }
   }
   else if ( newStatus == EClientStatus::InCustomLobby )
   {

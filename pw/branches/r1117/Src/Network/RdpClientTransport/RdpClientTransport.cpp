@@ -23,6 +23,35 @@ REGISTER_VAR( "rdp_sock_server_priority", s_sockServPriority, STORAGE_NONE );
 static int s_sockBufferSize = 65536;
 REGISTER_VAR( "rdp_sock_buffer_size", s_sockBufferSize, STORAGE_NONE );
 
+// Client-side RDP timing. The library defaults (ping 15 s, handshake 10 s) are
+// sized for a long-lived server-side channel. A client inside a battle has a
+// hard deadline: the game server keeps the reserved world snapshots for
+// `game_fast_reconnect_reserve_time` (50 s in the pool config) after IT notices
+// the drop, and the client only starts walking the pool after IT notices. With
+// the defaults the client spends tens of seconds before the first attempt even
+// fails, so the reconnect window is burned before the pool is tried.
+static int s_rdpClPingPeriodMs = 5000;
+REGISTER_VAR( "rdp_cl_ping_period", s_rdpClPingPeriodMs, STORAGE_NONE );
+
+static int s_rdpClRetransmitLimit = 8;
+REGISTER_VAR( "rdp_cl_retransmit_limit", s_rdpClRetransmitLimit, STORAGE_NONE );
+
+// Retransmit backoff cap. The library caps it at 4 s, which stretches the
+// "peer stopped answering" detection to ~15 s even with a modest retry limit.
+// A client in a battle has a reservation window to fit into (see
+// game_fast_reconnect_reserve_time), so it retransmits in a tighter cycle.
+static int s_rdpClMaxRetransmitMs = 2000;
+REGISTER_VAR( "rdp_cl_max_retransmit_time", s_rdpClMaxRetransmitMs, STORAGE_NONE );
+
+static int s_rdpClHandshakeTotalMs = 5000;
+REGISTER_VAR( "rdp_cl_handshake_timeout", s_rdpClHandshakeTotalMs, STORAGE_NONE );
+
+static int s_rdpClHandshakeRetryMs = 2000;
+REGISTER_VAR( "rdp_cl_handshake_retry", s_rdpClHandshakeRetryMs, STORAGE_NONE );
+
+static int s_rdpClHandshakeTries = 3;
+REGISTER_VAR( "rdp_cl_handshake_tries", s_rdpClHandshakeTries, STORAGE_NONE );
+
 
 namespace rdp_transport
 {
@@ -142,6 +171,12 @@ void ClientTransport::Login( const Network::NetAddress & _loginServerAddress, co
   ni_udp::RdpOptions opts;
   opts.logEvents = s_rdpLogEevents;
   opts.logicThreadPriority = s_rdpLogicPriority;
+  opts.pingPeriod = (float)s_rdpClPingPeriodMs / 1000.0f;
+  opts.retransmitLimit = (unsigned)Max( 1, s_rdpClRetransmitLimit );
+  opts.cc.maxRetransmitTime = (float)s_rdpClMaxRetransmitMs / 1000.0f;
+  opts.handshakeTotalTimeout = (float)s_rdpClHandshakeTotalMs / 1000.0f;
+  opts.handshakeRetryTimeout = (float)s_rdpClHandshakeRetryMs / 1000.0f;
+  opts.handshakeMaxTries = (unsigned)Max( 1, s_rdpClHandshakeTries );
 
   rdp = ni_udp::NewRdpInstance();
   if ( !rdp->Init( sockFact, opts, rndFact->Produce( (unsigned)timer::GetTicks() ), new timer::RealTimer ) )

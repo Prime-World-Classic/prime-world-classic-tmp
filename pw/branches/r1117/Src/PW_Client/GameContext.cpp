@@ -32,6 +32,7 @@ extern wstring g_spectatorNickname;
 
 #include "Game/PF/Client/GameChatClient/GameChatClient.h"
 #include "Network/RdpClientTransport/RdpClientTransport.h"
+#include "Network/RdpClientTransport/RdpLoginClient.h"   // SetLoginOperationTimeoutOverride
 
 #include "PF_GameLogic/MapCollection.h"
 #include "PF_GameLogic/SessionData.h"
@@ -68,12 +69,31 @@ static bool s_stat_immidiate = false;
 REGISTER_VAR( "stat_immidiate_http", s_stat_immidiate , STORAGE_NONE );
 
 static int s_fast_reconnect_max_tries = 5;
-static float s_fast_reconnect_delay = 2.0f;
-static float s_fast_reconnect_retry_delay = 10.0f;
+static float s_fast_reconnect_delay = 0.5f;
+static float s_fast_reconnect_retry_delay = 1.0f;
 
 REGISTER_VAR( "fast_reconnect_max_tries", s_fast_reconnect_max_tries, STORAGE_NONE );
 REGISTER_VAR( "fast_reconnect_delay", s_fast_reconnect_delay, STORAGE_NONE );
 REGISTER_VAR( "fast_reconnect_retry_delay", s_fast_reconnect_retry_delay, STORAGE_NONE );
+
+// Fast reconnect for the web-session (launcher) path. The game server keeps the
+// dropped player's world snapshots for game_fast_reconnect_reserve_time (50 s in
+// the pool config), so the client must finish its own detection + login walk
+// inside that window. `fast_reconnect_walk_pool` re-dials the battle through
+// another pool address: every box redirects the target's client ports to the
+// target (PW_GAME_SERVER_DOCKER/entrypoint.sh), so any alive address reaches the
+// same game.
+static int s_fast_reconnect_enabled = 1;
+REGISTER_VAR( "fast_reconnect_enabled", s_fast_reconnect_enabled, STORAGE_NONE );
+
+static int s_fast_reconnect_walk_pool = 1;
+REGISTER_VAR( "fast_reconnect_walk_pool", s_fast_reconnect_walk_pool, STORAGE_NONE );
+
+// Login timeout while reconnecting (one address). The configured login_timeout
+// (30 s) is only for the first login: burning it per address would walk past the
+// server-side reservation window.
+static float s_fast_reconnect_login_timeout = 3.0f;
+REGISTER_VAR( "fast_reconnect_login_timeout", s_fast_reconnect_login_timeout, STORAGE_NONE );
 
 
 static int s_base_udp_port = 27005;
@@ -342,12 +362,16 @@ int GameContext::Poll( float dt )
         // case go to the next IP of the pool (intermediate servers redirect the
         // traffic to the target anyway); after walking the whole pool — the
         // legacy error.
-        if ( ( res == Login::ELoginResult::NoConnection || res == Login::ELoginResult::Refused ||
+        // While a fast reconnect is running the walk is driven by the reconnect
+        // context (its own rotation and timing) - here we only report the failed
+        // try, the context turns it into the next attempt.
+        if ( !fastReconnectCtx &&
+             ( res == Login::ELoginResult::NoConnection || res == Login::ELoginResult::Refused ||
                 res == Login::ELoginResult::AccessDenied || res == Login::ELoginResult::ServerError ) &&
              usedServer + 1 < GetServerIpCount() )
         {
           MessageTrace( "Login failed on server #%d (code %d), trying the next server in the pool", usedServer, (int)res );
-          ++usedServer;
+          NextUsedServer();
           ConnectToCluster( lastLogin, "", sessionToken );
         }
         else
@@ -484,7 +508,14 @@ void GameContext::OnAltTab(bool isActive)
 void GameContext::StartFastReconnect()
 {
   MessageTrace( "Initiating fast reconnect..." );
-  fastReconnectCtx = new lobby::FastReconnectCtxPW( gameClient->ClientId(), s_fast_reconnect_max_tries, s_fast_reconnect_delay, s_fast_reconnect_retry_delay );
+
+  // Try at least once per address of the pool block (the launch protocol carries
+  // every alive server of the pool), plus the spare tries on the first address.
+  int tries = s_fast_reconnect_max_tries;
+  if ( s_fast_reconnect_walk_pool && ( tries < GetServerIpCount() ) )
+    tries = GetServerIpCount();
+
+  fastReconnectCtx = new lobby::FastReconnectCtxPW( gameClient->ClientId(), tries, s_fast_reconnect_delay, s_fast_reconnect_retry_delay, GetUsedServer() );
   gameClient->SetupFastReconnectCtx( fastReconnectCtx );
 }
 
@@ -534,7 +565,18 @@ void GameContext::PollFastReconnect()
     case lobby::EFastReconnStage::WarmUp:
       if ( fastReconnectCtx->CanTryNow() )
       {
-        MessageTrace( "Reconnecting fast, try #%d...", fastReconnectCtx->TryIndex() );
+        // Re-dial through another pool address (the pool proxies the target's
+        // ports), keeping the same session token/uid - the battle itself stays
+        // on the one server that owns it.
+        if ( s_fast_reconnect_walk_pool )
+          SetUsedServer( fastReconnectCtx->ServerForTry() );
+        else
+          SetUsedServer( fastReconnectCtx->StartServer() );
+
+        rdp_transport::SetLoginOperationTimeoutOverride( s_fast_reconnect_login_timeout );
+
+        MessageTrace( "Reconnecting fast, try #%d/%d via server #%d of %d...",
+          fastReconnectCtx->TryIndex(), fastReconnectCtx->MaxRetries(), GetUsedServer(), GetServerIpCount() );
         ConnectToCluster( lastLogin, "", "", Login::LoginType::FAST_RECONNECT );
       }
       break;
@@ -552,6 +594,7 @@ void GameContext::PollFastReconnect()
       else if ( gameClient && ( gameClient->GameState() == lobby::EGameState::Running ) )
       {
         MessageTrace( "Fast reconnect complete!" );
+        rdp_transport::SetLoginOperationTimeoutOverride( -1.0f );
         fastReconnectCtx = 0;
         if ( networkStatusScreen )
           networkStatusScreen->ResetErrors();
@@ -571,6 +614,7 @@ void GameContext::FastReconnectFailed()
     networkStatusScreen->SetFastReconnectTryIndex( 0 );
   }
 
+  rdp_transport::SetLoginOperationTimeoutOverride( -1.0f );
   fastReconnectCtx = 0;
   Cleanup();
 }
@@ -579,7 +623,14 @@ void GameContext::FastReconnectFailed()
 
 bool GameContext::ShouldStartFastReconnect() const
 {
-  if ( ( s_fast_reconnect_max_tries <= 0 ) || !socialMode )
+  // The web-session path is the one that runs battles. It used to be gated on
+  // `socialMode`, which the constructor pins to false (ParseSessionKey is
+  // commented out) - so the whole fast-reconnect machinery was unreachable and
+  // every channel drop kicked the player out of the fight.
+  if ( !s_fast_reconnect_enabled )
+    return false;
+
+  if ( ( s_fast_reconnect_max_tries <= 0 ) || g_sessionToken.empty() )
     return false;
 
   if (gameClient && !gameClient->IsFastReconnectEnabled())

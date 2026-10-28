@@ -21,6 +21,15 @@ int GetServerIpCount();
 const char* GetServerIpA(int index);
 const wchar_t* GetServerIpW(int index);
 
+// Pool rotation. `usedServer` is the index of the pool address the client is
+// currently dialing; GetServerIpA() already wraps any index into the block, so
+// the accessors below only normalize it (the value stays a plain index, never a
+// modulo-free guarantee). Reconnect attempts walk the block: see
+// lobby::FastReconnectCtxPW.
+int GetUsedServer();
+void SetUsedServer(int index);
+int NextUsedServer();
+
 // Base port of the TARGET server (6th token of the launch protocol, decimal).
 // Default 27300 — the legacy static-port behavior (server_ip.h). Ports are
 // derived from the base: coordinator=base, login=base+1, front=base+10,

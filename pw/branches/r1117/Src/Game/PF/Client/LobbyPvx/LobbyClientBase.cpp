@@ -218,6 +218,16 @@ void ClientBase::Poll()
     }
 
     case EClientStatus::Connected:
+      // Fast reconnect: the lobby channel is up and the instance was requested;
+      // re-join the web session the player is still fighting in. Only here, in
+      // Poll(), because the status is already Connected (see RequestWebJoin).
+      if ( !pendingWebJoinToken.empty() )
+      {
+        MessageTrace( "Lobby: re-joining web session after reconnect..." );
+        JoinWebGame( pendingWebJoinToken );
+        pendingWebJoinToken.clear();
+      }
+
       PollWebJoin();
       break;
 
@@ -600,6 +610,13 @@ void ClientBase::JoinGame( int gameId )
   
   serverInst->JoinGame( gameId, this, &ClientBase::OnOperatioResult );
   lastLobbyOperationResult = EOperationResult::InProgress;
+}
+
+
+
+void ClientBase::RequestWebJoin( const string & token )
+{
+  pendingWebJoinToken = token;
 }
 
 

@@ -328,6 +328,15 @@
 			// Портреты стоят у верхнего края экрана — кнопка не уходит за него.
 			try
 			{
+				// Правая панель (союзники 6–10 в Испытании на 10): кнопка у левого края портрета —
+				// у правого её срезал бы край экрана.
+				if (mate.stage != null)
+				{
+					var centre:Point = mate.localToGlobal(new Point(frameX + frameSize / 2, frameY));
+					if (Finite(centre.x, 0) > mate.stage.stageWidth / 2)
+						buttonCenterX = frameX - frameSize * BUTTON_OUTSET + buttonSize / 2;
+				}
+
 				var top:Point = mate.localToGlobal(new Point(buttonCenterX, buttonCenterY - buttonSize / 2));
 				var origin:Point = mate.localToGlobal(new Point(0, 0));
 				var unit:Point = mate.localToGlobal(new Point(0, 1));

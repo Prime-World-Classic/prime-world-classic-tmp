@@ -36,7 +36,7 @@ LoadingHeroes::LoadingHeroes( LoadingFlashInterface * _flashInterface, NDb::Ptr<
 
 void LoadingHeroes::AddUser( int userId, const wstring & playerName, 
                             bool isMale, NCore::ETeam::Enum team, NCore::ETeam::Enum manoeuvresTeam,
-                            const HeroInfo& heroInfo, string & flagIcon, wstring & flagTooltip, const string& skinId, int leagueIdx)
+                            const HeroInfo& heroInfo, string & flagIcon, wstring & flagTooltip, const string& skinId, int leagueIdx, bool otherSide)
 {
   if (loadingHeroes.find(userId) != loadingHeroes.end())
     return;
@@ -69,6 +69,8 @@ void LoadingHeroes::AddUser( int userId, const wstring & playerName,
   }
 
   NDb::EFaction faction = ConvertToFaction(team);
+  if ( otherSide ) // the Flash picks the column by faction
+    faction = ( faction == NDb::FACTION_FREEZE ) ? NDb::FACTION_BURN : NDb::FACTION_FREEZE;
 
   if( showAllHeros || userId == ourUserId )
   {

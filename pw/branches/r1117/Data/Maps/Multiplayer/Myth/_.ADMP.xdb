@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <AdvMap>
 	<BackLink DBID="/Maps/Multiplayer/Myth/_.ADMPDSCR" Count="1" />
+	<BackLink DBID="/Maps/Multiplayer/Myth/Black.ADMPDSCR" Count="1" />
 	<BackLink DBID="/Maps/Multiplayer/Myth/Blue.ADMPDSCR" Count="1" />
 	<BackLink DBID="/Maps/Multiplayer/Myth/Green.ADMPDSCR" Count="1" />
 	<BackLink DBID="/Maps/Multiplayer/Myth/Orange.ADMPDSCR" Count="1" />
@@ -2512,6 +2513,96 @@
 				<translateX>142.179</translateX>
 				<translateY>189.3398</translateY>
 				<translateZ>-0.001084328</translateZ>
+			</offset>
+			<player>None</player>
+			<scriptGroupName></scriptGroupName>
+			<scriptName></scriptName>
+		</Item>
+		<Item>
+			<gameObject href="/Heroes/Placeholders/TeamA.HPLH" />
+			<lockMap>true</lockMap>
+			<offset>
+				<rotationX>0</rotationX>
+				<rotationY>0</rotationY>
+				<rotationZ>0</rotationZ>
+				<scaleX>1</scaleX>
+				<scaleY>1</scaleY>
+				<scaleZ>1</scaleZ>
+				<translateX>141.9</translateX>
+				<translateY>185.2</translateY>
+				<translateZ>-0.2</translateZ>
+			</offset>
+			<player>None</player>
+			<scriptGroupName></scriptGroupName>
+			<scriptName></scriptName>
+		</Item>
+		<Item>
+			<gameObject href="/Heroes/Placeholders/TeamA.HPLH" />
+			<lockMap>true</lockMap>
+			<offset>
+				<rotationX>0</rotationX>
+				<rotationY>0</rotationY>
+				<rotationZ>0</rotationZ>
+				<scaleX>1</scaleX>
+				<scaleY>1</scaleY>
+				<scaleZ>1</scaleZ>
+				<translateX>135.4</translateX>
+				<translateY>190.4</translateY>
+				<translateZ>-0.2</translateZ>
+			</offset>
+			<player>None</player>
+			<scriptGroupName></scriptGroupName>
+			<scriptName></scriptName>
+		</Item>
+		<Item>
+			<gameObject href="/Heroes/Placeholders/TeamA.HPLH" />
+			<lockMap>true</lockMap>
+			<offset>
+				<rotationX>0</rotationX>
+				<rotationY>0</rotationY>
+				<rotationZ>0</rotationZ>
+				<scaleX>1</scaleX>
+				<scaleY>1</scaleY>
+				<scaleZ>1</scaleZ>
+				<translateX>136.0</translateX>
+				<translateY>186.2</translateY>
+				<translateZ>-0.2</translateZ>
+			</offset>
+			<player>None</player>
+			<scriptGroupName></scriptGroupName>
+			<scriptName></scriptName>
+		</Item>
+		<Item>
+			<gameObject href="/Heroes/Placeholders/TeamA.HPLH" />
+			<lockMap>true</lockMap>
+			<offset>
+				<rotationX>0</rotationX>
+				<rotationY>0</rotationY>
+				<rotationZ>0</rotationZ>
+				<scaleX>1</scaleX>
+				<scaleY>1</scaleY>
+				<scaleZ>1</scaleZ>
+				<translateX>139.5</translateX>
+				<translateY>192.6</translateY>
+				<translateZ>-0.2</translateZ>
+			</offset>
+			<player>None</player>
+			<scriptGroupName></scriptGroupName>
+			<scriptName></scriptName>
+		</Item>
+		<Item>
+			<gameObject href="/Heroes/Placeholders/TeamA.HPLH" />
+			<lockMap>true</lockMap>
+			<offset>
+				<rotationX>0</rotationX>
+				<rotationY>0</rotationY>
+				<rotationZ>0</rotationZ>
+				<scaleX>1</scaleX>
+				<scaleY>1</scaleY>
+				<scaleZ>1</scaleZ>
+				<translateX>144.0</translateX>
+				<translateY>189.8</translateY>
+				<translateZ>-0.2</translateZ>
 			</offset>
 			<player>None</player>
 			<scriptGroupName></scriptGroupName>

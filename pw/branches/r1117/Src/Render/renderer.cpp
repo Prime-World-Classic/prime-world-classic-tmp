@@ -1203,10 +1203,11 @@ void Renderer::RecoverFromDeviceLost( D3DPRESENT_PARAMETERS& pp )
         NI_ALWAYS_ASSERT("Reset() failed on lost device! Exiting app.");
         exit(D3DERR_DEVICENOTRESET);
       }
-      
-      // ResetDevice() has reallocated the resources already (release -> Reset() -> reallocate): one more
-      // NotifyResourcesReallocate() created them again over the live ones (transparent units after a window
-      // mode change)
+
+      // NotifyResourcesReallocate() уже разослан удачным ResetDevice(). Второй проход без
+      // release между ними пересоздавал DEFAULT-текстуры пустыми: перекрашенные текстуры
+      // героев и крипов (RecolorableTexture) заполняются один раз — модели пропадали после
+      // смены vsync/разрешения.
     }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -129,7 +129,7 @@ public:
   void SetProgress( float pro );
 
   void SetOurUserId(int userId, NCore::ETeam::Enum team, NCore::ETeam::Enum original_team, bool isGuardGame,bool isGuildGame, bool isCustomGame);
-  void AddPlayer( int index, const NCore::PlayerStartInfo& info, const HeroInfo& heroInfo);
+  void AddPlayer( int index, const NCore::PlayerStartInfo& info, const HeroInfo& heroInfo, bool otherSide = false ); // otherSide: ally in the enemy column (TeamSidesLayout)
   void SetPlayerProgress( int userId, float pro );
 
   void DisconnectUser(int userId);

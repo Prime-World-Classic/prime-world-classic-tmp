@@ -23,6 +23,13 @@ package Controllers
 		public function GenerateNewMateInfo(id:int, partyId:int):StatisticsBarPlayers
 		{
 			var mate:StatisticsBarPlayers =  mateContainer.getNewMateInfo();
+			
+			if (mate == null) // all 5 rows of the column are taken (trial for 10: allies on both sides)
+			{
+				trace("StatisticMateInfoController: no free row for hero " + id);
+				return null;
+			}
+			
 			mate.id = id;
 			mates_arr.push(mate);
 			

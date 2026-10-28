@@ -77,7 +77,7 @@
 			if (!playerData.IsNeedToShowInStatistics)
 				return;
 			
-			var mateInfo:MateInfoBase = MateInfoStat(playerData.HeroId, playerData.Fraction,playerData.PartyID);
+			var mateInfo:MateInfoBase = MateInfoStat(playerData.HeroId, playerData.ColumnFraction,playerData.PartyID);
 			
 			if (mateInfo == null) return;
 			

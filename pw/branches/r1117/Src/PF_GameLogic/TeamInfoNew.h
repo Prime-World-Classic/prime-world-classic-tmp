@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../UI/FSCommandListner.h"
+#include "TeamSidesLayout.h"
 
 namespace UI
 {
@@ -58,6 +59,8 @@ private:
   typedef hash_map<int, ConstPtr<NWorld::PFBaseHero>> HeroesById;
   HeroesById heroes;
   NDb::Ptr<NDb::DBUIData>       uiData;
+
+  TeamSidesLayout sides; // allies past the 5th go to the enemy side of the panels
 };
 
 }

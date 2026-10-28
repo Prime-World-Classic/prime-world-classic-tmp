@@ -365,7 +365,7 @@ void LoadingScreenLogic::recalcTeamForce(const HeroInfo& heroInfo)
 }
 
 void LoadingScreenLogic::AddPlayer( int userId, const NCore::PlayerStartInfo& info, 
-                                   const HeroInfo& heroInfo )
+                                   const HeroInfo& heroInfo, bool otherSide )
 {
   if (heroInfo.isBot)
   {
@@ -398,7 +398,7 @@ void LoadingScreenLogic::AddPlayer( int userId, const NCore::PlayerStartInfo& in
     }
 
 
-    loadingHeroes->AddUser(userId , botNickname, isMale, info.teamID, info.originalTeamID, heroInfo, flagIcon, flagTooltip, heroInfo.skinId, heroInfo.leagueIndex);
+    loadingHeroes->AddUser(userId , botNickname, isMale, info.teamID, info.originalTeamID, heroInfo, flagIcon, flagTooltip, heroInfo.skinId, heroInfo.leagueIndex, otherSide);
     recalcTeamForce(heroInfo);
     loadingHeroes->AddBot(userId);
     flashInterface->SetHeroLevel(userId, 1);
@@ -478,7 +478,7 @@ void LoadingScreenLogic::AddPlayer( int userId, const NCore::PlayerStartInfo& in
       (isTutorial && info.nickname.empty());
 
     const wstring& name = useHeroName ? GetHeroNameByPlayerInfo(info, advMapDescription) : info.nickname;
-    loadingHeroes->AddUser(info.userID, name, isMale, info.teamID, info.originalTeamID, heroInfo, flagIcon, flagTooltip, skinId, leagueIdx);
+    loadingHeroes->AddUser(info.userID, name, isMale, info.teamID, info.originalTeamID, heroInfo, flagIcon, flagTooltip, skinId, leagueIdx, otherSide);
     recalcTeamForce(heroInfo);
   }
 }

@@ -139,7 +139,7 @@
 			for each (var plr:PlayerStatisticData in players)
 			{
 				// TODO: почему OriginalFraction ?
-				if (plr.OriginalFraction == CurrentGameStatistics.ELF_FACTION)
+				if (PlayerStatisticData.ColumnOf(plr.OriginalFraction, plr.OtherSide) == CurrentGameStatistics.ELF_FACTION)
 					elfFactionCount++;
 				else
 					humanFactionCount++;

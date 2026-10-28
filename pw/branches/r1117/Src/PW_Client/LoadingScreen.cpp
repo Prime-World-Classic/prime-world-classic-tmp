@@ -9,6 +9,7 @@
 #include "../PF_GameLogic/IgnoreListStorage.h"
 #include "../PF_GameLogic/IgnoreListController.h"
 #include "../PF_GameLogic/ChatController.h"
+#include "../PF_GameLogic/TeamSidesLayout.h"
 #include "LoadingStatusHandler.h"
 #include "LoadingFlashInterface.h"
 
@@ -81,6 +82,19 @@ void LoadingScreen::InitLoadingUI()
 
 	string myLocale;
 	string enemyLocale;
+
+  // A team bigger than a panel side (the trial for 10): allies past the 5th go
+  // to the enemy column, the same split as in the battle (TeamSidesLayout).
+  NGameX::TeamSidesLayout sides;
+  vector<bool> otherSide( playersInfo.size(), false );
+  if ( myTeam != NCore::ETeam::None )
+  {
+    for ( int i = 0; i < playersInfo.size(); ++i )
+      if ( playersInfo[i].teamID == myTeam && loadingGameContext->lineup_info.find( playersInfo[i].playerID ) != loadingGameContext->lineup_info.end() )
+        otherSide[i] = sides.PlaceAlly( playersInfo[i].userID == loadingGameContext->userId );
+  }
+  int enemiesShown = 0;
+
   for ( int i = 0; i < playersInfo.size(); ++i )
   {
     const NCore::PlayerStartInfo& playerInfo = playersInfo[i];
@@ -88,8 +102,17 @@ void LoadingScreen::InitLoadingUI()
     TLineUpHeroesInfo::iterator info = loadingGameContext->lineup_info.find(playerInfo.playerID);
     if (info == loadingGameContext->lineup_info.end())
       continue;
+
+    // the enemy column is shared with our allies: enemies that do not fit are not shown
+    // (the trial bots appear only later in the battle anyway)
+    if ( myTeam != NCore::ETeam::None && playerInfo.teamID != myTeam && sides.AlliesOnOtherSide() > 0 )
+    {
+      if ( enemiesShown >= sides.EnemySlots() )
+        continue;
+      ++enemiesShown;
+    }
     
-    logic->AddPlayer( heroId, playerInfo, info->second );
+    logic->AddPlayer( heroId, playerInfo, info->second, otherSide[i] );
     if (!info->second.isBot)
       SetHeroInfo(heroId, info->second);
 		if (info->second.team == myTeam)

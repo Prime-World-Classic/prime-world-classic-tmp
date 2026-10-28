@@ -125,7 +125,7 @@
 			enemyTeamController = new MateInfoController(mainWindow.teamInfoEnemy_mc);
 			voiceTeamOverlay = new VoiceTeamOverlay(
 				function():Array { return mainWindow.Players; },
-				function(heroId:int):MateInfoBase { return friendlyTeamController.DoesHeroExist(heroId) ? friendlyTeamController.GetMateInfo(heroId) : null; },
+				function(heroId:int):MateInfoBase { var mate:PlayerStatisticData = GetPlayer(heroId); return (mate != null && !mate.IsEnemyTeam) ? GetMateInfo(heroId) : null; },
 				function():int { return ourID; });
 			replayControlsPanel = new ReplayControlsPanel(mainWindow, GetActionBarTop, GetActionBarCenterX);
 			trainingPanel = new TrainingPanel(mainWindow);
@@ -215,6 +215,16 @@
 		{
 			FillPlayerData(heroID, heroName, heroShortName, guildName, heroClass, path, fraction, originalFraction, isMale, isBot, force, heroRaiting, heroRangIcon, heroRangTooltip, flagIcon, flagTooltip, isPremiumAcount, isEnemy, partyId, isAnimatedAvatar, leagueIndex, ownLeaguePlace, leaguePlaces);
 		}
+		// Союзник в колонке врагов (Испытание на 10: все в одной команде, вид 5x5).
+		// C++ зовёт до ShowHeroPortrait; оформление остаётся союзным.
+		public function SetHeroOtherSide(heroID:int, otherSide:Boolean):void
+		{
+			var player:PlayerStatisticData = GetPlayer(heroID);
+			if (player == null)
+				return;
+			player.OtherSide = otherSide;
+		}
+		
 		public function ShowHeroPortrait( heroID:int, isEnemy : Boolean = false ) : void
 		{
 			var player:PlayerStatisticData = GetPlayer(heroID);
@@ -248,7 +258,7 @@
 				}
 				else
 				{
-					if (player.IsEnemyTeam)
+					if (player.IsEnemyTeam != player.OtherSide) // OtherSide: союзник в колонке врагов
 						mateInfos = enemyTeamController;
 					else
 						mateInfos = friendlyTeamController;

@@ -311,8 +311,17 @@
 		
 		public function Cooldown(value:Number,maxCooldownValue:Number):void 
 		{
-			if (icoState != TalentUIState.BOUGHT) return;
-			
+			if (icoState != TalentUIState.BOUGHT)
+			{
+				// a not learned talent has no cooldown: the cell may keep one of the previous hero (training hero change) and block the learning
+				if (cooldown > 0)
+				{
+					cooldown = 0;
+					clock_mc.visible = false;
+				}
+				return;
+			}
+
 			cooldown = value;
 			
 			clock_mc.Time = value;

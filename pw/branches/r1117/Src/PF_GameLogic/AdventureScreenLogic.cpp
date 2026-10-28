@@ -407,7 +407,7 @@ void AdventureScreenLogic::SetOwner( NGameX::AdventureScreen * owner, const NDb:
   // player; not in replays and not for spectators
   if ( !owner->IsInReplayMode() && !owner->IsSpectator() && owner->GetPlayer()
     && TrainingPanelController::IsAvailable( owner->GetWorld(), owner->GetPlayer()->GetUserID() ) )
-    trainingPanelController = new TrainingPanelController( flashWnd, "mainInterface", owner );
+    trainingPanelController = new TrainingPanelController( flashWnd, "mainInterface", owner, bindsController );
 
   InitErrorMessages(flashInterface, uiData);
 

@@ -205,7 +205,8 @@ bool PFSummonedUnitAIBehaviour::OnStep(float dtInSeconds)
   const NDb::SummonBehaviourBase*   pSummonBehaviourBase   = GetDB();
   const NDb::SummonBehaviourCommon* pSummonBehaviourCommon = dynamic_cast<const NDb::SummonBehaviourCommon*>( pSummonBehaviourBase );
 
-  if(pSummonBehaviourCommon)
+  // the formula reads the stats of the master: it may be gone (the training replaced the hero)
+  if ( pSummonBehaviourCommon && IsValid( pMaster ) )
   {
     SetLashRange( pSummonBehaviourCommon->lashRange(pMaster, pUnit, NULL, 15.f ) );
   }

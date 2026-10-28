@@ -12,8 +12,9 @@ namespace NGameX
       Chat = 1,
       ReportWindow = 2,
       EscMenu = 4,
-      Lua = 8
-    }; 
+      Lua = 8,
+      TrainingGrid = 16 // the choice window of the training panel: its search field takes the keys
+    };
 
     BindsController();
     ~BindsController(){};

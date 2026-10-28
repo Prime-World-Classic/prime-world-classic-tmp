@@ -96,6 +96,39 @@ namespace
       pAdvScreen->SetControlledHero( pHero );
   }
 
+  struct CollectSummons
+  {
+    vector< CObj<NWorld::PFSummonBehaviour> > * summons;
+    void operator()( NWorld::PFSummonBehaviour * pBehaviour ) { summons->push_back( pBehaviour ); }
+  };
+
+  // the summons do not outlive a removed hero (DebugDie takes it out of the world without the death of a unit)
+  void UnsummonAll( NWorld::PFBaseUnit * pMaster )
+  {
+    vector< CObj<NWorld::PFSummonBehaviour> > summons;
+    CollectSummons collect;
+    collect.summons = &summons;
+    const NDb::SummonType types[] = { NDb::SUMMONTYPE_PRIMARY, NDb::SUMMONTYPE_SECONDARY, NDb::SUMMONTYPE_PET };
+    for ( int i = 0; i < sizeof( types ) / sizeof( types[0] ); ++i )
+      if ( IsValid( pMaster->GetSummonedGroup( types[i] ) ) )
+        pMaster->GetSummonedGroup( types[i] )->ForAllBehaviour( collect );
+
+    // killing a summon takes it out of the group: not while the group is walked
+    for ( int i = 0; i < summons.size(); ++i )
+      if ( IsValid( summons[i] ) && NWorld::IsUnitValid( summons[i]->GetUnit() ) )
+        summons[i]->Unsummon();
+  }
+
+  // a replaced or removed hero leaves the world: DebugDie only unregisters the object (no OnUnitDie), so what the death
+  // of a unit does is done here - the summons go, the units attacking it drop it as their target
+  void RemoveHero( NWorld::PFBaseHero * pHero )
+  {
+    UnsummonAll( pHero );
+    pHero->StopAttackingMe( true ); // the homing dispatches too: their target leaves the world
+    pHero->SetForbidRespawn( true );
+    pHero->DebugDie();
+  }
+
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   bool LearnTalent( NWorld::PFBaseMaleHero * pHero, int level, int slot )
   {
@@ -378,8 +411,7 @@ NWorld::PFBaseHero * ChangeHero( NWorld::PFWorld * world, NWorld::PFBaseHero * o
       pNewHero->SetForbidRespawn( true );
   }
 
-  pOldHero->SetForbidRespawn( true );
-  pOldHero->DebugDie();
+  RemoveHero( pOldHero );
 
   if ( wasControlled && pNewHero )
     pAdvScreen->SetControlledHero( pNewHero );
@@ -442,9 +474,16 @@ void Execute( NWorld::PFWorld * world, int userId, const string & action, const 
   else if ( action == "remove" )
   {
     if ( pHero && !isSenderHero && CanRemove( pHero ) )
+      RemoveHero( pHero );
+  }
+  else if ( action == "teleport" )
+  {
+    // Ctrl + the move order (AdventureScreen::ExecuteCommand): the hero the player controls goes to the point at once
+    NWorld::PFBaseMovingUnit * pMoving = dynamic_cast<NWorld::PFBaseMovingUnit *>( pTarget );
+    if ( pMoving && !pMoving->IsDead() && ( isSenderHero || CanControl( pTarget, pSender ? pSender->GetHero() : 0 ) ) )
     {
-      pHero->SetForbidRespawn( true );
-      pHero->DebugDie();
+      pMoving->Stop();
+      pMoving->TeleportTo( pos.AsVec2D(), true, true );
     }
   }
   else if ( action == "set_talent" )

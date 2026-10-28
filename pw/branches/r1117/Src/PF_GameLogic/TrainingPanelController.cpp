@@ -69,10 +69,11 @@ namespace NGameX
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-TrainingPanelController::TrainingPanelController( UI::FlashContainer2 * flashWnd, const char* className, AdventureScreen * _screen ) :
+TrainingPanelController::TrainingPanelController( UI::FlashContainer2 * flashWnd, const char* className, AdventureScreen * _screen, BindsController * _bindsController ) :
   FlashInterface( flashWnd, className ),
   flashContainer( flashWnd ),
   screen( _screen ),
+  bindsController( _bindsController ),
   shown( false ),
   timeToState( 0.0f ),
   gridOpen( false ),
@@ -88,6 +89,8 @@ TrainingPanelController::~TrainingPanelController()
 {
   if ( flashContainer )
     flashContainer->RemoveFSListner( szTrainingCommand );
+  if ( gridOpen && IsValid( bindsController ) )
+    bindsController->SetEnabled( BindsController::TrainingGrid, true );
   if ( loadingAllowed )
     NDb::GetDbResourceCache().EnableAssertionLoadingFiles( oldAssertionValue );
 }
@@ -105,6 +108,15 @@ void TrainingPanelController::UpdateLoadingAssertion( float deltaTime )
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void TrainingPanelController::SetGridOpen( bool open )
+{
+  if ( open != gridOpen && IsValid( bindsController ) )
+    bindsController->SetEnabled( BindsController::TrainingGrid, !open );
+  gridOpen = open;
+  UpdateLoadingAssertion( 0.0f );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void TrainingPanelController::Update( float deltaTime )
 {
   NWorld::PFBaseHero * pHero = screen ? screen->GetHero() : 0;
@@ -114,7 +126,7 @@ void TrainingPanelController::Update( float deltaTime )
     if ( shown )
     {
       shown = false;
-      gridOpen = false;
+      SetGridOpen( false );
       CallMethod( "ShowTrainingPanel", false, g_trainingPanelCollapsed );
     }
     UpdateLoadingAssertion( deltaTime );
@@ -398,29 +410,27 @@ bool TrainingPanelController::IsAvailable( NWorld::PFWorld const * world, int lo
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void TrainingPanelController::LearnRandomTalent()
+void TrainingPanelController::LearnNextTalent()
 {
   NWorld::PFBaseMaleHero const * pMale = screen ? dynamic_cast<NWorld::PFBaseMaleHero const *>( screen->GetHero() ) : 0;
   if ( !pMale || !pMale->GetTalentsSet() )
     return;
 
-  // any talent the hero could buy now: its row is open, it is not learned yet
+  // the first talent the hero could buy now (its row is open, it is not learned yet): rows from the first one,
+  // in a row from left to right
   const int devLevel = pMale->GetTalentsSet()->GetLevelOfDevelopment();
-  nstl::vector<int> candidates;
   for ( int level = 0; level < NDb::KnownEnum<NDb::ETalentLevel>::sizeOf && level <= devLevel; ++level )
     for ( int slot = 0; slot < NDb::KnownEnum<NDb::ETalentSlot>::sizeOf; ++slot )
       if ( NWorld::PFTalent const * talent = pMale->GetTalent( level, slot ) )
         if ( !talent->IsActivated() && talent->CanBeActivated() )
-          candidates.push_back( level * 100 + slot );
-
-  if ( candidates.empty() )
-    return;
-
-  // the choice is made here, not in the world: the cheat gets the exact talent (replays stay the same)
-  const int choice = candidates[ rand() % candidates.size() ];
-  const string level = NStr::StrFmt( "%d", choice / 100 );
-  const string slot = NStr::StrFmt( "%d", choice % 100 );
-  Send( "learn_talent", screen->GetHero(), level.c_str(), slot.c_str() );
+        {
+          // an active one goes to the first free button of the action bar, not to its place of the build
+          CallMethod( "SetTalentAnyPosition", slot, level );
+          const string levelText = NStr::StrFmt( "%d", level );
+          const string slotText = NStr::StrFmt( "%d", slot );
+          Send( "learn_talent", screen->GetHero(), levelText.c_str(), slotText.c_str() );
+          return;
+        }
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -429,7 +439,7 @@ void TrainingPanelController::OnFSCommand( UI::FlashContainer2* _wnd, const char
   if ( strcmp( listenerID, szTrainingCommand ) != 0 || !args || strlen( args ) > 128 )
     return;
 
-  // Flash sends: "talent_random", "talents_all", "refresh", "mode <NoDamage|NoCooldown|NoMana> <0|1>", "hero <index>",
+  // Flash sends: "talent_next", "talents_all", "refresh", "mode <NoDamage|NoCooldown|NoMana> <0|1>", "hero <index>",
   // "skin <id>", "collapsed <0|1>", "grid <0|1>" (the choice window), "dbg <text>"
   loadingTime = LOADING_TIME;
   UpdateLoadingAssertion( 0.0f );
@@ -437,12 +447,9 @@ void TrainingPanelController::OnFSCommand( UI::FlashContainer2* _wnd, const char
   if ( strncmp( args, "dbg ", 4 ) == 0 )
     MessageTrace( "training panel: %s", args + 4 );
   else if ( strncmp( args, "grid ", 5 ) == 0 )
-  {
-    gridOpen = atoi( args + 5 ) != 0;
-    UpdateLoadingAssertion( 0.0f );
-  }
-  else if ( strcmp( args, "talent_random" ) == 0 )
-    LearnRandomTalent();
+    SetGridOpen( atoi( args + 5 ) != 0 );
+  else if ( strcmp( args, "talent_next" ) == 0 )
+    LearnNextTalent();
   else if ( strcmp( args, "talents_all" ) == 0 )
     Send( "talents_all", screen->GetHero() );
   else if ( strcmp( args, "refresh" ) == 0 )

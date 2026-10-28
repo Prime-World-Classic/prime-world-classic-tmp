@@ -27,6 +27,7 @@
 #include "PFChest.h"
 #include "PFGlyph.h"
 #include "PFHero.h"
+#include "PFTraining.h"
 #include "PFConsumable.h"
 #include "System/ConfigFiles.h"
 #include "PFTalent.h"
@@ -1625,6 +1626,22 @@ void AdventureScreen::ExecuteCommand(Command cmd, CVec3 const &worldPos, PF_Core
   
   // play effect when targeted command is applied (for visual feedback)
   ProcessSelectionPickEffects(dynamic_cast<NWorld::PFLogicObject*>(pObj));
+
+  // training: Ctrl + the move order puts the hero to the point at once (the ground and the minimap);
+  // the orders repeated while the button is held are dropped, else the hero would walk on from there
+  if ( cmd == CMD_MOVE && ( GetAsyncKeyState( VK_CONTROL ) & 0x8000 ) && !isSpectator && GetPlayer()
+       && Training::IsAllowed( GetWorld(), GetPlayer()->GetUserID() ) )
+  {
+    if ( !moveOnHoldSilent )
+    {
+      PlayPickEffect( worldPos, true );
+      Training::Send( "teleport", pHero, worldPos );
+    }
+    command       = pushedCommand;
+    pushedCommand = CMD_NA;
+    m_canExecuted = false;
+    return;
+  }
 
 	switch (cmd)
 	{ 

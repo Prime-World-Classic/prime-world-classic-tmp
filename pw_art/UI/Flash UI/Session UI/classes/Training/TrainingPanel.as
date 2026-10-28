@@ -245,7 +245,7 @@
 			panel.addChild(talentsCount);
 			y += 22;
 			var half:Number = (INNER_W - 6) / 2;
-			randomTalentButton = TrainingUI.CreateButton("", half, BUTTON_H, function():void { Send("talent_random"); }, 11);
+			randomTalentButton = TrainingUI.CreateButton("", half, BUTTON_H, function():void { Send("talent_next"); }, 11);
 			randomTalentButton.x = PAD;
 			randomTalentButton.y = y;
 			panel.addChild(randomTalentButton);

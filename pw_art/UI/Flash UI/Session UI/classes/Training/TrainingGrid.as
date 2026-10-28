@@ -53,6 +53,7 @@
 		private var current:String = "";
 		private var order:Array = [];    // индексы элементов в порядке показа
 		private var filtered:Array = []; // подходящие под поиск, по порядку
+		private var lastQuery:String = ""; // текст поиска, по которому построен filtered
 		private var scrollRow:int = 0;
 		private var rows:int = 1;        // строк в окне (по самому длинному списку, не меняется при поиске)
 		private var shown:Boolean = false;
@@ -299,6 +300,9 @@
 		private function OnSearchKey(e:KeyboardEvent):void
 		{
 			e.stopPropagation();
+			// Flash игры не шлёт "change" у поля ввода: текст проверяется на каждой клавише
+			if (searchField.text != lastQuery)
+				OnSearchChange(null);
 			if (e.keyCode == Keyboard.ESCAPE)
 				Hide();
 			else if (e.keyCode == Keyboard.ENTER && filtered.length == 1)
@@ -325,7 +329,8 @@
 		// Элементы, подходящие под поиск, по порядку
 		private function Filter():void
 		{
-			var query:String = searchField.text.toLowerCase();
+			lastQuery = searchField.text;
+			var query:String = lastQuery.toLowerCase();
 			filtered = [];
 			for (var i:int = 0; i < order.length; i++)
 			{

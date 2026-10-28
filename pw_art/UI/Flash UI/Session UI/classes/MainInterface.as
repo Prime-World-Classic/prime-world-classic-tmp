@@ -24,6 +24,7 @@
 	import Controllers.MateInfoController;
 	import BaseClasses.MateInfoBase;
 	import Enums.TalentUIState;
+	import Enums.EActionBarDesiredPositions;
 	import InventoryBar.*;
 	import TalentBar.*;
 	import MainScreen.*;
@@ -616,7 +617,8 @@
 			
 			if (talent == null) return;
 			
-			if ((talent.icoState == TalentUIState.CANBUY || talent.icoState == TalentUIState.NOTENOUGH_DEV_POINTS) && state == TalentUIState.BOUGHT&&talent.IsActive) 
+			// any not learned state: the training learns a talent the hero has no prime for (NOTENOUGH_PRIME)
+			if (talent.icoState != TalentUIState.BOUGHT && state == TalentUIState.BOUGHT&&talent.IsActive) 
 			{
 				AddTalantToActBar(column, raw);
 			}
@@ -637,6 +639,22 @@
 			var talentShortcut:TalentShortCut = new TalentShortCut(talent, mainWindow.actionBarContainer.actionBar_mc)
 			
 			mainWindow.actionBarContainer.actionBar_mc.AddShortcut(talentShortcut);
+		}
+
+		// training, a random talent: once learned, an active one goes to the first free button of the action bar
+		public function SetTalentAnyPosition(column:int, raw:int):void
+		{
+			try
+			{
+				var talent:Talent = mainWindow.talentsBar_mc.GetTalent(column, raw);
+				if (talent == null || talent.shortcut != null) return;
+
+				mainWindow.actionBarContainer.actionBar_mc.ClearReservedPosition(talent.DesiredIndex);
+				talent.DesiredIndex = EActionBarDesiredPositions.INTO_ANY_POSITION;
+			}
+			catch (e:Error)
+			{
+			}
 		}
 		
 			

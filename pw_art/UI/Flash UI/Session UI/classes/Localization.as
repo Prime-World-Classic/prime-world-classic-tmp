@@ -53,7 +53,7 @@
 		public static var Training_ChangeHero:String = "Сменить героя";
 		public static var Training_ChangeSkin:String = "Сменить скин";
 		public static var Training_Talents:String = "Таланты";
-		public static var Training_RandomTalent:String = "Случайный";
+		public static var Training_RandomTalent:String = "Следующий";
 		public static var Training_AllTalents:String = "Все таланты";
 		public static var Training_Modes:String = "Режимы";
 		public static var Training_NoDamage:String = "Неуязвимость";
@@ -66,7 +66,7 @@
 		public static var Training_Search:String = "Поиск";
 		public static var Training_Collapse:String = "Свернуть панель тренировки";
 		public static var Training_Expand:String = "Развернуть панель тренировки";
-		public static var Training_RandomTalentTooltip:String = "Изучить случайный доступный талант";
+		public static var Training_RandomTalentTooltip:String = "Изучить следующий доступный талант по порядку";
 		// юниты и мишень — Combat.xdb props 259–277
 		public static var Training_Units:String = "Юниты";
 		public static var Training_AddAlly:String = "+Союзник";

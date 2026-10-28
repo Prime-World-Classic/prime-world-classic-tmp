@@ -406,9 +406,11 @@
 		
 		public function ResetTalentBar():void 
 		{			
-			for each(var talent:Talent in talentBar_arr) 
+			for each(var talent:Talent in talentBar_arr)
 			{
 				talent.icoState = TalentUIState.CANBUY;
+				// the action bar is emptied too: the cell must not drive its old button (training hero change)
+				talent.shortcut = null;
 			}
 		}
 		

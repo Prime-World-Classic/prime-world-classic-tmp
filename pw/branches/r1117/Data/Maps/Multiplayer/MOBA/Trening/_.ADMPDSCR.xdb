@@ -7725,6 +7725,7 @@
 			<scriptFileName>/GameLogic/Scripts/Trening.lua</scriptFileName>
 		</AdvMapSettings>
 	</mapSettings>
+	<mapType>Training</mapType>
 	<productionMode>true</productionMode>
 	<title textref="/Maps/Multiplayer/MOBA/Trening/_.ADMPDSCR_title.txt" />
 </AdvMapDescription>

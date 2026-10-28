@@ -30,6 +30,10 @@ namespace
 
   static bool flashTest = false;
   REGISTER_DEV_VAR( "flashTest", flashTest, STORAGE_NONE );
+
+  // anti-aliased edges of the solid fills and lines (DrawFillFringe, DrawLineStripAA); 0 - as before, for comparison
+  static bool gFlashAntialias = true;
+  REGISTER_DEV_VAR( "flash_antialias", gFlashAntialias, STORAGE_NONE );
 }
 
 namespace Render
@@ -38,6 +42,7 @@ namespace Render
 #define TEXTURE_MATRIX  VIEWPROJECTION
 
 static const int MAX_VERTEX_COUNT = 1024 * 48;
+static const int MAX_SHAPE_VERTEX_COUNT = 1024 * 192; // fills + their anti-aliasing fringes (DrawFillFringe)
 static const int MAX_BATCHES = 4096 * 2; // Total allocated batch size ~ 2 Mb 
 
 // bitmap_info_d3d declaration
@@ -221,7 +226,11 @@ FlashRenderer::FlashRenderer() :
 
   currentPixelScale(20.f),
   modelMatrixCached(false),
-  colorTransformCached(false)
+  colorTransformCached(false),
+  displayPixelScale(20.f),
+  drawingMask(false),
+  lastShapeBatch(-1),
+  lastShapeBatchEnd(-1)
 {
   batches.resize(MAX_BATCHES);
 }
@@ -275,7 +284,7 @@ bool FlashRenderer::Initialize()
   vertexBuffer.Resize( MAX_VERTEX_COUNT * sizeof(FlashVertex) );
   NI_VERIFY( Get( vertexBuffer ), "FlashRenderer: Failed to create vertex buffer!", return false );
 
-  vertexBufferShape.Resize( MAX_VERTEX_COUNT * sizeof(ShapeVertex) );
+  vertexBufferShape.Resize( MAX_SHAPE_VERTEX_COUNT * sizeof(ShapeVertex) );
   NI_VERIFY( Get( vertexBufferShape ), "FlashRenderer: Failed to create shape vertex buffer!", return false );
 
   // Material
@@ -344,6 +353,8 @@ void FlashRenderer::BeginQueue()
   maskLevel = 0;
   numVertices = 0;
   numVerticesShape = 0;
+  lastShapeBatch = lastShapeBatchEnd = -1;
+  drawingMask = false;
   numBatches = 0;
   numRendered = 0;
   numDIP = 0;
@@ -414,8 +425,11 @@ void FlashRenderer::PrepareTexture( BatchTexture& batch, bool primary )
     batch.useDiffuse = false;
     NDb::SamplerState sampleState;
     sampleState.mipFilter = NDb::MIPFILTERTYPE_NONE;
-    sampleState.magFilter = batch.smoothing ? NDb::MAGFILTERTYPE_LINEAR : NDb::MAGFILTERTYPE_POINT;
-    sampleState.minFilter = batch.smoothing ? NDb::MINFILTERTYPE_LINEAR : NDb::MINFILTERTYPE_POINT;
+    // the whole UI is stretched from 1024 lines to the screen: point sampling turns every bitmap without
+    // "smoothing" (most of main.fla, the loaded hero icons) into blocks with stepped edges on 2K/4K
+    const bool smoothing = batch.smoothing || gFlashAntialias;
+    sampleState.magFilter = smoothing ? NDb::MAGFILTERTYPE_LINEAR : NDb::MAGFILTERTYPE_POINT;
+    sampleState.minFilter = smoothing ? NDb::MINFILTERTYPE_LINEAR : NDb::MINFILTERTYPE_POINT;
     sampleState.addressU = (batch.textureMode == EBitmapWrapMode::REPEAT) ? NDb::TEXTUREADDRESSTYPE_WRAP : NDb::TEXTUREADDRESSTYPE_CLAMP;
     sampleState.addressV = sampleState.addressU;
     sampleState.addressW = sampleState.addressU;
@@ -872,6 +886,7 @@ void FlashRenderer::BeginDisplay(
 
   batches[ numBatches ].viewMatrix = batches[ numBatches ].viewMatrix * windowMatrix;
   batches[ numBatches ].pixelScale = (x1 - x0) / ( viewportWidth * widthScale );
+  displayPixelScale = batches[ numBatches ].pixelScale;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -948,7 +963,7 @@ void FlashRenderer::DrawTriangleList( ShapeVertex* vertices, int vertex_count, i
   if ( numBatches >= MAX_BATCHES )
     return;
 
-  if ( numVerticesShape + vertex_count > MAX_VERTEX_COUNT )
+  if ( numVerticesShape + vertex_count > MAX_SHAPE_VERTEX_COUNT )
     return;
 
   Batch& batch = batches[ numBatches ];
@@ -964,6 +979,9 @@ void FlashRenderer::DrawTriangleList( ShapeVertex* vertices, int vertex_count, i
   batch.dip.primitiveCount = (vertex_count / 3);
 
   numVerticesShape += vertex_count;
+
+  lastShapeBatch = numBatches;
+  lastShapeBatchEnd = numVerticesShape;
 
   NextBatch();
 }
@@ -1155,6 +1173,158 @@ void FlashRenderer::DrawLineStrip( const nstl::vector<CVec2>& _coords, int uniqu
 
   NextBatch();
 #endif
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Shape units per screen pixel for the current matrix (as flashConstants.y for the lines, without 0.6); 0 if degenerate
+float FlashRenderer::ScreenPixelInShapeUnits() const
+{
+  const float a = lastModelMatrix.m_[0][0], b = lastModelMatrix.m_[1][0];
+  const float c = lastModelMatrix.m_[0][1], d = lastModelMatrix.m_[1][1];
+  const float axes = sqrtf( sqrtf( a * a + b * b ) * sqrtf( c * c + d * d ) );
+  return axes < 1e-6f ? 0.f : displayPixelScale / axes;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Per-vertex offset directions of a polyline: mitred average of the neighbouring segment normals
+// ( side = +1: (dy, -dx), with y going down that is the right of the travel )
+static void MitredNormals( const CVec2* coords, int count, float side, nstl::vector<CVec2>& result )
+{
+  const bool closed = coords[0] == coords[count - 1];
+  const int segments = count - 1;
+
+  nstl::vector<CVec2> normals( segments );
+  CVec2 last( 0.f, 0.f );
+  for ( int i = 0; i < segments; ++i )
+  {
+    const float dx = coords[i + 1].x - coords[i].x;
+    const float dy = coords[i + 1].y - coords[i].y;
+    const float len = sqrtf( dx * dx + dy * dy );
+    if ( len > 1e-6f )
+      last = CVec2( side * dy / len, -side * dx / len );
+    normals[i] = last;
+  }
+
+  result.resize( count );
+  for ( int i = 0; i < count; ++i )
+  {
+    const CVec2 n0 = i > 0 ? normals[i - 1] : ( closed ? normals[segments - 1] : normals[0] );
+    const CVec2 n1 = i < segments ? normals[i] : ( closed ? normals[0] : normals[segments - 1] );
+    CVec2 n( n0.x + n1.x, n0.y + n1.y );
+    const float len = sqrtf( n.x * n.x + n.y * n.y );
+    if ( len < 1e-6f )
+      n = n1;
+    else
+    {
+      n.x /= len; n.y /= len;
+      const float cosHalf = n.x * n1.x + n.y * n1.y;
+      const float miter = cosHalf > 0.5f ? 1.f / cosHalf : 2.f;
+      n.x *= miter; n.y *= miter;
+    }
+    result[i] = n;
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Two triangles between polyline vertices i and i+1: the band from offset d0 (color0) to offset d1 (color1)
+static ShapeVertex* AddBand( ShapeVertex* v, const CVec2* coords, const nstl::vector<CVec2>& normals, int i, float d0, const Color& color0, float d1, const Color& color1 )
+{
+  const CVec2& p0 = coords[i];
+  const CVec2& p1 = coords[i + 1];
+  const CVec2& n0 = normals[i];
+  const CVec2& n1 = normals[i + 1];
+
+  v[0].x = p0.x + n0.x * d0;  v[0].y = p0.y + n0.y * d0;  v[0].color = color0;
+  v[1].x = p0.x + n0.x * d1;  v[1].y = p0.y + n0.y * d1;  v[1].color = color1;
+  v[2].x = p1.x + n1.x * d0;  v[2].y = p1.y + n1.y * d0;  v[2].color = color0;
+  v[3] = v[2];
+  v[4] = v[1];
+  v[5].x = p1.x + n1.x * d1;  v[5].y = p1.y + n1.y * d1;  v[5].color = color1;
+  return v + 6;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void FlashRenderer::DrawFillFringe( const CVec2* coords, int count, const Color& color, bool fillOnLeft )
+{
+  if ( !gFlashAntialias || drawingMask || count < 2 )
+    return;
+
+  const float width = ScreenPixelInShapeUnits();
+  if ( width <= 0.f )
+    return;
+
+  // away from the filled side (y goes down: side +1 of MitredNormals is on the right of the travel)
+  nstl::vector<CVec2> normals;
+  MitredNormals( coords, count, fillOnLeft ? -1.f : 1.f, normals );
+
+  Color outer = color;
+  outer.A = 0;
+
+  const int segments = count - 1;
+  fringeVertices.resize( segments * 6 );
+  ShapeVertex* v = &fringeVertices[0];
+  for ( int i = 0; i < segments; ++i )
+    v = AddBand( v, coords, normals, i, 0.f, color, width, outer );
+
+  const int vertexCount = fringeVertices.size();
+  if ( !vertexBufferShapeRaw || numVerticesShape + vertexCount > MAX_SHAPE_VERTEX_COUNT )
+    return;
+
+  // Mesh::Display draws the fringe right after its fill: extend that batch instead of a new one
+  if ( numBatches > 0 && numBatches <= MAX_BATCHES && lastShapeBatch == numBatches - 1 && lastShapeBatchEnd == numVerticesShape )
+  {
+    memcpy( &vertexBufferShapeRaw[numVerticesShape], &fringeVertices[0], vertexCount * sizeof( ShapeVertex ) );
+    Batch& batch = batches[ numBatches - 1 ];
+    batch.dip.numVertices += vertexCount;
+    batch.dip.primitiveCount += vertexCount / 3;
+    numVerticesShape += vertexCount;
+    lastShapeBatchEnd = numVerticesShape;
+  }
+  else
+    DrawTriangleList( &fringeVertices[0], vertexCount, -1 );
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Solid line with analytic anti-aliasing, as fill triangles: a core of full alpha and 1-pixel ramps to transparent on both
+// sides; lines thinner than a pixel get a pixel-wide core with the alpha reduced to the width
+void FlashRenderer::DrawLineStripAA( const nstl::vector<CVec2>& coords, int uniqueID )
+{
+  const int count = coords.size();
+  const float px = ScreenPixelInShapeUnits();
+  if ( !gFlashAntialias || drawingMask || count < 2 || px <= 0.f )
+  {
+    DrawLineStrip( coords, uniqueID );
+    return;
+  }
+
+  float halfPx = lineWidthHalf / px;
+  if ( halfPx <= 0.f )
+    halfPx = 0.5f; // hairline: one pixel
+
+  Color core = lineColor;
+  if ( halfPx < 0.5f )
+    core.A = (unsigned char)( lineColor.A * halfPx * 2.f + 0.5f );
+  Color edge = lineColor;
+  edge.A = 0;
+
+  const float inner = ( halfPx > 0.5f ? halfPx - 0.5f : 0.f ) * px;
+  const float outer = ( ( halfPx > 0.5f ? halfPx : 0.5f ) + 0.5f ) * px;
+
+  nstl::vector<CVec2> normals;
+  MitredNormals( &coords[0], count, 1.f, normals );
+
+  const int segments = count - 1;
+  fringeVertices.resize( segments * ( inner > 0.f ? 18 : 12 ) );
+  ShapeVertex* v = &fringeVertices[0];
+  for ( int i = 0; i < segments; ++i )
+  {
+    v = AddBand( v, &coords[0], normals, i, -outer, edge, -inner, core );
+    if ( inner > 0.f )
+      v = AddBand( v, &coords[0], normals, i, -inner, core, inner, core );
+    v = AddBand( v, &coords[0], normals, i, inner, core, outer, edge );
+  }
+
+  DrawTriangleList( &fringeVertices[0], fringeVertices.size(), uniqueID );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1357,6 +1527,8 @@ void FlashRenderer::DrawBitmapScale9Grid( IBitmapInfo* bi, float width, float he
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void FlashRenderer::BeginSubmitMask()
 {
+  drawingMask = true;
+
   if ( numBatches >= MAX_BATCHES )
     return;
 
@@ -1366,6 +1538,8 @@ void FlashRenderer::BeginSubmitMask()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void FlashRenderer::EndSubmitMask()
 {
+  drawingMask = false;
+
   if ( numBatches >= MAX_BATCHES )
     return;
 
@@ -1378,6 +1552,8 @@ void FlashRenderer::EndSubmitMask()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void FlashRenderer::BeginUnSubmitMask()
 {
+  drawingMask = true;
+
   if ( numBatches >= MAX_BATCHES )
     return;
 
@@ -1387,6 +1563,8 @@ void FlashRenderer::BeginUnSubmitMask()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void FlashRenderer::DisableMask()
 {
+  drawingMask = false;
+
   if ( numBatches >= MAX_BATCHES )
     return;
 

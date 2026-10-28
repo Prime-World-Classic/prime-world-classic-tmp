@@ -61,6 +61,8 @@ public:
   virtual void DrawBitmapScale9Grid( IBitmapInfo* bi, float width, float height, const flash::SWF_RECT& scale9Grid, float aspectX, float aspectY, int uniqueID, bool smoothing );
   virtual void DrawTriangleList( ShapeVertex* vertices, int count, int uniqueID );
   virtual void DrawLineStrip( const nstl::vector<CVec2>& coords, int uniqueID );
+  virtual void DrawFillFringe( const CVec2* coords, int count, const Color& color, bool fillOnLeft );
+  virtual void DrawLineStripAA( const nstl::vector<CVec2>& coords, int uniqueID );
 
   virtual void SetMorph( float rate );
 
@@ -301,6 +303,13 @@ private:
   float currentPixelScale;
 
   ColorMatrixStack colorMatrixStack;
+
+  // fill fringes: movie units per screen pixel of the current BeginDisplay, no fringe while a mask is drawn
+  float displayPixelScale;
+  bool drawingMask;
+  nstl::vector<ShapeVertex> fringeVertices;
+  int lastShapeBatch, lastShapeBatchEnd; // the last DrawTriangleList: its batch and the end of its vertices
+  float ScreenPixelInShapeUnits() const;
 };
 
 } // namespace Render

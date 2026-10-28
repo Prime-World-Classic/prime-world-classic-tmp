@@ -24,6 +24,7 @@
 	import Controllers.MateInfoController;
 	import BaseClasses.MateInfoBase;
 	import Enums.TalentUIState;
+	import Enums.EActionBarDesiredPositions;
 	import InventoryBar.*;
 	import TalentBar.*;
 	import MainScreen.*;
@@ -32,6 +33,7 @@
 	import Utils.GameTimeGlobalUtils;
 	import VoiceChat.VoiceTeamOverlay;
 	import ReplayControls.ReplayControlsPanel;
+	import Training.TrainingPanel;
 	import Controllers.SoundController;
 	import EscMenu.ShortcutItem;
 	import EscMenu.OptionsWindow;
@@ -113,7 +115,8 @@
 		private var _shortheroname: SetPlayerShortName;
 		private var voiceTeamOverlay:VoiceTeamOverlay;
 		private var replayControlsPanel:ReplayControlsPanel;
-	
+		private var trainingPanel:TrainingPanel;
+
 		public function MainInterface(_main:Main)
 		{	
 			mainWindow = _main
@@ -125,6 +128,7 @@
 				function(heroId:int):MateInfoBase { var mate:PlayerStatisticData = GetPlayer(heroId); return (mate != null && !mate.IsEnemyTeam) ? GetMateInfo(heroId) : null; },
 				function():int { return ourID; });
 			replayControlsPanel = new ReplayControlsPanel(mainWindow, GetActionBarTop, GetActionBarCenterX);
+			trainingPanel = new TrainingPanel(mainWindow);
 		//	var Test:MainInterfaceTest = new MainInterfaceTest(this, mainWindow);
 		//	var Test2:MyFullTest = new MyFullTest(this, mainWindow);
 		}
@@ -623,7 +627,8 @@
 			
 			if (talent == null) return;
 			
-			if ((talent.icoState == TalentUIState.CANBUY || talent.icoState == TalentUIState.NOTENOUGH_DEV_POINTS) && state == TalentUIState.BOUGHT&&talent.IsActive) 
+			// any not learned state: the training learns a talent the hero has no prime for (NOTENOUGH_PRIME)
+			if (talent.icoState != TalentUIState.BOUGHT && state == TalentUIState.BOUGHT&&talent.IsActive)
 			{
 				AddTalantToActBar(column, raw);
 			}
@@ -644,6 +649,22 @@
 			var talentShortcut:TalentShortCut = new TalentShortCut(talent, mainWindow.actionBarContainer.actionBar_mc)
 			
 			mainWindow.actionBarContainer.actionBar_mc.AddShortcut(talentShortcut);
+		}
+
+		// training, a random talent: once learned, an active one goes to the first free button of the action bar
+		public function SetTalentAnyPosition(column:int, raw:int):void
+		{
+			try
+			{
+				var talent:Talent = mainWindow.talentsBar_mc.GetTalent(column, raw);
+				if (talent == null || talent.shortcut != null) return;
+
+				mainWindow.actionBarContainer.actionBar_mc.ClearReservedPosition(talent.DesiredIndex);
+				talent.DesiredIndex = EActionBarDesiredPositions.INTO_ANY_POSITION;
+			}
+			catch (e:Error)
+			{
+			}
 		}
 		
 			
@@ -1790,6 +1811,66 @@
 			this.pingMarkerHeroes[String(param1)] = param2;
 		}
 		
+		// box selection of the own units (C++ AdventureScreen::UpdateSelectionBox): corners 0..1 of the screen, x0 < 0 hides it
+		// the parts (fill, top, bottom, left, right) are 16x16 solid textures, moved and stretched like the ping beams:
+		// vector graphics drawn here do not show in the game's Flash runtime
+		private static const SELECTION_TEX_SIZE:Number = 16;
+		private var selectionBox:Sprite;
+		private var selectionBoxParts:Array;
+
+		private function CreateSelectionBoxPart(texture:String) : Loader
+		{
+			var part:Loader = this.LoadPingImage(texture);
+			this.selectionBox.addChild(part);
+			return part;
+		}
+
+		private function PlaceSelectionBoxPart(index:int, x:Number, y:Number, w:Number, h:Number) : void
+		{
+			var part:Loader = this.selectionBoxParts[index];
+			part.x = x;
+			part.y = y;
+			part.scaleX = w / SELECTION_TEX_SIZE;
+			part.scaleY = h / SELECTION_TEX_SIZE;
+		}
+
+		public function SetSelectionBox(x0:Number, y0:Number, x1:Number, y1:Number) : void
+		{
+			try
+			{
+				if (this.selectionBox == null)
+				{
+					this.selectionBox = new Sprite();
+					this.selectionBox.mouseEnabled = false;
+					this.selectionBox.mouseChildren = false;
+					this.GetPingMarkerLayer().addChild(this.selectionBox);
+					this.selectionBoxParts = [this.CreateSelectionBoxPart("selection_fill.dds"), this.CreateSelectionBoxPart("selection_edge.dds"),
+						this.CreateSelectionBoxPart("selection_edge.dds"), this.CreateSelectionBoxPart("selection_edge.dds"),
+						this.CreateSelectionBoxPart("selection_edge.dds")];
+				}
+				if (x0 < 0)
+				{
+					this.selectionBox.visible = false;
+					return;
+				}
+				var w:Number = this.mainWindow.stage.stageWidth;
+				var h:Number = this.mainWindow.stage.stageHeight;
+				var l:Number = Math.floor(x0 * w);
+				var t:Number = Math.floor(y0 * h);
+				var bw:Number = Math.max(Math.floor(x1 * w) - l, 2);
+				var bh:Number = Math.max(Math.floor(y1 * h) - t, 2);
+				this.PlaceSelectionBoxPart(0, l, t, bw, bh);
+				this.PlaceSelectionBoxPart(1, l, t, bw, 2);
+				this.PlaceSelectionBoxPart(2, l, t + bh - 2, bw, 2);
+				this.PlaceSelectionBoxPart(3, l, t, 2, bh);
+				this.PlaceSelectionBoxPart(4, l + bw - 2, t, 2, bh);
+				this.selectionBox.visible = true;
+			}
+			catch (e:Error)
+			{
+			}
+		}
+
 		// ping marker: light beam standing on the ground point (gx, gy) + icon (+ text) at its top (nx, ny); all 0..1 of the screen;
 		// alpha <= 0 removes it
 		public function SetPingMarker(param1:int, param2:int, param3:String, param4:uint, param5:Number, param6:Number, param7:Number, param8:Number, param9:Number) : void
@@ -2856,6 +2937,56 @@
 		public function SetReplayState(time:int, total:int, target:int, speed:int, paused:Boolean, ended:Boolean):void
 		{
 			replayControlsPanel.SetState(time, total, target, speed, paused, ended);
+		}
+
+		// Управление другим героем (панель тренировки): панель умений, инвентарь, магазин и билд очищаются
+		// перед заполнением для нового героя — как при SetOurHeroIdententity, но без сброса команд
+		// keepWindows — окна (билд) не закрываются: талант заменён из библиотеки прямо в открытом билде
+		public function ResetHeroControls(keepWindows:Boolean = false):void
+		{
+			if (!keepWindows)
+			{
+				mainWindow.ResetData();
+				return;
+			}
+			mainWindow.actionBarContainer.actionBar_mc.ResetActionBar();
+			mainWindow.inventoriesBar_mc.ResetInventory();
+			mainWindow.shopBar_mc.ResetShopItems();
+			mainWindow.talentsBar_mc.ResetTalentBar();
+		}
+
+		// Панель тренировки (PF_GameLogic/TrainingPanelController.cpp, сборки с читами)
+		public function ShowTrainingPanel(show:Boolean, collapsed:Boolean):void
+		{
+			try { trainingPanel.Show(show, collapsed); } catch (e:Error) { FSCommands.Send(TrainingPanel.COMMAND, "dbg Show: " + e.message); }
+		}
+
+		// heroes: индексы героев для hero_change, имена и пути текстур портретов
+		public function SetTrainingHeroes(ids:Array, names:Array, icons:Array):void
+		{
+			try { trainingPanel.SetHeroes(ids, names, icons); } catch (e:Error) { FSCommands.Send(TrainingPanel.COMMAND, "dbg SetHeroes: " + e.message); }
+		}
+
+		public function SetTrainingState(heroIndex:int, learned:int, total:int, available:int, modes:int,
+			skinIds:Array, skinNames:Array, skinIcons:Array, currentSkin:int):void
+		{
+			try { trainingPanel.SetState(heroIndex, learned, total, available, modes, skinIds, skinNames, skinIcons, currentSkin); }
+			catch (e:Error) { FSCommands.Send(TrainingPanel.COMMAND, "dbg SetState: " + e.message); }
+		}
+
+		// библиотека талантов для слота билда (правый клик по таланту): id, имена, иконки, редкость, текущий талант
+		public function ShowTrainingLibrary(level:int, slot:int, ids:Array, names:Array, icons:Array, rarities:Array, current:String):void
+		{
+			try { trainingPanel.ShowLibrary(level, slot, ids, names, icons, rarities, current); }
+			catch (e:Error) { FSCommands.Send(TrainingPanel.COMMAND, "dbg ShowLibrary: " + e.message); }
+		}
+
+		// выбранный юнит (можно ли удалить) и мишень: урон серии, DPS, последний удар, число ударов
+		public function SetTrainingUnits(selectedName:String, canRemove:Boolean, hasDummy:Boolean, total:int, dps:int, last:int, hits:int,
+			canControl:Boolean, controlling:Boolean):void
+		{
+			try { trainingPanel.SetUnits(selectedName, canRemove, hasDummy, total, dps, last, hits, canControl, controlling); }
+			catch (e:Error) { FSCommands.Send(TrainingPanel.COMMAND, "dbg SetUnits: " + e.message); }
 		}
 
 		// Верх панели активных талантов вместе с полосками и баффами над ней, в координатах экрана

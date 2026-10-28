@@ -23,10 +23,12 @@
 #include "Terrain/Terrain.h"
 #include "PF_Core/EffectsPool.h"
 #include "HeroActions.h"
+#include "PFSummoned.h"
 #include "PFAIContainer.h"
 #include "PFChest.h"
 #include "PFGlyph.h"
 #include "PFHero.h"
+#include "PFTraining.h"
 #include "PFConsumable.h"
 #include "System/ConfigFiles.h"
 #include "PFTalent.h"
@@ -224,6 +226,7 @@ static const int WHEEL_MAX_ITEMS     = 8;   // main.swf has the wheel textures f
 
 // Auto attack of our hero (idle / attack back); off = the hero attacks only by orders (synchronized by CmdSetAutoAttack)
 static bool  g_autoAttack            = true;
+static bool  g_summonManualControl   = false; // orders to the summons by the summon_select_* keys
 
 // Smart cast switches in the battle: checkboxes on the action bar buttons of targeted abilities.
 // Only the client decides about the smart cast, so the switches are local (the talent itself keeps its castle setting).
@@ -796,6 +799,12 @@ AdventureScreen::AdventureScreen()
 , lastPraiseTime(0)
 , praiseRowsFit(0)
 , autoAttackSent(-1)
+, summonControlGroup(0)
+, summonControlEnabled(false)
+, summonControlAllSummons(false)
+, summonControlHeroInSet(false)
+, selectionBoxPending(false)
+, selectionBoxShown(false)
 , smartCastRefreshTimer(0.0f)
 , flashMinimapAlertSent(-1)
 , flashChatCenteredSent(-1)
@@ -858,6 +867,7 @@ AdventureScreen::AdventureScreen()
 , exitingGame(false)
 {
   ::memset(m_commandArguments, 0, sizeof(int) * CMD_LAST);
+  controlledHeroSet = false;
 
   NMainFrame::SetCloseHandler( this );
 
@@ -960,6 +970,12 @@ void AdventureScreen::Construct( NGameX::ChatUiController * _chatController, NGa
   eventsUI.AddActivationHandler( "voice_overlay_unlock_on",  &AdventureScreen::VoiceOverlayUnlock, 1);
   eventsUI.AddActivationHandler( "voice_overlay_unlock_off", &AdventureScreen::VoiceOverlayUnlock, 0);
 
+  EnsureDefaultSummonBinds();
+  eventsUI.AddActivationHandler( "summon_select_all",     &AdventureScreen::SummonControlKey, 0 );
+  eventsUI.AddActivationHandler( "summon_select_summons", &AdventureScreen::SummonControlKey, 1 );
+  eventsUI.AddActivationHandler( "summon_select_next",    &AdventureScreen::SummonControlKey, 2 );
+  eventsUI.AddActivationHandler( "summon_select_hero",    &AdventureScreen::SummonControlKey, 3 );
+
   if ( IsSpectator() )
   {
     eventsUI.AddActivationHandler( "cmd_spectate_player1", &AdventureScreen::StartSpectate, SPECTATE_PLAYER1_IDX );
@@ -997,6 +1013,7 @@ void AdventureScreen::Construct( NGameX::ChatUiController * _chatController, NGa
 
 
   ::memset(m_commandArguments, 0, sizeof(int) * CMD_LAST);
+  controlledHeroSet = false;
   m_commandArguments[CMD_STOP]        = 0;
   m_commandArguments[CMD_HOLD]        = 0;
   m_commandArguments[CMD_MOVE]        = NDb::SPELLTARGET_LAND | NDb::SPELLTARGET_SHOP;
@@ -1411,8 +1428,8 @@ bool AdventureScreen::SetCommandTarget( const CVec3 & pos, PF_Core::WorldObjectB
   if ( m_canExecuted )
     return false;
 
-  NWorld::PFPlayer * pPlayer = pWorld->GetPlayer( playerId );
-  NWorld::PFBaseHero * pHero = pPlayer ? pPlayer->GetHero() : 0;
+  // GetHero: the hero the player controls (its own one or one given by the training panel)
+  NWorld::PFBaseHero * pHero = GetHero();
   NI_ASSERT( pHero, "" );
 
   m_targetObject = 0;
@@ -1613,8 +1630,8 @@ void AdventureScreen::ExecuteCommand(Command cmd, int nParam /*= 0*/)
 
 void AdventureScreen::ExecuteCommand(Command cmd, CVec3 const &worldPos, PF_Core::WorldObjectBase *pObj, bool bAddToQueue /*=false*/, const NDb::AlternativeTarget * altTarget /*=0*/ )
 {
-  NWorld::PFPlayer* pPlayer = pWorld->GetPlayer(playerId);
-  NWorld::PFBaseHero* pHero = pPlayer ? pPlayer->GetHero() : NULL;
+  // GetHero: the hero the player controls (its own one or one given by the training panel)
+  NWorld::PFBaseHero* pHero = GetHero();
 
   if (!pHero)
     return;
@@ -1623,6 +1640,31 @@ void AdventureScreen::ExecuteCommand(Command cmd, CVec3 const &worldPos, PF_Core
   
   // play effect when targeted command is applied (for visual feedback)
   ProcessSelectionPickEffects(dynamic_cast<NWorld::PFLogicObject*>(pObj));
+
+  // training: Ctrl + the move order puts the hero to the point at once (the ground and the minimap);
+  // the orders repeated while the button is held are dropped, else the hero would walk on from there
+  if ( cmd == CMD_MOVE && ( GetAsyncKeyState( VK_CONTROL ) & 0x8000 ) && !isSpectator && GetPlayer()
+       && Training::IsAllowed( GetWorld(), GetPlayer()->GetUserID() ) )
+  {
+    if ( !moveOnHoldSilent )
+    {
+      PlayPickEffect( worldPos, true );
+      Training::Send( "teleport", pHero, worldPos );
+    }
+    command       = pushedCommand;
+    pushedCommand = CMD_NA;
+    m_canExecuted = false;
+    return;
+  }
+
+  // manual control of the summons: move/attack/stop orders go to the chosen summons instead of the hero
+  if ( SendSummonOrders( cmd, worldPos, pObj ) )
+  {
+    command       = pushedCommand;
+    pushedCommand = CMD_NA;
+    m_canExecuted = false;
+    return;
+  }
 
 	switch (cmd)
 	{ 
@@ -2379,6 +2421,10 @@ void AdventureScreen::Step( bool bAppActive )
 {
   NI_PROFILE_FUNCTION
 
+  // the controlled hero is gone (removed by the training panel): the control comes back to the own hero
+  if ( controlledHeroSet && !IsValid( controlledHero ) )
+    SetControlledHero( 0 );
+
   {
     NI_PROFILE_BLOCK( "UI::Logic->DoCustomEvents" );
 
@@ -2595,6 +2641,7 @@ void AdventureScreen::CommonStep( bool bAppActive )
   UpdatePingWheel( deltaTime );
   UpdateChatWheel( deltaTime );
   UpdateAutoAttackOption();
+  UpdateSummonControl();
   UpdateSmartCastBoxes( deltaTime );
 
   // the old minimap alert sound of Flash plays only while the new ping sounds are off
@@ -3054,7 +3101,15 @@ bool AdventureScreen::MsgOnMouseDownImpl( const Input::SSysParams & sysParams, U
       ExecuteCommand( CMD_SIGNAL, currentPick.GetPickedPos(), currentPick.GetPickedPtr() );
   }
   else if( IsSelectionCmd(action) )
+  {
+    if ( g_summonManualControl && m_state == STATE_NORMAL && !isSpectator ) // may become a box selection (UpdateSelectionBox)
+    {
+      selectionBoxPending = true;
+      selectionBoxShown   = false;
+      selectionBoxStart   = vCursorPos;
+    }
     OnSelectionButtonMouseClick( currentPick.GetPickedPos(), true );
+  }
   else if( IsActionCmd(action) )
   {
     // remember before the click: it may change the state
@@ -5107,6 +5162,9 @@ AdventureScreen::CursorType AdventureScreen::GetCurrentCursor() const
 
 NWorld::PFBaseHero * AdventureScreen::GetHero()
 {
+  // the training panel may give the control of another hero (PFTraining.cpp)
+  if ( IsValid( controlledHero ) )
+    return controlledHero;
   return GetHeroById( playerId );
 }
 
@@ -5114,7 +5172,37 @@ NWorld::PFBaseHero * AdventureScreen::GetHero()
 
 const NWorld::PFBaseHero * AdventureScreen::GetHero() const
 {
+  if ( IsValid( controlledHero ) )
+    return controlledHero;
   return GetHeroById( playerId );
+}
+
+
+
+// Training panel: the controls of the current hero filled again without closing the windows (a talent replaced)
+void AdventureScreen::RefreshHeroControls()
+{
+  if ( NWorld::PFBaseHero * pHero = GetHero() )
+    if ( pLogic )
+      pLogic->SetControlledHero( pHero, true );
+}
+
+// Training panel: control another hero (0 - the own one). The controls of the UI follow it, the camera moves to it
+void AdventureScreen::SetControlledHero( NWorld::PFBaseHero * pHero )
+{
+  NWorld::PFBaseHero * pOwn = GetHeroById( playerId );
+  if ( pHero == pOwn || !IsValid( pHero ) )
+    pHero = 0;
+
+  controlledHero = pHero;
+  controlledHeroSet = pHero != 0;
+
+  NWorld::PFBaseHero * pActive = pHero ? pHero : pOwn;
+  if ( !IsValid( pActive ) || !pLogic )
+    return;
+
+  pLogic->SetControlledHero( pActive );
+  MoveCameraTo( pActive, false );
 }
 
 
@@ -6030,6 +6118,7 @@ void AdventureScreen::PreloadPingVisuals( const NDb::AdvMapDescription * advMapD
   if ( pLogic && pLogic->GetFlashInterface() )
   {
     pLogic->GetFlashInterface()->PreloadPingWheel();
+    pLogic->GetFlashInterface()->SetSelectionBox( -1.0f, -1.0f, -1.0f, -1.0f ); // loads the textures of the box selection
 
     // minimap icons of all heroes of the session: shown above the pings of their players
     NDb::Ptr<NDb::HeroesDB> heroesDb = NDb::SessionRoot::GetRoot()->logicRoot->heroes;
@@ -6571,6 +6660,442 @@ void AdventureScreen::UpdateAutoAttackOption()
     chatController->AddChatMessage( wanted ? wstring( L"\u0410\u0432\u0442\u043e\u0430\u0442\u0430\u043a\u0430 \u0432\u043a\u043b\u044e\u0447\u0435\u043d\u0430." )
                                            : wstring( L"\u0410\u0432\u0442\u043e\u0430\u0442\u0430\u043a\u0430 \u0432\u044b\u043a\u043b\u044e\u0447\u0435\u043d\u0430." ), NDb::CHATCHANNEL_SYSTEM );
   autoAttackSent = wanted;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Manual control of the summons (summon_manual_control). Keys: summon_select_all - the hero, its summons follow it as without
+// the option; summon_select_hero - the hero only, the summons stay where they are or go on with their orders;
+// summon_select_summons - all the summons get the same orders; summon_select_next - one unit of the current group
+// (of the summons, or of the summons and the hero). The orders are CmdSummonOrder, one per summon.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+namespace
+{
+  struct CollectControllableSummons
+  {
+    nstl::vector<NWorld::PFBaseUnit*> * summons;
+    void operator()( NWorld::PFSummonBehaviour * pBehaviour )
+    {
+      NWorld::PFSummonedUnitAIBehaviour * pAI = dynamic_cast<NWorld::PFSummonedUnitAIBehaviour*>( pBehaviour );
+      if ( !pAI )
+        return;
+      NWorld::PFBaseMovingUnit * pUnit = pAI->GetUnit().GetPtr();
+      if ( !IsUnitValid( pUnit ) || pUnit->GetBehaviour() != pAI || pUnit->GetTargetingParams().isStationarySummon )
+        return;
+      summons->push_back( pUnit );
+    }
+  };
+
+  bool ContainsUnit( nstl::vector<NWorld::PFBaseUnit*> const & units, PF_Core::WorldObjectBase const * pObject )
+  {
+    for ( int i = 0; i < units.size(); ++i )
+      if ( units[i] == pObject )
+        return true;
+    return false;
+  }
+}
+
+void AdventureScreen::GetControllableSummons( nstl::vector<NWorld::PFBaseUnit*> & summons )
+{
+  summons.clear();
+  NWorld::PFBaseHero * pHero = GetHero();
+  if ( !IsValid( pHero ) )
+    return;
+
+  CollectControllableSummons collect;
+  collect.summons = &summons;
+  const NDb::SummonType types[] = { NDb::SUMMONTYPE_PRIMARY, NDb::SUMMONTYPE_SECONDARY, NDb::SUMMONTYPE_PET };
+  for ( int i = 0; i < 3; ++i )
+    if ( IsValid( pHero->GetSummonedGroup( types[i] ) ) )
+      pHero->GetSummonedGroup( types[i] )->ForAllBehaviour( collect );
+}
+
+// the living summons of the current group
+void AdventureScreen::GetGroupSummons( nstl::vector<NWorld::PFBaseUnit*> const & summons, nstl::vector<NWorld::PFBaseUnit*> & group )
+{
+  group.clear();
+  if ( summonControlGroup != 1 )
+    return;
+  if ( summonControlAllSummons )
+  {
+    group = summons;
+    return;
+  }
+  for ( int i = 0; i < summons.size(); ++i )
+    for ( int j = 0; j < summonControlSet.size(); ++j )
+      if ( summonControlSet[j].GetPtr() == summons[i] )
+      {
+        group.push_back( summons[i] );
+        break;
+      }
+}
+
+// the summons that get the next order; heroToo: the hero gets it as well
+void AdventureScreen::GetSummonOrderTargets( nstl::vector<NWorld::PFBaseUnit*> & targets, bool & heroToo )
+{
+  targets.clear();
+  heroToo = true;
+  if ( !g_summonManualControl || isSpectator )
+    return;
+
+  nstl::vector<NWorld::PFBaseUnit*> summons;
+  GetControllableSummons( summons );
+  if ( IsValid( summonControlFocus ) )
+  {
+    if ( ContainsUnit( summons, summonControlFocus.GetPtr() ) )
+    {
+      targets.push_back( dynamic_cast<NWorld::PFBaseUnit*>( summonControlFocus.GetPtr() ) );
+      heroToo = false;
+    }
+    return; // or the hero alone
+  }
+  if ( summonControlGroup != 1 )
+    return;
+  GetGroupSummons( summons, targets );
+  heroToo = summonControlHeroInSet;
+}
+
+void AdventureScreen::SelectSummonGroup( bool allSummons, nstl::vector<NWorld::PFBaseUnit*> const & summons, bool heroInSet )
+{
+  summonControlGroup      = 1;
+  summonControlAllSummons = allSummons;
+  summonControlHeroInSet  = heroInSet;
+  summonControlFocus      = 0;
+  summonControlSet.clear();
+  for ( int i = 0; i < summons.size(); ++i )
+    summonControlSet.push_back( summons[i] );
+}
+
+// returns true when the hero does not get the order
+bool AdventureScreen::SendSummonOrders( Command cmd, CVec3 const & worldPos, PF_Core::WorldObjectBase * pObj )
+{
+  if ( cmd != CMD_MOVE && cmd != CMD_STOP && cmd != CMD_HOLD && cmd != CMD_ATTACK )
+    return false;
+
+  nstl::vector<NWorld::PFBaseUnit*> targets;
+  bool heroToo = true;
+  GetSummonOrderTargets( targets, heroToo );
+  if ( targets.empty() )
+    return false;
+
+  int order = NWorld::SUMMONORDER_STOP;
+  NWorld::PFBaseUnit * pTarget = 0;
+  switch ( cmd )
+  {
+  case CMD_MOVE:
+    order = NWorld::SUMMONORDER_MOVE;
+    if ( !heroToo && ( !moveOnHoldSilent || g_moveOnHoldMarker ) )
+      PlayPickEffect( worldPos, true );
+    break;
+  case CMD_HOLD:
+    order = NWorld::SUMMONORDER_HOLD;
+    break;
+  case CMD_ATTACK:
+    pTarget = dynamic_cast<NWorld::PFBaseUnit*>( pObj );
+    if ( pTarget )
+    {
+      if ( !IsUnitValid( pTarget ) )
+        return !heroToo;
+      if ( !pTarget->IsVulnerable() )
+      {
+        if ( pLogic && !heroToo ) // the hero's order shows it otherwise
+          pLogic->SetErrorMessage( NDb::ERRORMESSAGETYPE_INVULNERABLETARGET );
+        return !heroToo;
+      }
+      order = NWorld::SUMMONORDER_ATTACK;
+    }
+    else
+    {
+      if ( !heroToo )
+        PlayPickEffect( worldPos, false );
+      order = NWorld::SUMMONORDER_COMBATMOVE;
+    }
+    break;
+  default:
+    break;
+  }
+
+  NWorld::PFBaseHero * pHero = GetHero();
+  for ( int i = 0; i < targets.size(); ++i )
+    SendGameCommand( NWorld::CreateCmdSummonOrder( pHero, targets[i], order, worldPos.AsVec2D(), pTarget ), true );
+  return !heroToo;
+}
+
+// a click on an own unit: a summon becomes the group, the hero takes the orders back
+void AdventureScreen::OnSummonControlPick( PF_Core::WorldObjectBase * pObject )
+{
+  if ( !g_summonManualControl || isSpectator || !pObject )
+    return;
+
+  if ( pObject == GetHero() )
+  {
+    summonControlGroup = 0;
+    summonControlFocus = 0;
+    return;
+  }
+
+  nstl::vector<NWorld::PFBaseUnit*> summons;
+  GetControllableSummons( summons );
+  if ( !ContainsUnit( summons, pObject ) )
+    return;
+
+  nstl::vector<NWorld::PFBaseUnit*> one;
+  one.push_back( dynamic_cast<NWorld::PFBaseUnit*>( pObject ) );
+  SelectSummonGroup( false, one, false );
+}
+
+void AdventureScreen::ReleaseSummons()
+{
+  NWorld::PFBaseHero * pHero = GetHero();
+  nstl::vector<NWorld::PFBaseUnit*> summons;
+  GetControllableSummons( summons );
+  for ( int i = 0; i < summons.size(); ++i )
+  {
+    NWorld::PFSummonedUnitAIBehaviour const * pAI = dynamic_cast<NWorld::PFSummonedUnitAIBehaviour const*>( summons[i]->GetBehaviour() );
+    if ( pAI && pAI->IsPlayerControlled() )
+      SendGameCommand( NWorld::CreateCmdSummonOrder( pHero, summons[i], NWorld::SUMMONORDER_RELEASE, VNULL2, 0 ), true );
+  }
+}
+
+// box selection with the left button: the own units in the box become the group
+void AdventureScreen::UpdateSelectionBox()
+{
+  if ( !selectionBoxPending )
+    return;
+
+  AdventureFlashInterface * flash = pLogic ? pLogic->GetFlashInterface() : 0;
+  const bool down = g_summonManualControl && m_state == STATE_NORMAL && IsLogicalMouseButtonDown( UI::EMButton::Left );
+  const CVec2 delta = vCursorPos - selectionBoxStart;
+  if ( down && !selectionBoxShown && fabs( delta.x ) + fabs( delta.y ) < 8.0f )
+    return;
+
+  const UI::Point & res = UI::GetScreenResolution();
+  const float w  = Max( (float)res.x, 1.0f );
+  const float h  = Max( (float)res.y, 1.0f );
+  const float x0 = Min( selectionBoxStart.x, vCursorPos.x ) / w;
+  const float x1 = Max( selectionBoxStart.x, vCursorPos.x ) / w;
+  const float y0 = Min( selectionBoxStart.y, vCursorPos.y ) / h;
+  const float y1 = Max( selectionBoxStart.y, vCursorPos.y ) / h;
+  if ( down )
+  {
+    selectionBoxShown = true;
+    if ( flash )
+    {
+      const bool assertLoading = NDb::GetDbResourceCache().EnableAssertionLoadingFiles( false ); // textures preloaded with the map
+      flash->SetSelectionBox( x0, y0, x1, y1 );
+      NDb::GetDbResourceCache().EnableAssertionLoadingFiles( assertLoading );
+    }
+    return;
+  }
+
+  selectionBoxPending = false;
+  if ( !selectionBoxShown )
+    return;
+  selectionBoxShown = false;
+  if ( flash )
+    flash->SetSelectionBox( -1.0f, -1.0f, -1.0f, -1.0f );
+  if ( !g_summonManualControl || !pScene )
+    return;
+
+  // a unit is in the box if its feet are (a little margin for the model size)
+  const SHMatrix sceneToScreen = pScene->GetCamera()->GetProjectiveMatrix() * pScene->GetCamera()->GetViewMatrix();
+  const float margin = 0.01f;
+  nstl::vector<NWorld::PFBaseUnit*> summons, inBox;
+  GetControllableSummons( summons );
+  for ( int i = 0; i < summons.size(); ++i )
+  {
+    float nx = 0.0f, ny = 0.0f;
+    if ( ProjectPingPoint( sceneToScreen, summons[i]->GetPosition(), nx, ny )
+         && nx >= x0 - margin && nx <= x1 + margin && ny >= y0 - margin && ny <= y1 + margin )
+      inBox.push_back( summons[i] );
+  }
+  NWorld::PFBaseHero * pHero = GetHero();
+  float hx = 0.0f, hy = 0.0f;
+  const bool heroIn = IsUnitValid( pHero ) && ProjectPingPoint( sceneToScreen, pHero->GetPosition(), hx, hy )
+                      && hx >= x0 - margin && hx <= x1 + margin && hy >= y0 - margin && hy <= y1 + margin;
+
+  if ( !inBox.empty() )
+    SelectSummonGroup( false, inBox, heroIn );
+  else if ( heroIn )
+  {
+    summonControlGroup = 0;
+    summonControlFocus = 0;
+  }
+}
+
+void AdventureScreen::UpdateSummonControl()
+{
+  if ( isSpectator || !GetHero() )
+    return;
+
+  if ( summonControlEnabled != g_summonManualControl )
+  {
+    summonControlEnabled = g_summonManualControl;
+    if ( !summonControlEnabled )
+    {
+      ReleaseSummons();
+      summonControlGroup = 0;
+      summonControlFocus = 0;
+      summonControlSet.clear();
+    }
+  }
+
+  UpdateSelectionBox();
+
+  // the chosen summon has died, or all the summons of the group have
+  nstl::vector<NWorld::PFBaseUnit*> summons;
+  GetControllableSummons( summons );
+  if ( IsValid( summonControlFocus ) && summonControlFocus.GetPtr() != GetHero() && !ContainsUnit( summons, summonControlFocus.GetPtr() ) )
+    summonControlFocus = 0;
+  if ( summonControlGroup == 1 )
+  {
+    nstl::vector<NWorld::PFBaseUnit*> group;
+    GetGroupSummons( summons, group );
+    if ( group.empty() )
+    {
+      summonControlGroup = 0;
+      summonControlFocus = 0;
+      summonControlSet.clear();
+    }
+  }
+
+  // selection disks under the summons that get the orders
+  nstl::vector<NWorld::PFBaseUnit*> marked;
+  bool heroToo = true;
+  GetSummonOrderTargets( marked, heroToo );
+  bool same = marked.size() == summonControlMarked.size();
+  for ( int i = 0; same && i < marked.size(); ++i )
+    same = summonControlMarked[i].GetPtr() == marked[i];
+  if ( same )
+    return;
+
+  for ( int i = 0; i < summonControlEffects.size(); ++i )
+    if ( IsValid( summonControlEffects[i] ) )
+      summonControlEffects[i]->Die();
+  summonControlEffects.clear();
+  summonControlMarked.clear();
+
+  for ( int i = 0; i < marked.size(); ++i )
+  {
+    CObj<PF_Core::BasicEffectAttached> pEffect;
+    if ( NScene::SceneObject * pSceneObject = marked[i]->GetClientSceneObject() )
+    {
+      pEffect = PF_Core::EffectsPool::Get()->RetrieveKnownEffect<PF_Core::BasicEffectAttached>( NDb::EFFECTS_SELECTIONAURASELF );
+      if ( IsValid( pEffect ) )
+      {
+        pEffect->SetDeathType( NDb::EFFECTDEATHTYPE_MANUAL );
+        pEffect->Attach( pSceneObject );
+      }
+    }
+    summonControlEffects.push_back( pEffect );
+    summonControlMarked.push_back( marked[i] );
+  }
+}
+
+bool AdventureScreen::SummonControlKey( const int & key )
+{
+  NWorld::PFBaseHero * pHero = GetHero();
+  if ( !g_summonManualControl || isSpectator || !pHero )
+    return true;
+
+  nstl::vector<NWorld::PFBaseUnit*> summons;
+  GetControllableSummons( summons );
+
+  if ( key == 0 ) // all: the hero, the summons follow it
+  {
+    summonControlGroup = 0;
+    summonControlFocus = 0;
+    summonControlSet.clear();
+    ReleaseSummons();
+  }
+  else if ( key == 3 ) // the hero only: the summons following the hero stop, the ordered ones go on
+  {
+    summonControlGroup = 0;
+    summonControlFocus = 0;
+    for ( int i = 0; i < summons.size(); ++i )
+    {
+      NWorld::PFSummonedUnitAIBehaviour const * pAI = dynamic_cast<NWorld::PFSummonedUnitAIBehaviour const*>( summons[i]->GetBehaviour() );
+      if ( pAI && !pAI->IsPlayerControlled() )
+        SendGameCommand( NWorld::CreateCmdSummonOrder( pHero, summons[i], NWorld::SUMMONORDER_STOP, VNULL2, 0 ), true );
+    }
+  }
+  else if ( key == 1 ) // all the summons
+  {
+    if ( summons.empty() )
+      return true;
+    nstl::vector<NWorld::PFBaseUnit*> none;
+    SelectSummonGroup( true, none, false );
+  }
+  else // the next unit of the group: of the hero and all the summons, or of the selected group
+  {
+    nstl::vector<NWorld::PFBaseUnit*> cycle;
+    if ( summonControlGroup == 0 || summonControlHeroInSet )
+      cycle.push_back( pHero );
+    if ( summonControlGroup == 0 )
+      for ( int i = 0; i < summons.size(); ++i )
+        cycle.push_back( summons[i] );
+    else
+    {
+      nstl::vector<NWorld::PFBaseUnit*> group;
+      GetGroupSummons( summons, group );
+      for ( int i = 0; i < group.size(); ++i )
+        cycle.push_back( group[i] );
+    }
+    if ( cycle.size() < 2 )
+      return true;
+
+    int current = summonControlGroup == 0 ? 0 : -1; // no focus: the hero, or none of the group yet
+    for ( int i = 0; i < cycle.size(); ++i )
+      if ( IsValid( summonControlFocus ) && cycle[i] == summonControlFocus.GetPtr() )
+        current = i;
+    NWorld::PFBaseUnit * pNext = cycle[ ( current + 1 ) % cycle.size() ];
+    if ( pNext == pHero && summonControlGroup == 0 )
+      summonControlFocus = 0;
+    else
+      summonControlFocus = pNext;
+  }
+
+  UpdateSummonControl();
+  return true;
+}
+
+// Players keep their own input_new.cfg (unbindall + all the binds), so the binds of the summon control never reach them
+// from input.cfg. Defined once: the statistics move from TAB to CapsLock, TAB switches between the summons.
+void AdventureScreen::EnsureDefaultSummonBinds()
+{
+  Input::Binds * binds = Input::BindsManager::Instance()->GetBinds();
+  if ( !binds )
+    return;
+
+  if ( !binds->FindCommand( "summon_select_hero" ) )
+  {
+    NGlobal::RunCommand( L"bindsection adventure_screen", L"input" );
+    NGlobal::RunCommand( L"bind summon_select_hero 'SPACE'", L"input" );
+    NGlobal::RunCommand( L"bindsection", L"input" );
+  }
+
+  if ( binds->FindCommand( "summon_select_next" ) )
+    return;
+
+  bool statisticsOnTab = false;
+  Input::TBinds::const_iterator it = binds->GetBindStrings().find( L"input" );
+  if ( it != binds->GetBindStrings().end() )
+  {
+    const Input::TBindsEntry & entry = *it;
+    for ( int i = 0; i < entry.second.size(); ++i )
+      if ( entry.second[i].find( " show_statistics " ) != -1 && entry.second[i].find( "'TAB'" ) != -1 )
+        statisticsOnTab = true;
+  }
+
+  NGlobal::RunCommand( L"bindsection adventure_screen", L"input" );
+  if ( statisticsOnTab )
+  {
+    NGlobal::RunCommand( L"rebind show_statistics 'CAPITAL'", L"input" );
+    NGlobal::RunCommand( L"rebind !hide_statistics 'CAPITAL'", L"input" );
+  }
+  NGlobal::RunCommand( L"bind summon_select_all '`'", L"input" );
+  NGlobal::RunCommand( L"bind summon_select_summons 'R'", L"input" );
+  NGlobal::RunCommand( L"bind summon_select_next 'TAB'", L"input" );
+  NGlobal::RunCommand( L"bindsection", L"input" );
 }
 #pragma warning( pop )
 
@@ -7149,6 +7674,7 @@ bool AdventureScreen::OnSelectionButtonMouseClick( CVec3 const &vPickPos, bool u
     {
       SetSelectedObject( currentPick.GetPickedPtr(), currentPick.GetScenePtr() );
       UpdateShopInfo( selectedObject.GetPtr() );
+      OnSummonControlPick( currentPick.GetPickedPtr() );
     }
     return false;
   }
@@ -9699,6 +10225,7 @@ REGISTER_VAR( "ping_ground_radius", g_pingGroundRadius, STORAGE_NONE );
 REGISTER_VAR( "ping_beam_height", g_pingBeamHeight, STORAGE_NONE );
 REGISTER_VAR( "ping_sound", g_pingSound, STORAGE_USER );
 REGISTER_VAR( "auto_attack", g_autoAttack, STORAGE_USER );
+REGISTER_VAR( "summon_manual_control", g_summonManualControl, STORAGE_USER );
 REGISTER_VAR( "smart_cast_toggles", g_smartCastToggles, STORAGE_USER );
 REGISTER_VAR( "smart_cast_items", g_smartCastItems, STORAGE_USER );
 REGISTER_VAR( "praise", g_praise, STORAGE_USER );

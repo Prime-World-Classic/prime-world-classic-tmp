@@ -58,6 +58,7 @@ namespace NGameX
   class  VotingForSurrenderController;
   class  VoiceOverlayController;
   class  ReplayControlsController;
+  class  TrainingPanelController;
   class  DialogController;
   class  CTE_Controller;
   class  FriendsController;
@@ -168,6 +169,7 @@ namespace NGameX
     Strong<VotingForSurrenderController> votingForSurrenderController;
     Strong<VoiceOverlayController>    voiceOverlayController;
     Strong<ReplayControlsController>  replayControlsController; // created on the first replay state
+    Strong<TrainingPanelController>   trainingPanelController; // builds with cheats only
     Strong<DialogController>          dialogController;
     Strong<QuestsController>          questsController;
     Strong<CTE_Controller>            cteController;
@@ -278,6 +280,8 @@ namespace NGameX
     AdventureFlashInterface * GetFlashInterface() {return flashInterface;}
     void SetVoiceOverlayUnlocked( bool unlocked );
     void NotifySmartCast( const char * talentId, bool on );
+    // training panel: the controls of the UI follow another hero (AdventureScreen::SetControlledHero)
+    void SetControlledHero( NWorld::PFBaseHero const * pHero, bool keepWindows = false );
     void UpdateReplayControls( int playedSteps, int totalSteps, int stepLengthMs, float speed, bool paused, int seekTargetStep, bool ended );
     ShopController * GetShopController() {return shopController;}
     InventoryController * GetInventoryController() {return inventoryController;}

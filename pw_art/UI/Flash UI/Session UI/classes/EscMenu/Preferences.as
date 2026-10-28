@@ -58,6 +58,11 @@
 		{
 			main.optionsWindow.SetAdvancedTargetPage(page);
 		}
+
+		public function SetAdvancedPageName(page:int, name:String):void
+		{
+			main.optionsWindow.SetAdvancedPageName(page, name);
+		}
 		
 		public function AddAdvancedHeader(caption:String):void
 		{

@@ -63,6 +63,7 @@ public:
   void  reserve_vertices( int expected_vertex_count );
 
   void  add_triangle( const PointWithID pts[3] );
+  void  add_outline( const CVec2 coords[], int coord_count, bool fillOnLeft );
 
 	void	Display( Render::IFlashRenderer* _renderer, Movie* _movie, SWF_FILLSTYLE& style );
   void	DisplayMorph( Render::IFlashRenderer* _renderer, Movie* _movie, SWF_FILLSTYLE& style1, SWF_FILLSTYLE& style2, float rate );
@@ -73,6 +74,14 @@ private:
 
   nstl::vector<CVec2> triangleList;
   Render::ShapeVertex* allignedTriangleList;
+
+  // outer edges of the fill: drawn as a 1-pixel fringe fading out (the triangles have no anti-aliasing)
+  struct Outline
+  {
+    nstl::vector<CVec2> coords;
+    bool fillOnLeft;
+  };
+  nstl::vector<Outline> outlines;
 
   bool colorsCached;
 };

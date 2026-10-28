@@ -229,7 +229,8 @@ void Texture2D::OnResourcesRelease()
 {
   if (!pDXTexture)
     return;
-  ASSERT(desc.Type == D3DRTYPE_SURFACE);
+  // textures made from a backend handle have Type D3DRTYPE_TEXTURE (see the constructor above)
+  ASSERT(desc.Type == D3DRTYPE_SURFACE || desc.Type == D3DRTYPE_TEXTURE);
 
   // free VRAM resource
   if((desc.Pool == D3DPOOL_DEFAULT) && pDXTexture)

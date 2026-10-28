@@ -477,6 +477,28 @@ struct GSClientSettings
     signed char         smartCastItemSentMode[64];  // the same for the shop items, by inventory slot
     float               smartCastRefreshTimer;
     int                 autoAttackSent;             // auto attack option last sent to the world (-1 = not yet, the world starts with "on")
+    // manual control of the summons (summon_manual_control, the "Summoned creatures" settings page)
+    int                 summonControlGroup;         // 0 = the hero (its summons follow it as without the option), 1 = a group
+    bool                summonControlAllSummons;    // the group is all the summons (summon_select_summons), not summonControlSet
+    bool                summonControlHeroInSet;     // the hero is in the group too (box selection): it gets the same orders
+    nstl::vector< CPtr<PF_Core::WorldObjectBase> >     summonControlSet;     // summons of the group (click, box selection)
+    CPtr<PF_Core::WorldObjectBase> summonControlFocus; // one unit of the group chosen by summon_select_next (0 = the whole group)
+    bool                summonControlEnabled;       // the option as seen on the previous step
+    nstl::vector< CPtr<PF_Core::WorldObjectBase> >     summonControlMarked;  // units with the selection disk
+    nstl::vector< CObj<PF_Core::BasicEffectAttached> > summonControlEffects;
+    bool                selectionBoxPending;        // the left button is down since a click in the scene
+    bool                selectionBoxShown;          // the mouse has moved far enough: the box is drawn
+    CVec2               selectionBoxStart;
+    void GetControllableSummons( nstl::vector<NWorld::PFBaseUnit*> & summons );
+    void GetGroupSummons( nstl::vector<NWorld::PFBaseUnit*> const & summons, nstl::vector<NWorld::PFBaseUnit*> & group );
+    void GetSummonOrderTargets( nstl::vector<NWorld::PFBaseUnit*> & targets, bool & heroToo );
+    void SelectSummonGroup( bool allSummons, nstl::vector<NWorld::PFBaseUnit*> const & summons, bool heroInSet );
+    bool SendSummonOrders( Command cmd, CVec3 const & worldPos, PF_Core::WorldObjectBase * pObj );
+    void OnSummonControlPick( PF_Core::WorldObjectBase * pObject );
+    void ReleaseSummons();
+    void UpdateSummonControl();
+    void UpdateSelectionBox();
+    static void EnsureDefaultSummonBinds();
     int                 flashMinimapAlertSent;      // options last pushed to the Flash UI of this battle (-1 = not yet)
     int                 flashChatCenteredSent;
     float               flashChatRaiseSent;
@@ -723,6 +745,7 @@ struct GSClientSettings
 
     bool LockActionBar(const int &lock);
     bool VoiceOverlayUnlock(const int &unlock);
+    bool SummonControlKey(const int &key);
        
     bool CmdActionBarHotKey( const int & slotIndex );
 
@@ -804,6 +827,18 @@ struct GSClientSettings
     NWorld::PFBaseHero*       GetHeroById(int heroId) const;
     NWorld::PFPlayer*         GetPlayer()  { return pWorld ? pWorld->GetPlayer(playerId) : NULL; } 
     NWorld::PFPlayer const *  GetPlayer() const { return pWorld ? pWorld->GetPlayer(playerId) : NULL; } 
+
+    // Training panel (PFTraining.cpp): the hero the player controls instead of its own one (0 - its own one).
+    // GetHero() returns it; the own hero is GetOwnHero()
+    void                      SetControlledHero( NWorld::PFBaseHero * pHero );
+    // the controls of the current hero filled again, the windows (build) stay open: a talent replaced in battle
+    void                      RefreshHeroControls();
+    NWorld::PFBaseHero*       GetOwnHero() const { return GetHeroById( playerId ); }
+    bool                      IsControllingOtherHero() const { return IsValid( controlledHero ); }
+  private:
+    CPtr<NWorld::PFBaseHero>  controlledHero;
+    bool                      controlledHeroSet;
+  public:
     NWorld::PFAbilityData *   GetAbilityData(Command cmd, int index);
     const wstring&            GetPlayerName(int playerId) const;
     virtual NWorld::PFWorld*  GetWorld() { return pWorld; }

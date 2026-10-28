@@ -217,7 +217,7 @@ int PFHeroStatistics::GetNumTowersKilled(NDb::ERoute route, bool countAssisted, 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PFHeroStatistics::AddFinalScore(PFStatistics &stat)
 {
-  DebugTrace( "Hero userid %d (playerid %d) has personal score: %d", pHero->GetPlayer()->GetUserID(), pHero->GetPlayerId(), score );
+  DebugTrace( "Hero userid %d (playerid %d) has personal score: %d", pHero->GetPlayer() ? pHero->GetPlayer()->GetUserID() : -1, pHero->GetPlayerId(), score );
   score += stat.GetFactionStatistics(pHero->GetFaction()).GetScore();
 }
 
@@ -225,7 +225,7 @@ void PFHeroStatistics::AddFinalScore(PFStatistics &stat)
 void PFHeroStatistics::AddTitleScore( NGameX::HeroTitleCalculator const* heroTitleCalculator )
 {
   int tempscore = heroTitleCalculator->GetHeroTitleScore( pHero );
-  DebugTrace( "Hero userid %d (playerid %d) got title score: %d", pHero->GetPlayer()->GetUserID(), pHero->GetPlayerId(), tempscore );
+  DebugTrace( "Hero userid %d (playerid %d) got title score: %d", pHero->GetPlayer() ? pHero->GetPlayer()->GetUserID() : -1, pHero->GetPlayerId(), tempscore );
   score += tempscore;
 }
 
@@ -552,8 +552,9 @@ void PFHeroStatistics::NotifyTeleport()
 {
   UpdateDistanceTraveled(true);
 
-  // put notification into last 
-  history.back().teleport = true;
+  // put notification into last (a hero without a player - added by the training - has no history yet)
+  if ( history.size() > 0 )
+    history.back().teleport = true;
 }
 
 // Очки которые "показываются по табу".

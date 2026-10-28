@@ -80,6 +80,29 @@ private:
   float leashRange;
   ZEND int operator&( IBinSaver &f ) { f.Add(1,(PFBaseMovingUnitState*)this); f.Add(2,(PFHFSM*)this); f.Add(3,&pMaster); f.Add(4,&maxChaseDistance); f.Add(5,&bStrongTarget); f.Add(6,&isStationarySummon); f.Add(7,&pTarget); f.Add(8,&leashRange); return 0; }
 };
+// manual control of a summon (CmdSummonOrder): stands and attacks the enemies coming close;
+// holdPosition: only those in attack range, without chasing
+class PFSummonManualGuardState
+  : public PFBaseMovingUnitState
+  , public PFHFSM
+{
+  WORLD_OBJECT_METHODS(0x5E1A7C50, PFSummonManualGuardState);
+
+public:
+  PFSummonManualGuardState( CPtr<PFBaseMovingUnit> const& pOwner, bool holdPosition );
+  bool IsHoldingPosition() const { return holdPosition; }
+
+protected:
+  virtual bool OnStep( float dt );
+  PFSummonManualGuardState() : holdPosition( false ) {}
+
+private:
+  ZDATA_(PFBaseMovingUnitState);
+  ZPARENT(PFHFSM);
+  bool                 holdPosition;
+  ZEND int operator&( IBinSaver &f ) { f.Add(1,(PFBaseMovingUnitState*)this); f.Add(2,(PFHFSM*)this); f.Add(3,&holdPosition); return 0; }
+};
+
 /* оказался не нужен, пока что оставляю в коде на какое-то время - а вдруг дизайнеры опять что-то придумают 
 class PFSummonAIResponseState
   : public PFBaseMovingUnitState

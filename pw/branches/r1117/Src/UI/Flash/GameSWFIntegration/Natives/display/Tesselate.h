@@ -24,6 +24,8 @@ namespace flash
     virtual void end_trilist() = 0;
 
     virtual void accept_line_strip( int style, const CVec2 coords[], int point_count ) = 0;
+    // outer edge of a fill (nothing on the other side, no line over it): anti-aliasing fringe goes along it
+    virtual void accept_fill_outline( int style, const CVec2 coords[], int point_count, bool fillOnLeft ) {}
     virtual void end_shape() = 0;
   };
 

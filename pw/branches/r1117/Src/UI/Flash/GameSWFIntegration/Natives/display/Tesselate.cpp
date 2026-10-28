@@ -523,6 +523,16 @@ void Tesselator::end_path()
 			&s_path_parts.back().m_verts[0],
 			s_path_parts.back().m_verts.size());
 	}
+
+	const path_part& part = s_path_parts.back();
+	if (part.m_line_style < 0 && part.m_verts.size() > 1 && (part.m_left_style >= 0) != (part.m_right_style >= 0)) {
+		const bool fillOnLeft = part.m_left_style >= 0;
+		accepter->accept_fill_outline(
+			fillOnLeft ? part.m_left_style : part.m_right_style,
+			&part.m_verts[0],
+			part.m_verts.size(),
+			fillOnLeft);
+	}
 }
 
 }

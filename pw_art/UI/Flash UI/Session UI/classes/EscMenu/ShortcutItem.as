@@ -163,6 +163,14 @@ package EscMenu
 						case Keyboard.TAB:
 							value.text = "TAB";
 							break;
+
+						case 0x14: // Caps Lock
+							value.text = "CAPITAL";
+							break;
+
+						case 0xC0:
+							value.text = "`";
+							break;
 						
 						case Keyboard.UP:
 							value.text = "UP";

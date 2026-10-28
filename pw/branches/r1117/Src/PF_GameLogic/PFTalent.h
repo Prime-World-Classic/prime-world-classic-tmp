@@ -182,6 +182,8 @@ public:
   bool HasFreshTalentsToBuy() const;
   bool ActivateTalent(int level, int slot);
   void ActivateTakenOnStart();
+  // training panel (PFTraining.cpp): another talent in the slot, learned when the old one was
+  bool ReplaceTalent( int level, int slot, NDb::Ptr<NDb::Talent> const& pTalentDesc );
   vector<PFTalent*> const& GetTalentsFromGroup( NDb::TalentGroup const* group ) { return talentGroups[group]; }
 
   void IncActivatedWithinKit( NDb::TalentKit const* kit ) { talentKits[kit]++; }

@@ -1835,7 +1835,8 @@ namespace NWorld
     }
 
     // the current place is free (no obstacles, no other units): the unit stays where it is. Placing it anyway snaps it
-    // to the tile centre, a visible jerk when a ghost move status ends (Laguna's trail, the Mana Wyrm's ethereal form)    if (!pMovingUnit->IsDead() && !pMovingUnit->CanOccupyPosition( pMovingUnit->GetPosition().AsVec2D() ))
+    // to the tile centre, a visible jerk when a ghost move status ends (Laguna's trail, the Mana Wyrm's ethereal form)
+    if (!pMovingUnit->IsDead() && !pMovingUnit->CanOccupyPosition( pMovingUnit->GetPosition().AsVec2D() ))
     {
       // the unit may be deep inside an obstacle (Laguna's jellyfish trail through a forest), while the placing below looks
       // for a free place only ~10 m around and takes any free tile, a small clearing inside the forest too: find the

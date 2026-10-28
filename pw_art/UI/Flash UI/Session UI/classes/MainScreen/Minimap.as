@@ -114,6 +114,12 @@
 			shMask.graphics.endFill();
 			addChild(shMask);
 			iconBase_mc.mask = shMask
+
+			// the mask cuts by stencil (stepped edge): an anti-aliased line over the edge hides the steps
+			var maskEdge:Shape = new Shape();
+			maskEdge.graphics.lineStyle(2, 0x1E1D14, 1);
+			maskEdge.graphics.drawCircle(135, 135, 132);
+			addChildAt(maskEdge, getChildIndex(iconBase_mc) + 1);
 			
 			miniMapZone_mc.buttonMode = true;
 			miniMapZone_mc.addEventListener(MouseEvent.MOUSE_OUT, minimapOut);

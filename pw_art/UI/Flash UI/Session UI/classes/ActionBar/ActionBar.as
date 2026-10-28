@@ -344,12 +344,33 @@
 			actionButtons[index].isReserved = true;
 		}
 
+		// the place of the build is not needed any more (training: a random talent goes to the first free button)
+		public function ClearReservedPosition(index:int):void
+		{
+			if (index<0||index>=actionButtons.length) return;
+
+			if (actionButtons[index].isFreeSlot)
+				actionButtons[index].isReserved = false;
+		}
+
+		// the first free button, a free one kept for a talent of the build only if there is no other
+		private function FindFreeSlot():int
+		{
+			for (var i:int = 0; i < actionButtons.length; i++)
+				if (actionButtons[i].isFreeSlot && !actionButtons[i].isReserved)
+					return i;
+			for (var j:int = 0; j < actionButtons.length; j++)
+				if (actionButtons[j].isFreeSlot)
+					return j;
+			return -1;
+		}
+
 		public function AddShortcut(shortcut:BaseShortCut)
 		{
 			
 			if (buyToIndex != -1)
 			{
-				if(!actionButtons[i].isFreeSlot)
+				if(!actionButtons[buyToIndex].isFreeSlot)
 					actionButtons[buyToIndex].Shortcut.RemoveFromActionbar();
 					
 				actionButtons[buyToIndex].Shortcut = shortcut;
@@ -361,27 +382,18 @@
 			if (shortcut.DesirableIndex == EActionBarDesiredPositions.NOT_NEEDED_IN_ACTIONBAR)
 				return;
 			
-			if (shortcut.DesirableIndex==EActionBarDesiredPositions.INTO_ANY_POSITION/*||shortcut.DesirableIndex == EActionBarDesiredPositions.NOT_NEEDED_IN_ACTIONBAR*/)
-			{
-				for (var i:int; i<actionButtons.length; i++)
-				{
-					if (actionButtons[i].isFreeSlot&&!actionButtons[i].isReserved)
-					{
-						actionButtons[i].Shortcut = shortcut;
-						actionButtons[i].Shortcut.EnableDeathMask(death);
-						break;
-					}
-				}		
+			var index:int = shortcut.DesirableIndex;
+			if (index==EActionBarDesiredPositions.INTO_ANY_POSITION/*||shortcut.DesirableIndex == EActionBarDesiredPositions.NOT_NEEDED_IN_ACTIONBAR*/)
+				index = FindFreeSlot();
+			else if (index<0|| index>=actionButtons.length)
 				return;
-			}
-			
-			if (shortcut.DesirableIndex<0|| shortcut.DesirableIndex>=actionButtons.length) return;
-			
-			if (actionButtons[shortcut.DesirableIndex].isFreeSlot)
-				{
-					actionButtons[shortcut.DesirableIndex].Shortcut = shortcut;
-					actionButtons[shortcut.DesirableIndex].Shortcut.EnableDeathMask(death);
-				}
+			else if (!actionButtons[index].isFreeSlot)
+				index = FindFreeSlot(); // the place of the build is taken: the talent is not left out of the bar
+
+			if (index < 0) return;
+
+			actionButtons[index].Shortcut = shortcut;
+			actionButtons[index].Shortcut.EnableDeathMask(death);
 		}
 		
 		

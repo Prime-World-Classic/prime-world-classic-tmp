@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "PFTraining.h"
 
 #include "PFBaseUnit.h"
 #include "PFApplInstant.h"
@@ -2297,6 +2298,9 @@ float PFBaseUnit::OnDamage(const DamageDesc &desc)
 {
 	if( !IsVulnerable() || g_bDebugNoDamage )
 		return 0.0f;
+  // training mode NoDamage (PFTraining.cpp)
+  if ( NGameX::Training::HasMode( this, NGameX::Training::VAR_NO_DAMAGE ) )
+    return 0.0f;
 
   NI_VERIFY(0 <= desc.damageType && desc.damageType < NDb::KnownEnum<NDb::EApplicatorDamageType>::SizeOf(),
 		"Invalid damage type", return 0.f);
@@ -2339,6 +2343,14 @@ float PFBaseUnit::OnDamage(const DamageDesc &desc)
   damage = evt.damage2Deal;
 
   damage = max(damage, 0.f);
+
+  // training target dummy (PFTraining.cpp): the damage is counted, health stays
+  if ( NGameX::Training::HasMode( this, NGameX::Training::VAR_DUMMY ) )
+  {
+    NGameX::Training::OnDummyDamage( this, damage );
+    CALL_CLIENT_2ARGS(OnDamage, health, damage);
+    return damage;
+  }
 
   // expo mode feature //
   if ( g_immortalHeroes && IsHero() )

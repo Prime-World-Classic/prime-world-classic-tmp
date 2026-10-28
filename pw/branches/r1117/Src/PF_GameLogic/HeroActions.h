@@ -47,6 +47,18 @@ namespace NWorld
   // "ability range" stat of the hero (console command ability_range_scale, for tests)
   NCore::WorldCommand* CreateCmdSetAbilityRangeScale( PFBaseHero *pHero, float scale );
 
+  // manual control of the summons (option summon_manual_control): an order of the player of pHero to one of its summons
+  enum ESummonOrder
+  {
+    SUMMONORDER_RELEASE,     // back to the summon AI: follows the master again
+    SUMMONORDER_MOVE,
+    SUMMONORDER_ATTACK,      // attack pTarget
+    SUMMONORDER_COMBATMOVE,  // move to the point attacking the enemies on the way
+    SUMMONORDER_STOP,        // stop, attack the enemies coming close
+    SUMMONORDER_HOLD,        // stop, attack only the enemies in attack range
+  };
+  NCore::WorldCommand* CreateCmdSummonOrder( PFBaseHero *pHero, PFBaseUnit *pSummon, int order, CVec2 const & target, PFBaseUnit *pTarget );
+
   NCore::WorldCommand* CreateCmdInitMinigame( PFEaselPlayer* easelPlayer, INT32 objId );
 
   //NCore::WorldCommand* CreateCmdDenyBuilding( PFBaseHero * pHero, PFBuilding* pBuilding );

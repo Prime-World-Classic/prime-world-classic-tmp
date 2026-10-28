@@ -37,6 +37,7 @@
 	import DragAndDrop.TallentDragOBject;
 	import flash.utils.getDefinitionByName;
 	import Strokes.*;
+	import Training.TrainingPanel;
 	import flash.filters.ColorMatrixFilter;
 	
 	public class Talent extends MovieClip
@@ -310,8 +311,17 @@
 		
 		public function Cooldown(value:Number,maxCooldownValue:Number):void 
 		{
-			if (icoState != TalentUIState.BOUGHT) return;
-			
+			if (icoState != TalentUIState.BOUGHT)
+			{
+				// a not learned talent has no cooldown: the cell may keep one of the previous hero (training hero change) and block the learning
+				if (cooldown > 0)
+				{
+					cooldown = 0;
+					clock_mc.visible = false;
+				}
+				return;
+			}
+
 			cooldown = value;
 			
 			clock_mc.Time = value;
@@ -373,6 +383,9 @@
 		}
 		private function OnDown(e:MouseEvent):void
 		{
+			// панель тренировки: правый клик открывает библиотеку талантов (по отпусканию, см. onUp)
+			if (e.type == MouseRightEvents.MOUSE_RIGHT_DOWN && TrainingPanel.LibraryEnabled) return;
+
 			if (disabled) return;
 			
 			timerToDrug.stop();
@@ -393,6 +406,13 @@
 		}
 		private function onUp(e:Event):void
 		{
+			// панель тренировки: правый клик по таланту билда — библиотека талантов для этого слота
+			if (e.type == MouseRightEvents.MOUSE_RIGHT_UP && TrainingPanel.LibraryEnabled)
+			{
+				try { TrainingPanel.OpenLibrary(column, raw); } catch (err:Error) {}
+				return;
+			}
+
 			if (disabled) return;
 			
 			if (!onDown) return;

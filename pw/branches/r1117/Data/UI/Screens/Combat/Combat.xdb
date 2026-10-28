@@ -1302,6 +1302,178 @@
 						<propertyName>Tooltip_StatisticBarWardsIcon</propertyName>
 						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_240_propertyValue.txt" />
 					</Item>
+					<Item>
+						<propertyName>Training_Title</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_241_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_ChangeHero</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_242_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_ChangeSkin</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_243_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_Talents</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_244_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_RandomTalent</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_245_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_AllTalents</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_246_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_Modes</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_247_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_NoDamage</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_248_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_NoCooldown</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_249_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_NoMana</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_250_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_Refresh</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_251_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_RefreshTooltip</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_252_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_ChooseHero</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_253_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_ChooseSkin</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_254_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_Search</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_255_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_Collapse</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_256_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_Expand</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_257_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_RandomTalentTooltip</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_258_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_Units</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_259_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_AddAlly</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_260_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_AddEnemy</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_261_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_AddDummy</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_262_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_AddAllyTooltip</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_263_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_AddEnemyTooltip</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_264_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_AddDummyTooltip</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_265_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_AddAllyTitle</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_266_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_AddEnemyTitle</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_267_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_AddDummyTitle</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_268_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_Selected</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_269_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_NoSelection</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_270_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_Remove</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_271_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_RemoveTooltip</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_272_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_Dummy</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_273_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_DummyReset</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_274_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_DummyDamage</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_275_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_DummyDps</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_276_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_DummyLast</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_277_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_Control</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_278_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_ControlTooltip</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_279_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_Release</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_280_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_ReleaseTooltip</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_281_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_LibraryTitle</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_282_propertyValue.txt" />
+					</Item>
+					<Item>
+						<propertyName>Training_LibraryHint</propertyName>
+						<propertyValue textref="/UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_283_propertyValue.txt" />
+					</Item>
 				</properties>
 				<relatedLayouts />
 				<relatedTexts />

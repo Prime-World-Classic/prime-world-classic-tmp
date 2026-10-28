@@ -124,7 +124,7 @@ void TalentPanelNew::SetHero( NWorld::PFBaseMaleHero * pMale )
       talentStates[index] = talentState;
       flashInterface->SetTalentState(slot, level, talentState);
 
-      NWorld::PFTalent * talent = hero->GetTalent(slot, level);
+      NWorld::PFTalent * talent = hero->GetTalent(level, slot);
       if (!talent)
         continue;
       SlotStatus status = ActionBarController::GetTalentStatus(talent);

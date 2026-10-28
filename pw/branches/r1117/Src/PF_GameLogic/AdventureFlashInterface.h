@@ -153,6 +153,8 @@ public:
   //team info
   void SetForceColorTable(const vector<int> & forceTable,const vector<uint> & colorTable);
   void SetOurHeroIdententity( int heroID, NDb::EFaction faction, NDb::EApplicatorDamageType damageType, int leagueIndex, int ownLeaguePlace, const vector<int>& leaguePlaces);
+  // action bar, inventory, shop and talents emptied before they are filled for another hero (training panel)
+  void ResetHeroControls( bool keepWindows );
  
   void SetHeroIdentity( 
     const wstring& heroName, 
@@ -328,6 +330,7 @@ public:
   void PreloadPingImage( const string & path ); // loads a texture for ping markers now (before the game start)
   void SetPingMarkerHero( int id, const string & iconPath ); // hero icon above the marker, call before its first SetPingMarker
   void SetPingMarker( int id, int type, const wstring & text, int color, float nx, float ny, float gx, float gy, float alpha ); // icon at nx,ny, beam down to gx,gy; alpha <= 0 removes it
+  void SetSelectionBox( float x0, float y0, float x1, float y1 ); // box selection of the own units, normalized corners; x0 < 0 hides it
   virtual void SetChatOff(bool isChatOff);
   virtual void SetPlayerIcon(const int playerId, const string& path);
   virtual void SetPlayerHeroId(const int playerId, const int heroId, const int teamId);

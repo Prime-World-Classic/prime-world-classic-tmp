@@ -349,7 +349,25 @@ namespace flash
 
       NI_VERIFY( allignedTriangleList, "Shape trinale list is not ready", return );
 			_renderer->DrawTriangleList( allignedTriangleList, triangleList.size(), -1 );
+
+      // solid fills only: textured ones take the colour from the texture, not from the vertex alpha
+      if ( style.IsColor() )
+      {
+        for ( int i = 0; i < outlines.size(); ++i )
+          _renderer->DrawFillFringe( &outlines[i].coords[0], outlines[i].coords.size(), allignedTriangleList[0].color, outlines[i].fillOnLeft );
+      }
 		}
+  }
+
+  void Mesh::add_outline( const CVec2 coords[], int coord_count, bool fillOnLeft )
+  {
+    if ( coord_count < 2 )
+      return;
+
+    outlines.push_back();
+    outlines.back().coords.resize( coord_count );
+    memcpy( &outlines.back().coords[0], coords, coord_count * sizeof( CVec2 ) );
+    outlines.back().fillOnLeft = fillOnLeft;
   }
 
   void Mesh::DisplayMorph( Render::IFlashRenderer* _renderer, Movie* _movie, SWF_FILLSTYLE& style1, SWF_FILLSTYLE& style2, float rate )
@@ -390,7 +408,11 @@ namespace flash
     if ( pointCoords.size() > 0 )
     {
       style.Apply( _renderer, _movie );
-      _renderer->DrawLineStrip( pointCoords, -1 );
+      // a line with a gradient/bitmap fill keeps the line shader (its colour comes from the texture)
+      if ( style.HasFillFlag )
+        _renderer->DrawLineStrip( pointCoords, -1 );
+      else
+        _renderer->DrawLineStripAA( pointCoords, -1 );
     }
 	}
 
@@ -495,6 +517,17 @@ namespace flash
 
 				meshSet->add_line_strip(style, coords, coord_count);
 			}
+
+      virtual void accept_fill_outline( int style, const CVec2 coords[], int coord_count, bool fillOnLeft )
+      {
+        if (m_new_layer)
+        {
+          meshSet->new_layer();
+          m_new_layer = false;
+        }
+
+        meshSet->get_mutable_mesh(style)->add_outline( coords, coord_count, fillOnLeft );
+      }
 
 			virtual void begin_trilist( int style, int expected_triangle_count, int expected_vertex_count )
 			{

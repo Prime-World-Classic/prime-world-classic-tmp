@@ -440,6 +440,10 @@ void PFStatistics::AddKill(CPtr<PFBaseUnit> pVictim, CPtr<PFBaseHero> pKiller)
   {
     PFBaseHero *pHeroVictim = static_cast<PFBaseHero *>(pVictim.GetPtr());
 
+    // heroes added by the training panel have no player: no hero kill statistics for them
+    if ( !pHeroVictim->GetPlayer() || !pKiller->GetPlayer() )
+      return;
+
     playersKills.push_back(std::make_pair<int, int>(pKiller->GetPlayer()->GetUserID(), pHeroVictim->GetPlayer()->GetUserID()));
 
     StatisticsStuff::UpdateArray_(killerStatistics.heroKillTime.begin(), killerStatistics.heroKillTime.size(), curTime);

@@ -52,6 +52,11 @@ void AdventureFlashInterface::SetOurHeroIdententity( int heroID, NDb::EFaction f
   CallMethod( "SetOurHeroIdententity", heroID, faction, (int)damageType, leaguePlaces, leagueIndex, ownLeaguePlace);
 }
 
+void AdventureFlashInterface::ResetHeroControls( bool keepWindows )
+{
+  CallMethod( "ResetHeroControls", keepWindows );
+}
+
 void AdventureFlashInterface::SetHeroIdentity( 
                      const wstring& heroName, 
                      const wstring& heroClass, 
@@ -830,6 +835,11 @@ void AdventureFlashInterface::SetPingMarkerHero( int id, const string & iconPath
 void AdventureFlashInterface::SetPingMarker( int id, int type, const wstring & text, int color, float nx, float ny, float gx, float gy, float alpha )
 {
   CallMethod( "SetPingMarker", id, type, text, color, nx, ny, gx, gy, alpha );
+}
+
+void AdventureFlashInterface::SetSelectionBox( float x0, float y0, float x1, float y1 )
+{
+  CallMethod( "SetSelectionBox", x0, y0, x1, y1 );
 }
 
 void AdventureFlashInterface::SetChatVisible( bool visible )

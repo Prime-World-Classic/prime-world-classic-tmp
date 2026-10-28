@@ -113,6 +113,10 @@ namespace Render
     virtual void DrawBitmapScale9Grid( IBitmapInfo* bi, float width, float height, const flash::SWF_RECT& scale9Grid, float aspectX, float aspectY_, int uniqueID, bool smoothing ) = 0;
     virtual void DrawTriangleList( ShapeVertex* vertices, int count, int uniqueID ) = 0;
     virtual void DrawLineStrip( const nstl::vector<CVec2>& coords, int uniqueID ) = 0;
+    // anti-aliasing of a solid fill: a strip one screen pixel wide along its outer edge, color -> transparent
+    virtual void DrawFillFringe( const CVec2* coords, int count, const Color& color, bool fillOnLeft ) {}
+    // solid line (no fill) with anti-aliased edges
+    virtual void DrawLineStripAA( const nstl::vector<CVec2>& coords, int uniqueID ) { DrawLineStrip( coords, uniqueID ); }
 
     virtual void SetMorph( float rate ) = 0;
 

@@ -10,6 +10,28 @@
 static float operationTimeout = 30.0f;
 REGISTER_VAR( "login_timeout", operationTimeout, STORAGE_NONE );
 
+// Fast-reconnect attempts must not burn the whole login_timeout on one address:
+// the client walks the pool, and every dead address costs a full timeout. The
+// override applies to logins created while it is set (> 0); the configured
+// `login_timeout` stays the value for the initial login.
+static float loginTimeoutOverride = -1.0f;
+
+namespace rdp_transport
+{
+
+void SetLoginOperationTimeoutOverride( float seconds )
+{
+  loginTimeoutOverride = seconds;
+}
+
+} //namespace rdp_transport
+
+
+static float EffectiveLoginTimeout()
+{
+  return ( loginTimeoutOverride > 0.0f ) ? loginTimeoutOverride : operationTimeout;
+}
+
 
 namespace rdp_transport
 {
@@ -24,7 +46,7 @@ sessionKey( _sessionKey ),
 playerKey( _playerKey ),
 loginSvcAddr( _loginSvcAddr ),
 rdp( _rdp ),
-timeout( operationTimeout, this, &LoginClient::OnTimeout ),
+timeout( EffectiveLoginTimeout(), this, &LoginClient::OnTimeout ),
 nextChanReqId( 1 )
 {
   dispatcher = new Network::PacketDispatcher;

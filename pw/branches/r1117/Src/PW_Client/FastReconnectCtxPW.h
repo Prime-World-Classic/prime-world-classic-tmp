@@ -32,11 +32,13 @@ class FastReconnectCtxPW : public FastReconnectCtx
   NI_DECLARE_REFCOUNT_CLASS_1( FastReconnectCtxPW, FastReconnectCtx )
 
 public:
-  FastReconnectCtxPW( Transport::TClientId _clientid, int _maxRetries, timer::Time _delay, timer::Time _retryDelay ) :
+  FastReconnectCtxPW( Transport::TClientId _clientid, int _maxRetries, timer::Time _delay, timer::Time _retryDelay,
+                      int _startServer = 0 ) :
   FastReconnectCtx( _clientid ),
   maxRetries( _maxRetries ),
   delayBeforeFirstRetry( _delay ),
   delayBeforeRetry( _retryDelay ),
+  startServer( _startServer ),
   tryIndex( 0 ),
   nextTryTime( 0 ),
   stage( EFastReconnStage::Idle )
@@ -80,6 +82,21 @@ public:
     return true;
   }
 
+  // Which pool address this try dials. The pool block (launch protocol) carries
+  // every alive server of the pool and all of them redirect the target's ports
+  // to the target, so any address reaches the battle - but the address the
+  // client used before the drop is the most likely to still work (the loss can
+  // be on the client's side, not on the path to the box). So try #1 keeps it,
+  // and the rest of the block is walked in order, wrapping around.
+  int ServerForTry() const
+  {
+    if ( tryIndex <= 1 )
+      return startServer;
+    return startServer + tryIndex - 1;
+  }
+
+  int StartServer() const { return startServer; }
+
   bool CanTryNow()
   {
     if ( stage != EFastReconnStage::WarmUp )
@@ -102,6 +119,7 @@ public:
 
   EFastReconnStage::Enum Stage() const { return stage; }
   int TryIndex() const { return tryIndex; }
+  int MaxRetries() const { return maxRetries; }
   NGameX::AdventureScreen * AdvScreen() const { return advScreen; }
   NGameX::ChatUiController * ChatController() const { return chatController; }
   NGameX::SmartChatController * SmartChatController() const { return smartChatController; }
@@ -112,6 +130,7 @@ private:
   const int                                   maxRetries;
   const timer::Time                           delayBeforeFirstRetry;
   const timer::Time                           delayBeforeRetry;
+  const int                                   startServer;
 
   EFastReconnStage::Enum                      stage;
   int                                         tryIndex;

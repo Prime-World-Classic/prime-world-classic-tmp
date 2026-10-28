@@ -121,6 +121,11 @@ public:
   void CreateGame( const char * mapId, int maxPlayers, int maxPlayersPerTeam, int autostartPlayers = -1 );
   void JoinGame( int gameId );
   void JoinWebGame( const string & token );
+  // Queue a web join for the moment the lobby reaches Connected (fast reconnect
+  // re-attaches the player to the running session). Calling JoinWebGame() from a
+  // status callback does not work: ChangeStatus() runs the callback before it
+  // assigns the new status, and JoinWebGame() verifies the status.
+  void RequestWebJoin( const string & token );
   void ReconnectGame( int gameId, int team, const string& heroId );
   void SpectateGame( int gameId );
   void ChangeCustomGameSettings( ETeam::Enum team, ETeam::Enum faction, const string & heroId );
@@ -175,6 +180,7 @@ private:
 
   // Pending web-session join (see ClientBase::PollWebJoin()).
   string                          webJoinToken;
+  string                          pendingWebJoinToken;
   timer::Time                     webJoinDeadline;
   int                             webJoinRetriesLeft;
 

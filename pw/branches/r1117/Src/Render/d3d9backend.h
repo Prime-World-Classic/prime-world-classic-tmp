@@ -85,6 +85,10 @@ class D3D9Backend : public IRenderBackend {
   InstancedDeclMap instancedDecls;
 
   void ApplyInstanceState();  // частоты потоков + слот данных экземпляра (дельтой, перед рисованием)
+  // Сверка тени состояний менеджера с устройством (dev-var verify_state_model).
+  // Дёргается из ApplyInstanceState — единственной точки «перед выводом», куда
+  // D3D9-бэкенд попадает на каждом выводе (SetPipelineState ему не приходит).
+  void MaybeVerifyStateModel();
   // Логический номер потока -> физический слот устройства.
   unsigned MapStream(unsigned logical) const;
   HRESULT SetStreamSlot(unsigned physical, IDirect3DVertexBuffer9* pVB, unsigned offset, unsigned stride);
@@ -131,9 +135,13 @@ public:
   // --- очистка ---
   virtual HRESULT Clear(unsigned clearFlags, unsigned colorRGBA, float z, unsigned stencil);
 
-  // Модель состояний (шаг 13.4b). D3D9-бэкенду состояния не нужны — их уже
-  // применил RenderStatesManager. Реализация здесь — контроль полноты модели.
+  // Модель состояний (шаг 13.4b). D3D9-бэкенду она не приходит вовсе: состояния
+  // уже применил RenderStatesManager, а постройка модели и сам вызов стоят
+  // измеримых процентов (WantsPipelineState()=false, см. IRenderBackend).
+  // Контроль полноты модели, который раньше жил в этом вызове, — в
+  // MaybeVerifyStateModel(), его дёргает путь вывода.
   virtual void SetPipelineState(const BackendPipelineState& state, unsigned long long stateKey);
+  virtual bool WantsPipelineState() const { return false; }
 
   // --- константы шейдеров ---
   virtual HRESULT SetVertexShaderConstants(unsigned startRegister, unsigned registerCount, const void* pData);

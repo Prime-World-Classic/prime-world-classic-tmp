@@ -619,11 +619,24 @@ namespace
 // бэкенд строит по ней объект пайплайна, а менеджер пересобирает модель только
 // после изменения состояний, поэтому здесь — копирование готовой структуры и
 // хэш (замер шага 8: ~458 выводов на кадр в бою).
+//
+// Строить и передавать её обязан только тот бэкенд, который её читает:
+// IRenderBackend::WantsPipelineState(). D3D9-контуру модель не нужна ни
+// постройкой (~0,6 мкс/вывод), ни самим вызовом (~0,3 мкс/вывод) — вместе это
+// 6…7% к/с (173,5 против 185,4 на той же сцене). Контроль полноты модели,
+// который раньше жил в этом вызове, переехал в
+// D3D9Backend::MaybeVerifyStateModel — dev-var verify_state_model работает
+// по-прежнему. Разбор и цифры — docs/PLAN_NVRHI.md, «Шестнадцатая
+// серия (очередь перф)».
 inline void NotePipelineState()
 {
+  IRenderBackend* const pb = GetBackend();
+  if (!pb->WantsPipelineState())
+    return;
+
   RenderStatesManager* const sm = Render::GetStatesManager();
   if (sm)
-    GetBackend()->SetPipelineState(sm->GetPipelineState(), sm->GetPipelineStateHash());
+    pb->SetPipelineState(sm->GetPipelineState(), sm->GetPipelineStateHash());
 }
 
 // 2026-10-21 (PLAN_NVRHI, «белая плашка»): трасса Dip'ов клиента.

@@ -792,21 +792,30 @@ HRESULT D3D9Backend::UnlockSurface(HSurface surface) {
   return static_cast<IDirect3DSurface9*>(surface.p)->UnlockRect();
 }
 
-// Модель состояний приходит от менеджера перед каждым выводом. D3D9-бэкенду
-// она не нужна (состояния уже записаны в устройство), но вызов оставлен как
-// контроль полноты модели: если тень менеджера отстаёт от устройства — значит
-// кто-то пишет прямо в D3D9, и на Vulkan/DX12 это потерянное состояние.
-// Заметить это можно только здесь, где есть с чем сравнить. Проверка дорогая
+// Модель состояний D3D9-бэкенду не приходит вовсе: клиент не строит её для
+// бэкенда, ответившего WantsPipelineState()=false. Цена измерена на бою
+// (608 выводов/кадр): постройка модели — ~0,6 мкс/вывод, один только вызов
+// с пустой моделью — ещё ~0,3 мкс/вывод; вместе 6…7% к/с. Разбор и цифры —
+// docs/PLAN_NVRHI.md, «Шестнадцатая серия (очередь перф)». Stub сохранён:
+// SetPipelineState в интерфейсе — чисто виртуальный.
+void D3D9Backend::SetPipelineState(const BackendPipelineState& /*state*/, unsigned long long /*stateKey*/) {
+}
+
+// Контроль полноты модели жил в SetPipelineState — единственном месте, где есть с чем
+// сравнить: если тень менеджера отстаёт от устройства — значит, кто-то пишет
+// прямо в D3D9, и на Vulkan/DX12 это потерянное состояние. Проверка дорогая
 // (GetRenderState на каждое состояние), поэтому под dev-var и не каждый кадр:
 //   setvar verify_state_model 1
 // Регистрация — REGISTER_VAR, а не REGISTER_DEV_VAR: во shipping-конфигурации
 // (Commands.h:457-469: _SHIPPING без _RELEASE) REGISTER_DEV_VAR сворачивается в
-// пустоту, и переключатель молча исчезает вместе с проверкой. Так же сделано в
-// multishader.cpp:31,51 (dump_shader_index, shader_target).
+// пустоту, и переключатель молча исчезает вместе с проверкой. Так же сделано
+// в multishader.cpp:31,51 (dump_shader_index, shader_target).
+// Перенесено из SetPipelineState: на D3D9 он больше не вызывается, а
+// ApplyInstanceState — вызывается на каждом выводе всеми четырьмя путями вывода.
 static bool s_verifyStateModel = false;
 REGISTER_VAR("verify_state_model", s_verifyStateModel, STORAGE_NONE)
 
-void D3D9Backend::SetPipelineState(const BackendPipelineState& /*state*/, unsigned long long /*stateKey*/) {
+void D3D9Backend::MaybeVerifyStateModel() {
   if (!s_verifyStateModel)
     return;
   static unsigned s_verifyTick = 0;
@@ -817,7 +826,7 @@ void D3D9Backend::SetPipelineState(const BackendPipelineState& /*state*/, unsign
     return;
   const unsigned bad = sm->VerifyShadowAgainstDevice(6u);
   // Сводка печатается и при нуле: молчание в гейте неотличимо от «проверка не
-  // запускалась» (переключатель не прочитан, SetPipelineState не вызывается).
+  // запускалась» (переключатель не прочитан, вывод не идёт через бэкенд).
   // Периодичность — не каждый кадр, но достаточно часто, чтобы покрыть бой
   // (проверка только на загрузке экрана ничего не доказывает).
   static unsigned s_checks = 0, s_badTotal = 0, s_reported = 0;
@@ -1077,6 +1086,10 @@ void D3D9Backend::ApplyInstanceState() {
   for (unsigned n = 0; n < kFreqStreams; ++n)
     if (streamFreq[n] != requested[n])
       pDevice->SetStreamSourceFreq(n, streamFreq[n] = requested[n]);
+
+  // Точка «перед выводом» для диагностики модели состояний — она здесь, а не в
+  // SetPipelineState, который на D3D9 больше не вызывается.
+  MaybeVerifyStateModel();
 }
 
 // Источник данных экземпляра (шаг 9 очереди, §2.10). Раньше счётчик 0..N-1

@@ -118,6 +118,7 @@ public:
   float const &                   GetManaCostRef() const { return manaCost; }
   float                           GetCooldown() const { return cooldownTime[abilityState]; }
   float                           GetCurrentCooldown() const { return cooldown[abilityState]; }
+  float                           GetRangeScale() const; // "ability range" of the hero, 1 for abilities without a target
   float                           GetUseRange() const;
   float                           GetUseRange(const PFBaseUnit * pTarget) const;
   float                           GetUseRange(const NWorld::Target & target) const;

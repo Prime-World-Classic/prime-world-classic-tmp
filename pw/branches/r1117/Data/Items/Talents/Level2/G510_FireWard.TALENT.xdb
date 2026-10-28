@@ -997,9 +997,9 @@
 								</offset>
 								<paralleledTarget>false</paralleledTarget>
 								<range>
-									<compiledString>FQkAAAABAAAAFQAAAFVzZVJhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SUdkcJItFEIsQi00Qi0IM/9BR2Rwk6AUAAACDxAhdw1WL7FHZRQjZRQze2d/g9sRBdQjZRQjZXfzrBtlFDNld/NlF/IvlXcM=</compiledString>
+									<compiledString>FR4AAAACAAAALQAAAEcAAABVc2VSYW5nZQAAAABBYmlsaXR5UmFuZ2VTY2FsZQBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0otFDFCLTQhRaAwAAACLVRCLAotNEItQUN1d+P/S3E342V302UX0UdkcJItFEIsQi00Qi0IM/9BR2Rwk6AcAAACDxAiL5V3DVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
 									<returnType>float</returnType>
-									<sString>min( mDist2Target, cUseRange )</sString>
+									<sString>min( mDist2Target, cUseRange * cAbilityRangeScale )</sString>
 								</range>
 								<targetSelector href="/Items/Talents/Level2/G510_FireWard.TALENT" id="E37B730F-67D6-41D2-857C-7B835D9FA6F9">
 									<SelectApplicatorTarget>

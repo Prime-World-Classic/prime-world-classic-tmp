@@ -3371,7 +3371,8 @@ void AdventureScreen::UpdateJumpMark( float deltaTime )
     float const rangeMax = HoldChargeConst( pTalent, pHero, "A4_2_RangeMax", rangeMin );
     float const minRange = HoldChargeConst( pTalent, pHero, "JumpMinRange", 2.0f );
     float const k        = prepare > 0.0f ? Clamp( holdChargeChannelTime / prepare, 0.0f, 1.0f ) : 1.0f;
-    float const charged  = Max( rangeMin + ( rangeMax - rangeMin ) * k, minRange );
+    // the selector of the jump (A4_2_Range) is multiplied by the hero's "ability range": the mark is too
+    float const charged  = Max( ( rangeMin + ( rangeMax - rangeMin ) * k ) * pTalent->GetRangeScale(), minRange );
     CVec3 const heroPos  = pHero->GetPosition();
     CVec3 const cursor   = GetCurrentCursorPosOnTerrain();
     CVec2 dir = cursor.AsVec2D() - heroPos.AsVec2D();
@@ -3500,7 +3501,7 @@ void AdventureScreen::UpdateRamArrow( float deltaTime )
       if ( !Normalize( &dir ) )
         dir = ramArrowHead;
       ramArrowHead = dir;
-      ramArrowLen  = rangeMin + ( rangeMax - rangeMin ) * k;
+      ramArrowLen  = ( rangeMin + ( rangeMax - rangeMin ) * k ) * pTalent->GetRangeScale(); // as A4_1_Range of the run
       ramArrowRun  = false;
     }
     // straight, sampled like the path of the run: the same look as in the run

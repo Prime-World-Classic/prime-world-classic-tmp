@@ -498,9 +498,9 @@
 								</offset>
 								<paralleledTarget>false</paralleledTarget>
 								<range>
-									<compiledString>FRMAAAACAAAAIgAAAEsAAABBMl9SYW5nZQAAAABUYXJnZXQAVYvsg+wQi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9JR2RwkUdnu2Rwki0UQixCLTRCLQgz/0GgMAAAAi00QixGLTRCLQkzdXfj/0CtFDPfYG8CD4ASJRfTbRfTcbfjZXfDZRfBR2Rwk6D4AAACDxATZHCToCwAAAIPECIvlXcMAAAAAVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdw1WL7FHZRQjZRQze2d/g9sQFegjZRQjZXfzrBtlFDNld/NlF/IvlXcM=</compiledString>
+									<compiledString>FScAAAADAAAANgAAAFAAAACFAAAAQTJfUmFuZ2UAAAAAQWJpbGl0eVJhbmdlU2NhbGUAAABUYXJnZXQAVYvsg+wci0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9KLRQxQi00IUWgMAAAAi1UQiwKLTRCLUFDdXfj/0txN+Nld9NlF9FHZHCRR2e7ZHCSLRRCLEItNEItCDP/QaCAAAACLTRCLEYtNEItCTN1d7P/QK0UM99gbwIPgBIlF6NtF6Nxt7Nld5NlF5FHZHCToPgAAAIPEBNkcJOgLAAAAg8QIi+VdwwAAAABVi+xR2UUI2UUM3tnf4PbEQXUI2UUI2V386wbZRQzZXfzZRfyL5V3DVYvsUdlFCNlFDN7Z3+D2xAV6CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
 									<returnType>float</returnType>
-									<sString>clamp( mDist2Target - (pMisc-&gt;GetObject("Target") != pSecond ? 4 : 0 ), 0, cA2_Range )</sString>
+									<sString>clamp( mDist2Target - (pMisc-&gt;GetObject("Target") != pSecond ? 4 : 0 ), 0, cA2_Range * cAbilityRangeScale )</sString>
 								</range>
 								<targetSelector href="/Items/Talents/Class/FallenAngel/Ability_A2.TALENT" id="6751114C-93DD-433A-9FCB-FBB344FEC15F">
 									<SelectApplicatorTarget>

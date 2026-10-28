@@ -131,9 +131,9 @@
 					<UnitConstant>
 						<name>TECH_DropRange</name>
 						<var>
-							<compiledString>FQ4AAAACAAAAGwAAAC4AAABTdG9uZVVzZVJhbmdlAFWL7FGLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0twFPAAAANld/NlF/IvlXcMAAAAAAAAIQA==</compiledString>
+							<compiledString>FSIAAAADAAAAMQAAAEQAAABRAAAAU3RvbmVVc2VSYW5nZQAAAEFiaWxpdHlSYW5nZVNjYWxlAFWL7IPsDItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/S3AVyAAAAi0UMUItNCFFoEAAAAItVEIsCi00Qi1BQ3V34/9LcTfjZXfTZRfSL5V3DAAAAAAAACEA=</compiledString>
 							<returnType>float</returnType>
-							<sString>cStoneUseRange + 3</sString>
+							<sString>(cStoneUseRange + 3) * cAbilityRangeScale</sString>
 						</var>
 					</UnitConstant>
 				</Item>

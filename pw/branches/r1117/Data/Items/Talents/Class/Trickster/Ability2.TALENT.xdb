@@ -750,9 +750,9 @@
 																	<formulaName></formulaName>
 																	<LoggingEvent>-1</LoggingEvent>
 																	<maxDistance>
-																		<compiledString>FQwAAAABAAAAGAAAAEJsaW5rX1JhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+																		<compiledString>FR4AAAACAAAALQAAAEcAAABCbGlua19SYW5nZQBBYmlsaXR5UmFuZ2VTY2FsZQBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0otFDFCLTQhRaAwAAACLVRCLAotNEItQUN1d+P/S3E342V302UX0i+Vdww==</compiledString>
 																		<returnType>float</returnType>
-																		<sString>cBlink_Range</sString>
+																		<sString>cBlink_Range * cAbilityRangeScale</sString>
 																	</maxDistance>
 																	<notifyInboundDispatches>true</notifyInboundDispatches>
 																	<providerName></providerName>
@@ -793,9 +793,9 @@
 																	<formulaName></formulaName>
 																	<LoggingEvent>-1</LoggingEvent>
 																	<maxDistance>
-																		<compiledString>FQwAAAABAAAAGAAAAEJsaW5rX1JhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+																		<compiledString>FR4AAAACAAAALQAAAEcAAABCbGlua19SYW5nZQBBYmlsaXR5UmFuZ2VTY2FsZQBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0otFDFCLTQhRaAwAAACLVRCLAotNEItQUN1d+P/S3E342V302UX0i+Vdww==</compiledString>
 																		<returnType>float</returnType>
-																		<sString>cBlink_Range</sString>
+																		<sString>cBlink_Range * cAbilityRangeScale</sString>
 																	</maxDistance>
 																	<notifyInboundDispatches>true</notifyInboundDispatches>
 																	<providerName></providerName>

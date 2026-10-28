@@ -64,9 +64,9 @@
 														<Item href="" />
 													</effect>
 													<enabled>
-														<compiledString>FSEAAAACAAEAKAAAAEUAAAAqAQAAQWJpbGl0eVRhcmdldAAAAEE0X1RlbGVwb3J0UmFuZ2UAVYvsg+wgaAAAAACLRRCLEItNEItCTP/QiUXsi00MUYtVCFJoEAAAAItFEIsQi00Qi0JQ/9CNTfhRi1XsiwKLTeyLkIwBAADdXeT/0lCNRfBQi00IixGLTQiLgowBAAD/0FDoJAAAAIPECNxd5N/g9sRBdQnHReABAAAA6wfHReAAAAAAikXgi+Vdw1WL7IPsFItFCNlABItNDNhhBNld9NlF9FHZHCSLVQjZAotFDNgg2V3w2UXwUdkcJI1N+OhXAAAA2UX42E342UX82E383sHZXezZRexR2Rwk6AcAAACDxASL5V3DVYvsUdlFCNkcJOgFAAAAg8QEXcNVi+xR2UUIg+wI3Rwk6K7+//+DxAjZXfzZRfyL5V3DVYvsUYlN/ItF/NlFCNkYi0382UUM2VkEi0X8i+VdwggA</compiledString>
+														<compiledString>FTYAAAADAAEAPQAAAFoAAAB0AAAAXwEAAEFiaWxpdHlUYXJnZXQAAABBNF9UZWxlcG9ydFJhbmdlAAAAAEFiaWxpdHlSYW5nZVNjYWxlAFWL7IPsKGgAAAAAi0UQixCLTRCLQkz/0IlF7ItNDFGLVQhSaCQAAACLRRCLEItNEItCUP/Qi00MUYtVCFJoEAAAAItFEIsQi00Qi0JQ3V3k/9DcTeSNTfhRi1XsiwKLTeyLkIwBAADdXdz/0lCNRfBQi00IixGLTQiLgowBAAD/0FDoJAAAAIPECNxd3N/g9sRBdQnHRdgBAAAA6wfHRdgAAAAAikXYi+Vdw1WL7IPsFItFCNlABItNDNhhBNld9NlF9FHZHCSLVQjZAotFDNgg2V3w2UXwUdkcJI1N+OhXAAAA2UX42E342UX82E383sHZXezZRexR2Rwk6AcAAACDxASL5V3DVYvsUdlFCNkcJOgFAAAAg8QEXcNVi+xR2UUIg+wI3Rwk6Hn+//+DxAjZXfzZRfyL5V3DVYvsUYlN/ItF/NlFCNkYi0382UUM2VkEi0X8i+VdwggA</compiledString>
 														<returnType>bool</returnType>
-														<sString>d( sPos, appl.oAbilityTarget.Pos ) &gt; cA4_TeleportRange</sString>
+														<sString>d( sPos, appl.oAbilityTarget.Pos ) &gt; cA4_TeleportRange * cAbilityRangeScale</sString>
 													</enabled>
 													<flag>0</flag>
 													<formulaName></formulaName>

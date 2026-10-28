@@ -102,9 +102,9 @@
 																	<formulaName></formulaName>
 																	<LoggingEvent>-1</LoggingEvent>
 																	<maxDistance>
-																		<compiledString>FQ0AAAABAAAAGQAAAEE0X0Nhc3RSYW5nZQBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+																		<compiledString>FSIAAAACAAAAMQAAAEsAAABBNF9DYXN0UmFuZ2UAAAAAQWJpbGl0eVJhbmdlU2NhbGUAVYvsg+wMi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9KLRQxQi00IUWgQAAAAi1UQiwKLTRCLUFDdXfj/0txN+Nld9NlF9IvlXcM=</compiledString>
 																		<returnType>float</returnType>
-																		<sString>cA4_CastRange</sString>
+																		<sString>cA4_CastRange * cAbilityRangeScale</sString>
 																	</maxDistance>
 																	<notifyInboundDispatches>true</notifyInboundDispatches>
 																	<providerName></providerName>
@@ -145,9 +145,9 @@
 																	<formulaName></formulaName>
 																	<LoggingEvent>-1</LoggingEvent>
 																	<maxDistance>
-																		<compiledString>FQ0AAAABAAAAGQAAAEE0X0Nhc3RSYW5nZQBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+																		<compiledString>FSIAAAACAAAAMQAAAEsAAABBNF9DYXN0UmFuZ2UAAAAAQWJpbGl0eVJhbmdlU2NhbGUAVYvsg+wMi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9KLRQxQi00IUWgQAAAAi1UQiwKLTRCLUFDdXfj/0txN+Nld9NlF9IvlXcM=</compiledString>
 																		<returnType>float</returnType>
-																		<sString>cA4_CastRange</sString>
+																		<sString>cA4_CastRange * cAbilityRangeScale</sString>
 																	</maxDistance>
 																	<notifyInboundDispatches>true</notifyInboundDispatches>
 																	<providerName></providerName>

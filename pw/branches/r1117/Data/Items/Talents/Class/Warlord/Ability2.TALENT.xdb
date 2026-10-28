@@ -149,9 +149,9 @@
 																			<Item href="" />
 																		</effect>
 																		<enabled>
-																			<compiledString>FRIAAAACAAEAUQAAAGsAAABTAQAASGl0TWF4UmFuZ2UAUmFuZ2UAVYvsg+wwi0UQixCLTRCLQkj/0IlF7ItN7IsRi03si0JI/9CJReiLTeiLEYtN6ItCSP/QiUXki00MUYtVCFJoDAAAAItFEIsQi00Qi0JQ/9CLTQxRi1UIUmgAAAAAi0UQixCLTRCLQlDdXdz/0NxF3I1N+FGLVeSLAotN5ItQWN1d1P/SUI1F8FCLTQiLEYtNCIuCjAEAAP/QUOgkAAAAg8QI3F3U3+D2xAV6CcdF0AEAAADrB8dF0AAAAACKRdCL5V3DVYvsg+wUi0UI2UAEi00M2GEE2V302UX0UdkcJItVCNkCi0UM2CDZXfDZRfBR2RwkjU346FcAAADZRfjYTfjZRfzYTfzewdld7NlF7FHZHCToBwAAAIPEBIvlXcNVi+xR2UUI2Rwk6AUAAACDxARdw1WL7FHZRQiD7AjdHCTohf7//4PECNld/NlF/IvlXcNVi+xRiU38i0X82UUI2RiLTfzZRQzZWQSLRfyL5V3CCAA=</compiledString>
+																			<compiledString>FSYAAAADAAEAZQAAAH8AAACfAAAAhwEAAEhpdE1heFJhbmdlAFJhbmdlAAAAQWJpbGl0eVJhbmdlU2NhbGUAVYvsg+w4i0UQixCLTRCLQkj/0IlF7ItN7IsRi03si0JI/9CJReiLTeiLEYtN6ItCSP/QiUXki00MUYtVCFJoFAAAAItFEIsQi00Qi0JQ/9CLTQxRi1UIUmgMAAAAi0UQixCLTRCLQlDdXdz/0NxN3ItNDFGLVQhSaAAAAACLRRCLEItNEItCUN1d1P/Q3EXUjU34UYtV5IsCi03ki1BY3V3M/9JQjUXwUItNCIsRi00Ii4KMAQAA/9BQ6CQAAACDxAjcXczf4PbEBXoJx0XIAQAAAOsHx0XIAAAAAIpFyIvlXcNVi+yD7BSLRQjZQASLTQzYYQTZXfTZRfRR2Rwki1UI2QKLRQzYINld8NlF8FHZHCSNTfjoVwAAANlF+NhN+NlF/NhN/N7B2V3s2UXsUdkcJOgHAAAAg8QEi+Vdw1WL7FHZRQjZHCToBQAAAIPEBF3DVYvsUdlFCIPsCN0cJOhR/v//g8QI2V382UX8i+Vdw1WL7FGJTfyLRfzZRQjZGItN/NlFDNlZBItF/IvlXcIIAA==</compiledString>
 																			<returnType>bool</returnType>
-																			<sString>d( sPos, $ParentAppl-&gt;GetObjectParent()-&gt;GetObjectParent()-&gt;GetTargetPos() ) &lt; cHitMaxRange + cRange</sString>
+																			<sString>d( sPos, $ParentAppl-&gt;GetObjectParent()-&gt;GetObjectParent()-&gt;GetTargetPos() ) &lt; cHitMaxRange + cRange * cAbilityRangeScale</sString>
 																		</enabled>
 																		<formulaName></formulaName>
 																		<lifeTime>
@@ -195,9 +195,9 @@
 																			<Item href="" />
 																		</effect>
 																		<enabled>
-																			<compiledString>FRIAAAACAAEAUQAAAGsAAABTAQAASGl0TWF4UmFuZ2UAUmFuZ2UAVYvsg+wwi0UQixCLTRCLQkj/0IlF7ItN7IsRi03si0JI/9CJReiLTeiLEYtN6ItCSP/QiUXki00MUYtVCFJoDAAAAItFEIsQi00Qi0JQ/9CLTQxRi1UIUmgAAAAAi0UQixCLTRCLQlDdXdz/0NxF3I1N+FGLVeSLAotN5ItQWN1d1P/SUI1F8FCLTQiLEYtNCIuCjAEAAP/QUOgkAAAAg8QI3F3U3+D2xAV6CcdF0AEAAADrB8dF0AAAAACKRdCL5V3DVYvsg+wUi0UI2UAEi00M2GEE2V302UX0UdkcJItVCNkCi0UM2CDZXfDZRfBR2RwkjU346FcAAADZRfjYTfjZRfzYTfzewdld7NlF7FHZHCToBwAAAIPEBIvlXcNVi+xR2UUI2Rwk6AUAAACDxARdw1WL7FHZRQiD7AjdHCTohf7//4PECNld/NlF/IvlXcNVi+xRiU38i0X82UUI2RiLTfzZRQzZWQSLRfyL5V3CCAA=</compiledString>
+																			<compiledString>FSYAAAADAAEAZQAAAH8AAACfAAAAhwEAAEhpdE1heFJhbmdlAFJhbmdlAAAAQWJpbGl0eVJhbmdlU2NhbGUAVYvsg+w4i0UQixCLTRCLQkj/0IlF7ItN7IsRi03si0JI/9CJReiLTeiLEYtN6ItCSP/QiUXki00MUYtVCFJoFAAAAItFEIsQi00Qi0JQ/9CLTQxRi1UIUmgMAAAAi0UQixCLTRCLQlDdXdz/0NxN3ItNDFGLVQhSaAAAAACLRRCLEItNEItCUN1d1P/Q3EXUjU34UYtV5IsCi03ki1BY3V3M/9JQjUXwUItNCIsRi00Ii4KMAQAA/9BQ6CQAAACDxAjcXczf4PbEBXoJx0XIAQAAAOsHx0XIAAAAAIpFyIvlXcNVi+yD7BSLRQjZQASLTQzYYQTZXfTZRfRR2Rwki1UI2QKLRQzYINld8NlF8FHZHCSNTfjoVwAAANlF+NhN+NlF/NhN/N7B2V3s2UXsUdkcJOgHAAAAg8QEi+Vdw1WL7FHZRQjZHCToBQAAAIPEBF3DVYvsUdlFCIPsCN0cJOhR/v//g8QI2V382UX8i+Vdw1WL7FGJTfyLRfzZRQjZGItN/NlFDNlZBItF/IvlXcIIAA==</compiledString>
 																			<returnType>bool</returnType>
-																			<sString>d( sPos, $ParentAppl-&gt;GetObjectParent()-&gt;GetObjectParent()-&gt;GetTargetPos() ) &lt; cHitMaxRange + cRange</sString>
+																			<sString>d( sPos, $ParentAppl-&gt;GetObjectParent()-&gt;GetObjectParent()-&gt;GetTargetPos() ) &lt; cHitMaxRange + cRange * cAbilityRangeScale</sString>
 																		</enabled>
 																		<flags>0</flags>
 																		<formulaName></formulaName>
@@ -311,9 +311,9 @@
 																			<Item href="" />
 																		</effect>
 																		<enabled>
-																			<compiledString>FRIAAAACAAEAUQAAAGsAAABpAQAASGl0TWF4UmFuZ2UAUmFuZ2UAVYvsg+wwi0UQixCLTRCLQkj/0IlF7ItN7IsRi03si0JI/9CJReiLTeiLEYtN6ItCSP/QiUXki00MUYtVCFJoDAAAAItFEIsQi00Qi0JQ/9CLTQxRi1UIUmgAAAAAi0UQixCLTRCLQlDdXdz/0NxF3I1N+FGLVeSLAotN5ItQWN1d1P/SUI1F8FCLTQiLEYtNCIuCjAEAAP/QUOg6AAAAg8QI3F3U3+D2xAV6H2r/i00MixGLTQyLQnT/0A+2yIXJdAnHRdABAAAA6wfHRdAAAAAAikXQi+Vdw1WL7IPsFItFCNlABItNDNhhBNld9NlF9FHZHCSLVQjZAotFDNgg2V3w2UXwUdkcJI1N+OhXAAAA2UX42E342UX82E383sHZXezZRexR2Rwk6AcAAACDxASL5V3DVYvsUdlFCNkcJOgFAAAAg8QEXcNVi+xR2UUIg+wI3Rwk6G/+//+DxAjZXfzZRfyL5V3DVYvsUYlN/ItF/NlFCNkYi0382UUM2VkEi0X8i+VdwggA</compiledString>
+																			<compiledString>FSYAAAADAAEAZQAAAH8AAACfAAAAnQEAAEhpdE1heFJhbmdlAFJhbmdlAAAAQWJpbGl0eVJhbmdlU2NhbGUAVYvsg+w4i0UQixCLTRCLQkj/0IlF7ItN7IsRi03si0JI/9CJReiLTeiLEYtN6ItCSP/QiUXki00MUYtVCFJoFAAAAItFEIsQi00Qi0JQ/9CLTQxRi1UIUmgMAAAAi0UQixCLTRCLQlDdXdz/0NxN3ItNDFGLVQhSaAAAAACLRRCLEItNEItCUN1d1P/Q3EXUjU34UYtV5IsCi03ki1BY3V3M/9JQjUXwUItNCIsRi00Ii4KMAQAA/9BQ6DoAAACDxAjcXczf4PbEBXofav+LTQyLEYtNDItCdP/QD7bIhcl0CcdFyAEAAADrB8dFyAAAAACKRciL5V3DVYvsg+wUi0UI2UAEi00M2GEE2V302UX0UdkcJItVCNkCi0UM2CDZXfDZRfBR2RwkjU346FcAAADZRfjYTfjZRfzYTfzewdld7NlF7FHZHCToBwAAAIPEBIvlXcNVi+xR2UUI2Rwk6AUAAACDxARdw1WL7FHZRQiD7AjdHCToO/7//4PECNld/NlF/IvlXcNVi+xRiU38i0X82UUI2RiLTfzZRQzZWQSLRfyL5V3CCAA=</compiledString>
 																			<returnType>bool</returnType>
-																			<sString>(d( sPos, $ParentAppl-&gt;GetObjectParent()-&gt;GetObjectParent()-&gt;GetTargetPos() ) &lt; cHitMaxRange + cRange)&amp;&amp; receiver.IsVisibleForEnemy(-1)</sString>
+																			<sString>(d( sPos, $ParentAppl-&gt;GetObjectParent()-&gt;GetObjectParent()-&gt;GetTargetPos() ) &lt; cHitMaxRange + cRange * cAbilityRangeScale)&amp;&amp; receiver.IsVisibleForEnemy(-1)</sString>
 																		</enabled>
 																		<formulaName></formulaName>
 																		<lifeTime>

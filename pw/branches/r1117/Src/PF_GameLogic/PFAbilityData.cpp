@@ -554,15 +554,25 @@ void PFAbilityData::DropCooldown(EAbilityState::Enum forAbilityState, float cool
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The hero's "ability range" lengthens only what is cast at a target (a unit or the land). An ability around the hero
+// itself (no target, or the hero only) keeps its range: its useRange is the radius of its area, which stays as it is
+float PFAbilityData::GetRangeScale() const
+{
+  if ( !pDBDesc || ( pDBDesc->targetType & ( NDb::SPELLTARGET_ALL | NDb::SPELLTARGET_LAND ) ) == 0 )
+    return 1.0f;
+  return PFBaseHero::GetAbilityRangeScale( pOwner.GetPtr() );
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 float PFAbilityData::GetUseRange() const
 {
-  return pDBDesc->useRange(pOwner, pOwner, this, 0.0f) * PFBaseHero::GetAbilityRangeScale( pOwner.GetPtr() );
+  return pDBDesc->useRange(pOwner, pOwner, this, 0.0f) * GetRangeScale();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 float PFAbilityData::GetUseRange(const PFBaseUnit * pTarget) const
 {
-  const float rangeScale = PFBaseHero::GetAbilityRangeScale( pOwner.GetPtr() );
+  const float rangeScale = GetRangeScale();
   if (IsValid(pTarget))
   {
     return pDBDesc->useRange(pOwner, pTarget, this, 0.0f) * rangeScale;
@@ -578,7 +588,7 @@ float PFAbilityData::GetUseRange(const PFBaseUnit * pTarget) const
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 float PFAbilityData::GetUseRange(const NWorld::Target & target) const
 {
-  const float rangeScale = PFBaseHero::GetAbilityRangeScale( pOwner.GetPtr() );
+  const float rangeScale = GetRangeScale();
   if (target.IsUnit())
   {
     PFBaseUnit * targetUnit = target.GetUnit();

@@ -178,9 +178,9 @@
 													<formulaName></formulaName>
 													<LoggingEvent>-1</LoggingEvent>
 													<maxDistance>
-														<compiledString>FQwAAAABAAAAGAAAAEExX1VzZVJhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+														<compiledString>FR4AAAACAAAALQAAAEcAAABBMV9Vc2VSYW5nZQBBYmlsaXR5UmFuZ2VTY2FsZQBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0otFDFCLTQhRaAwAAACLVRCLAotNEItQUN1d+P/S3E342V302UX0i+Vdww==</compiledString>
 														<returnType>float</returnType>
-														<sString>cA1_UseRange</sString>
+														<sString>cA1_UseRange * cAbilityRangeScale</sString>
 													</maxDistance>
 													<notifyInboundDispatches>true</notifyInboundDispatches>
 													<providerName></providerName>

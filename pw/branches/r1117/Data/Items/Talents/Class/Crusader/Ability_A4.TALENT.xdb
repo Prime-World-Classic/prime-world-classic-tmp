@@ -616,9 +616,9 @@
 					<UnitConstant>
 						<name>PushDistance</name>
 						<var>
-							<compiledString>FQkAAAACAAAAFgAAACkAAABBNF9SYW5nZQBVi+xRi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9LcBTcAAADZXfzZRfyL5V3DAAAAAAAA8D8=</compiledString>
+							<compiledString>FR4AAAADAAAALQAAAEAAAABNAAAAQTRfUmFuZ2UAAAAAQWJpbGl0eVJhbmdlU2NhbGUAVYvsg+wMi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9LcBW4AAACLRQxQi00IUWgMAAAAi1UQiwKLTRCLUFDdXfj/0txN+Nld9NlF9IvlXcMAAAAAAADwPw==</compiledString>
 							<returnType>float</returnType>
-							<sString>cA4_Range+1</sString>
+							<sString>(cA4_Range+1) * cAbilityRangeScale</sString>
 						</var>
 					</UnitConstant>
 				</Item>

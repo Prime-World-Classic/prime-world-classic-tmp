@@ -64,9 +64,9 @@
 										<sString>!sender.IsSkinUsed( "archeress_S7" )</sString>
 									</enabled>
 									<maxDistance>
-										<compiledString>FQYAAAABAAAAEgAAAFJhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+										<compiledString>FRoAAAACAAAAKQAAAEMAAABSYW5nZQAAAEFiaWxpdHlSYW5nZVNjYWxlAFWL7IPsDItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/Si0UMUItNCFFoCAAAAItVEIsCi00Qi1BQ3V34/9LcTfjZXfTZRfSL5V3D</compiledString>
 										<returnType>float</returnType>
-										<sString>cRange</sString>
+										<sString>cRange * cAbilityRangeScale</sString>
 									</maxDistance>
 									<teleportTarget>ApplicatorTarget</teleportTarget>
 								</TeleportApplicator>
@@ -82,9 +82,9 @@
 										<sString>sender.IsSkinUsed( "archeress_S7" )</sString>
 									</enabled>
 									<maxDistance>
-										<compiledString>FQYAAAABAAAAEgAAAFJhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+										<compiledString>FRoAAAACAAAAKQAAAEMAAABSYW5nZQAAAEFiaWxpdHlSYW5nZVNjYWxlAFWL7IPsDItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/Si0UMUItNCFFoCAAAAItVEIsCi00Qi1BQ3V34/9LcTfjZXfTZRfSL5V3D</compiledString>
 										<returnType>float</returnType>
-										<sString>cRange</sString>
+										<sString>cRange * cAbilityRangeScale</sString>
 									</maxDistance>
 									<teleportTarget>ApplicatorTarget</teleportTarget>
 								</TeleportApplicator>

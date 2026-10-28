@@ -171,7 +171,7 @@ struct Harness
   StrongMT<ni_udp::IRdpListenContext>     listenCtx;
   StrongMT<ni_udp::IRdpConnection>        clientConn;
 
-  void Start( int _dropEveryNthAck, unsigned _initWindowSize )
+  void Start( int _dropEveryNthAck, unsigned _initWindowSize, unsigned _retransmitLimit = 0, float _maxRetransmitTime = 0.f )
   {
     clock = new timer::FixedTimer;
     sockSrv = new ni_udp::LocalSocketServer( clock );
@@ -180,6 +180,10 @@ struct Harness
     opt.logEvents = 0;
     if ( _initWindowSize )
       opt.cc.initWindowSize = _initWindowSize;
+    if ( _retransmitLimit )
+      opt.retransmitLimit = _retransmitLimit;
+    if ( _maxRetransmitTime > 0.f )
+      opt.cc.maxRetransmitTime = _maxRetransmitTime;
 
     Strong<ni_rnd::IGenerator> rnd = new TestRnd( 201 );
 
@@ -344,6 +348,72 @@ void test_partial_ack_loss_recovers()
   Check( h.clientConnCb->failed == 0, "connection not failed" );
 }
 
+// Incident reproduction (2026-10-27, VPS5/base 27700, sid=70 cid=2): the player's
+// datagrams kept reaching the server (the server logged the same seq as
+// "Datagram sequence out of range" six times), the server's ACKs never reached
+// the player, and the client died on `Excessed retransmit limit ... try=10`
+// ~25 s after the last acknowledged exchange.  This case measures how long the
+// transport survives a *total* one-way ACK blackout with production client
+// options, and how many retransmits it takes.
+void test_total_ack_blackout_kills_after_retransmit_limit()
+{
+  printf( "test_total_ack_blackout_kills_after_retransmit_limit\n" );
+
+  Harness h;
+  const int droppedBefore = g_acksDropped;
+  h.Start( 1, 0 );
+  Check( h.Ready(), "connection established" );
+
+  h.clientConn->SendDatagram( "cmd-1", 5 );
+
+  // Poll in 0.1 s slices up to 60 s of simulated time, stop when the client's
+  // connection is declared failed.
+  int steps = 0;
+  while ( steps < 600 && !h.clientConnCb->failed )
+  {
+    h.poll( 0.1f, 1 );
+    ++steps;
+  }
+
+  const double seconds = 0.1 * steps;
+  const int dupAcks = g_acksDropped - droppedBefore;
+  printf( "       client connection failed=%d after %.1f s simulated; "
+          "app-level copies at peer %d, peer ACKed %d retransmits\n",
+          h.clientConnCb->failed, seconds, (int)h.serverConnCb->datagrams.size(), dupAcks );
+
+  Check( h.clientConnCb->failed == 1, "total ACK blackout eventually kills the connection" );
+  Check( dupAcks >= 10, "peer keeps receiving (and ACKing) the retransmits - in prod it logs 'Datagram sequence out of range'" );
+  Check( h.serverConnCb->datagrams.size() == 1, "the application sees the datagram exactly once" );
+  Check( seconds > 15.0 && seconds < 40.0, "time to death ~10 retransmits at rtto<=4 s (incident: ~25 s)" );
+}
+
+
+// Same blackout with the client timings shipped since 47491ddba
+// (rdp_cl_retransmit_limit 8, rdp_cl_max_retransmit_time 2 s): detection must fit
+// the server-side snapshot reserve (game_fast_reconnect_reserve_time 50 s).
+void test_total_ack_blackout_with_client_timings()
+{
+  printf( "test_total_ack_blackout_with_client_timings\n" );
+
+  Harness h;
+  h.Start( 1, 0, 8, 2.0f );
+  Check( h.Ready(), "connection established" );
+
+  h.clientConn->SendDatagram( "cmd-1", 5 );
+
+  int steps = 0;
+  while ( steps < 1200 && !h.clientConnCb->failed )
+  {
+    h.poll( 0.1f, 1 );
+    ++steps;
+  }
+
+  const double seconds = 0.1 * steps;
+  printf( "       failed=%d after %.1f s simulated (limit 8, rtto cap 2 s)\n", h.clientConnCb->failed, seconds );
+  Check( h.clientConnCb->failed == 1, "blackout still detected" );
+  Check( seconds < 30.0, "detection fits the 50 s reserve window with room to walk the pool" );
+}
+
 } //namespace
 
 
@@ -353,6 +423,8 @@ int main()
   test_no_loss_smoke();
   test_ack_loss_does_not_wedge_the_channel();
   test_partial_ack_loss_recovers();
+  test_total_ack_blackout_kills_after_retransmit_limit();
+  test_total_ack_blackout_with_client_timings();
 
   printf( "\n%s (%d failure(s))\n", g_failures ? "FAILED" : "PASSED", g_failures );
   return g_failures ? 1 : 0;

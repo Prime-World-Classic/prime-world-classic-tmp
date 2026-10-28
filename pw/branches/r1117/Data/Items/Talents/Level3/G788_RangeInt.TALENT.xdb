@@ -47,9 +47,9 @@
 					<UnitConstant>
 						<name>Add_Stat</name>
 						<var>
-							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DMzNTQQ==</compiledString>
+							<compiledString>FQAAAAACAAAABgAAABAAAABVi+xR2QUqAAAA2RwkUdkFJgAAANkcJItFEIsQi00Qi0Js/9BdwwAAIEHNzEw/</compiledString>
 							<returnType>float</returnType>
-							<sString>13.2</sString>
+							<sString>refineScale(10, 0.8)</sString>
 						</var>
 					</UnitConstant>
 				</Item>

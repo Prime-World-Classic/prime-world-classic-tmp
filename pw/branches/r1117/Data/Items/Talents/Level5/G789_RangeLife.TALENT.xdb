@@ -45,9 +45,9 @@
 					<UnitConstant>
 						<name>Add_Stat</name>
 						<var>
-							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAIA4RA==</compiledString>
+							<compiledString>FQsAAAADAAAAFAAAAB4AAAA7AAAATGlmZUJ1ZGdldABVi+yD7AxR2QVgAAAA2RwkUdkFXAAAANkcJItFEIsQi00Qi0Js/9CLTQxRi1UIUmgAAAAAi0UQixCLTRCLQlDdXfj/0NxN+Nld9NlF9IvlXcMAAJhBMzOzPw==</compiledString>
 							<returnType>float</returnType>
-							<sString>24.6*30</sString>
+							<sString>refineScale(19,1.4)*cLifeBudget</sString>
 						</var>
 					</UnitConstant>
 				</Item>

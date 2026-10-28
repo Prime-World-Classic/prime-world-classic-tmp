@@ -206,23 +206,21 @@ namespace
     return &condition;
   }
   
-  // A selector distance equal to the ability's own (unscaled) use range is the reach of the cast,
+  // A selector distance given by the same formula as the ability's own use range is the reach of the cast,
   // so it follows the hero's "ability range" like the use range does (e.g. Demonolog's Mental Whip).
-  // Other distances (knockbacks, auras, offsets...) stay as they are.
-  float ScaleCastReach( float range, const PFTargetSelector::RequestParams &pars )
+  // Other distances (knockbacks, auras, offsets...) stay as they are, even when their value is the same
+  // (the formula is compared, not the value: min( mDist2Target, cRange ) equals the use range only when it is cut)
+  float ScaleCastReach( const ExecutableFloatString &formula, float range, const PFTargetSelector::RequestParams &pars )
   {
     if ( range <= 0.0f || !IsValid( pars.pAbility ) )
       return range;
-    const float scale = PFBaseHero::GetAbilityRangeScale( pars.pOwner.GetPtr() );
-    if ( fabs( scale - 1.0f ) < 0.001f )
-      return range;
     const PFAbilityData * pData = pars.pAbility->GetData();
-    if ( !pData )
+    if ( !pData || !pData->GetDBDesc() )
       return range;
-    const float baseUseRange = pData->GetUseRange() / scale; // GetUseRange() is already scaled
-    if ( fabs( range - baseUseRange ) > 0.01f )
+    const ExecutableFloatString &useRange = pData->GetDBDesc()->useRange;
+    if ( formula.compiledString.empty() || formula.compiledString != useRange.compiledString )
       return range;
-    return range * scale;
+    return range * pData->GetRangeScale();
   }
 }
 
@@ -528,8 +526,8 @@ void PFSectorTargetSelector::OnForAllTargets(ITargetAction &action, const Reques
     RotateVector(dir, offset);
   }
 
-	// "ability range" stat of the hero lengthens cones (the angle stays)
-	float range = RetrieveParam(GetDB().range, pars) * PFBaseHero::GetAbilityRangeScale( pars.pOwner.GetPtr() );
+	// a cone is the area of the ability: the "ability range" stat of the hero does not lengthen it
+	float range = RetrieveParam(GetDB().range, pars);
 
   if ( GetDB().centerIsSegmentEnd )
    beginPos = endPos;
@@ -630,7 +628,7 @@ void PFCapsuleTargetSelector::OnForAllTargets(ITargetAction &action, const Reque
     origin = pars.pOwner->GetPosition().AsVec2D();
 
 	float range = RetrieveParam(GetDB().range, pars);
-  float rangeFromOrigin = ScaleCastReach( RetrieveParam( GetDB().rangeFromOwner, pars ), pars );
+  float rangeFromOrigin = ScaleCastReach( GetDB().rangeFromOwner, RetrieveParam( GetDB().rangeFromOwner, pars ), pars );
 	// Functor
 	struct CapsuleSelectorFunctor : public NonCopyable
 	{
@@ -1400,7 +1398,7 @@ bool PFPointTargetSelector::FindTarget(const RequestParams &pars, Target &target
       direction.z = 0.0f;
       Normalize(&direction);
 
-      const float reach = ScaleCastReach( range, pars );
+      const float reach = ScaleCastReach( GetDB().range, range, pars );
       float distance = reach;
 
       if ( traceDist < reach )

@@ -17,6 +17,8 @@
 #include "PFLogicDebug.h"
 #include "PFEaselPlayer.h"
 #include "PFAIContainer.h"
+#include "PFSummoned.h"
+#include "PFSummonState.h"
 
 #include "TileMap.h"
 #include "StaticPathInternal.h"
@@ -149,6 +151,7 @@ namespace NWorld
   DEFINE_2_PARAM_CMD_CHECK( 0x5E1A7C43, CmdSetAutoAttack,  CPtr<PFBaseHero>, pHero, bool, enabled);
   DEFINE_2_PARAM_CMD_CHECK( 0x5E1A7C44, CmdSetAbilityRangeScale, CPtr<PFBaseHero>, pHero, float, scale);
   DEFINE_3_PARAM_CMD_CHECK( 0x5E1A7C42, CmdPraise,         CPtr<PFBaseHero>, pHero, CPtr<PFBaseHero>, pTarget, INT32, amount);
+  DEFINE_5_PARAM_CMD_CHECK( 0x5E1A7C45, CmdSummonOrder,    CPtr<PFBaseHero>, pHero, CPtr<PFBaseUnit>, pSummon, INT32, order, CVec2, target, CPtr<PFBaseUnit>, pTarget);
 
   DEFINE_2_PARAM_CMD_CHECK( 0x9D62D440, CmdInitMinigame,   CPtr<PFEaselPlayer>, easelPlayer, INT32, objId );
 
@@ -688,6 +691,76 @@ namespace NWorld
     return new CmdSetAutoAttack( pHero, enabled );
   }
 
+  // the AI behaviour of a summon of pHero that its player may give orders to (0 if it may not)
+  static PFSummonedUnitAIBehaviour * GetControllableSummonAI( PFBaseHero const * pHero, PFBaseUnit * pSummon )
+  {
+    if ( !IsValid( pHero ) || !IsUnitValid( pSummon ) || pSummon->GetMasterUnit().GetPtr() != pHero )
+      return 0;
+    return dynamic_cast<PFSummonedUnitAIBehaviour*>( const_cast<PFBaseBehaviour*>( pSummon->GetBehaviour() ) );
+  }
+
+  bool CmdSummonOrder::CanExecute() const
+  {
+    if ( !CheckHero( pHero, GetId() ) || !GetControllableSummonAI( pHero, pSummon ) )
+      return false;
+    return order == SUMMONORDER_RELEASE || !pSummon->CheckFlagType( NDb::UNITFLAGTYPE_FORBIDPLAYERCONTROL );
+  }
+
+  void CmdSummonOrder::Execute( NCore::IWorldBase * pWorld )
+  {
+    PFSummonedUnitAIBehaviour * pBehaviour = GetControllableSummonAI( pHero, pSummon );
+    if ( !pBehaviour )
+      return;
+
+    if ( order == SUMMONORDER_RELEASE )
+    {
+      pBehaviour->SetPlayerControlled( false );
+      return;
+    }
+
+    CPtr<PFBaseMovingUnit> pUnit = pBehaviour->GetUnit();
+    CPtr<PFWorld> world = dynamic_cast<PFWorld*>( pWorld );
+    if ( !IsUnitValid( pUnit ) || !IsValid( world ) )
+      return;
+
+    pBehaviour->SetPlayerControlled( true );
+
+    switch ( order )
+    {
+    case SUMMONORDER_MOVE:
+      if ( pUnit->CheckFlagType( NDb::UNITFLAGTYPE_FORBIDMOVE ) )
+        return;
+      pUnit->DropStates();
+      pUnit->PushState( new PFBaseUnitMoveToState( pUnit.GetPtr(), target, 0.5f ) );
+      break;
+    case SUMMONORDER_ATTACK:
+      if ( !IsUnitValid( pTarget ) || pTarget.GetPtr() == static_cast<PFBaseUnit*>( pUnit.GetPtr() ) || !pUnit->CanAttackTarget( pTarget ) || pUnit->CheckFlagType( NDb::UNITFLAGTYPE_FORBIDATTACK ) )
+        return;
+      pUnit->DropStates();
+      pUnit->PushState( new PFBaseUnitAttackState( world, pUnit, pTarget, true, true ) );
+      break;
+    case SUMMONORDER_COMBATMOVE:
+      if ( pUnit->CheckFlagType( NDb::UNITFLAGTYPE_FORBIDMOVE ) )
+        return;
+      pUnit->DropStates();
+      pUnit->PushState( new PFBaseUnitCombatMoveState( world, pUnit, target ) );
+      break;
+    case SUMMONORDER_STOP:
+    case SUMMONORDER_HOLD:
+      pUnit->DropStates();
+      pUnit->Stop();
+      pUnit->PushState( new PFSummonManualGuardState( pUnit, order == SUMMONORDER_HOLD ) );
+      break;
+    }
+  }
+
+  NCore::WorldCommand* CreateCmdSummonOrder( PFBaseHero *pHero, PFBaseUnit *pSummon, int order, CVec2 const & target, PFBaseUnit *pTarget )
+  {
+    if ( NULL == pHero || NULL == pSummon )
+      return 0;
+    return new CmdSummonOrder( pHero, pSummon, order, target, pTarget );
+  }
+
   bool CmdSetAbilityRangeScale::CanExecute() const
   {
     return CheckHero(pHero, GetId());
@@ -865,6 +938,7 @@ REGISTER_SAVELOAD_CLASS_NM( CmdBuyConsumable, NWorld )
 REGISTER_SAVELOAD_CLASS_NM( CmdMinimapSignal, NWorld)
 REGISTER_SAVELOAD_CLASS_NM( CmdTypedSignal, NWorld)
 REGISTER_SAVELOAD_CLASS_NM( CmdPraise, NWorld)
+REGISTER_SAVELOAD_CLASS_NM( CmdSummonOrder, NWorld)
 REGISTER_SAVELOAD_CLASS_NM( CmdSetAutoAttack, NWorld)
 REGISTER_SAVELOAD_CLASS_NM( CmdSetAbilityRangeScale, NWorld)
 REGISTER_SAVELOAD_CLASS_NM( CmdInitMinigame, NWorld )

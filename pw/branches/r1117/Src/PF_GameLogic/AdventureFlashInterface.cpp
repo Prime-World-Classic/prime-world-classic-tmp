@@ -832,6 +832,11 @@ void AdventureFlashInterface::SetPingMarker( int id, int type, const wstring & t
   CallMethod( "SetPingMarker", id, type, text, color, nx, ny, gx, gy, alpha );
 }
 
+void AdventureFlashInterface::SetSelectionBox( float x0, float y0, float x1, float y1 )
+{
+  CallMethod( "SetSelectionBox", x0, y0, x1, y1 );
+}
+
 void AdventureFlashInterface::SetChatVisible( bool visible )
 {
   FLASH_INTERFACE_ENTER_FUNCTION("SetChatVisible")

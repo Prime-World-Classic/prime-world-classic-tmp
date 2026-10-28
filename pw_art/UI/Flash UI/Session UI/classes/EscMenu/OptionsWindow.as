@@ -59,9 +59,14 @@
 
 		private static var advancedNextY:Number = 0;
 
-		// pages created by C++: 0 = Advanced, 1 = Communication, 2 = Chat wheel, 3 = Ping wheel, 4 = Game (under the sound)
-		private static const PAGE_COUNT:int = 5;
+		// pages created by C++: 0 = Advanced, 1 = Communication, 2 = Chat wheel, 3 = Ping wheel, 4 = Game (under the sound),
+		// 5 = Summoned creatures
+		private static const PAGE_COUNT:int = 6;
 		private static const PAGE_GAME:int = 4;
+		private static const PAGE_SUMMONS:int = 5;
+
+		// category names given by C++ (SetAdvancedPageName), by page
+		private static var pageNames:Object = {5: "Призванные существа"};
 
 		private static var pagePanels:Array;
 
@@ -69,10 +74,11 @@
 
 		private static var buildPage:int = 0;
 
-		// categories (buttons of the left column): Game (graphics + sound), Keys, Communication, Chat wheel, Ping wheel, Advanced
+		// categories (buttons of the left column): Game (graphics + sound), Keys, Communication, Chat wheel, Ping wheel,
+		// Summoned creatures, Advanced
 		private static const CAT_GAME:int = 0;
 		private static const CAT_KEYS:int = 1;
-		private static const CAT_COUNT:int = 6;
+		private static const CAT_COUNT:int = 7;
 
 		// page shown by a category (-1 = not a page)
 		private static function CatPage(category:int) : int
@@ -95,6 +101,10 @@
 			}
 			if (category == 5)
 			{
+				return PAGE_SUMMONS;
+			}
+			if (category == 6)
+			{
 				return 0;
 			}
 			return -1;
@@ -103,7 +113,8 @@
 		private static function get CAT_NAMES():Array
 		{
 			return [Localization.PreferenceMenu_GameLabel, Localization.ShortcutsMenu_Header, Localization.Options_CommunicationPage,
-				Localization.Options_ChatWheelPage, Localization.Options_PingWheelPage, Localization.Options_AdvancedPage];
+				Localization.Options_ChatWheelPage, Localization.Options_PingWheelPage, String(pageNames[PAGE_SUMMONS]),
+				Localization.Options_AdvancedPage];
 		}
 
 		// titles of the sections of the "Game" category
@@ -423,6 +434,13 @@
 			OptionsWindow.buildPage = param1;
 			OptionsWindow.advancedPanel = OptionsWindow.pagePanels[param1];
 			OptionsWindow.advancedNextY = OptionsWindow.pageNextY[param1];
+		}
+
+		// C++ (PreferencesProcessor): name of the category button of a page, in the client language
+		public function SetAdvancedPageName(page:int, name:String) : void
+		{
+			OptionsWindow.pageNames[page] = name;
+			this.UpdateCategoryTexts();
 		}
 
 		// Окно создаётся до того, как движок подставит переводы в Localization (Combat.xdb):

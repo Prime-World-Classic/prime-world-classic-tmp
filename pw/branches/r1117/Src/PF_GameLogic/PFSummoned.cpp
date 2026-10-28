@@ -64,6 +64,7 @@ PFSummonedUnitAIBehaviour::PFSummonedUnitAIBehaviour(PFBaseMovingUnit* pUnit, CP
   : PFSummonedUnitBehaviour( pUnit, pMaster, pBehaviourBase, lifeTime, behaviourFlags )
   , summonType(summonType)
   , isSuspended(false)
+  , playerControlled(false)
 {
   // Note that master loses alpha summon only on a death of the latter
   if ( (behaviourFlags & BEHAVIOURFLAGS_ALPHASUMMON) != 0 )
@@ -126,6 +127,9 @@ unsigned int PFSummonedUnitAIBehaviour::OnEvent( const PFBaseUnitEvent *pEvent )
 
   if ( !IsValid(pUnit) )
     return 0;
+
+  if ( playerControlled )
+    return 0; // the player gives orders to this summon itself (CmdSummonOrder)
 
   if ( NDb::BASEUNITEVENT_WANTMOVETO == eventType )
   {
@@ -213,7 +217,12 @@ bool PFSummonedUnitAIBehaviour::OnStep(float dtInSeconds)
 
   // Enqueue base summon IA state on idle
   if ( IsValid(pUnit) && !pUnit->GetCurrentState() )
-    pUnit->EnqueueState( new PFSummonAIBaseState(pUnit), true );
+  {
+    if ( playerControlled )
+      pUnit->EnqueueState( new PFSummonManualGuardState(pUnit, false), true ); // stays where the last order has left it
+    else
+      pUnit->EnqueueState( new PFSummonAIBaseState(pUnit), true );
+  }
 
   if (g_debugSummonStates && pUnit->GetCurrentState())
   {
@@ -240,12 +249,37 @@ void PFSummonedUnitAIBehaviour::OnTarget( const CPtr<PFBaseUnit>& pTarget, bool 
 	if ( pUnit->CheckFlagType(NDb::UNITFLAGTYPE_FORBIDATTACK) )
 		return; // Attack forbid flag not empty!
 
+  if ( playerControlled )
+  {
+    // only a standing summon answers an attack, an order of the player is not interrupted
+    const IPFState * pState = pUnit->GetCurrentState();
+    if ( !pState || pState->GetTypeId() != PFSummonManualGuardState::typeId || static_cast<const PFSummonManualGuardState*>( pState )->IsHoldingPosition() )
+      return;
+    pUnit->DropStates();
+    pUnit->PushState( new PFBaseUnitAttackState( pUnit->GetWorld(), pUnit, pTarget, bStrongTarget ) ); // no leash to the master
+    return;
+  }
+
 	pUnit->DropStates();
 	pUnit->PushState( new PFSummonAIAttackState(pUnit, pTarget, bStrongTarget) );
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PFSummonedUnitAIBehaviour::SetPlayerControlled( bool controlled )
+{
+  if ( playerControlled == controlled )
+    return;
+
+  playerControlled = controlled;
+  if ( IsValid( pUnit ) )
+    pUnit->DropStates(); // OnStep enqueues the state of the new mode
+}
+
 bool PFSummonedUnitAIBehaviour::CanSelectTarget( const PFBaseUnit* pTarget, bool mustSeeTarget /*= false*/ ) const
 {
+  if ( playerControlled )
+    return true; // no leash to the master
+
   if ( pUnit->GetCurrentState() && pUnit->GetCurrentState()->GetTypeId() == PFSummonAIBaseState::typeId )
   {
     PFSummonAIBaseState* state = dynamic_cast<PFSummonAIBaseState*>(pUnit->GetCurrentState());

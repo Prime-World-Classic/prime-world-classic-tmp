@@ -618,7 +618,7 @@
 			if (talent == null) return;
 			
 			// any not learned state: the training learns a talent the hero has no prime for (NOTENOUGH_PRIME)
-			if (talent.icoState != TalentUIState.BOUGHT && state == TalentUIState.BOUGHT&&talent.IsActive) 
+			if (talent.icoState != TalentUIState.BOUGHT && state == TalentUIState.BOUGHT&&talent.IsActive)
 			{
 				AddTalantToActBar(column, raw);
 			}
@@ -1801,6 +1801,66 @@
 			this.pingMarkerHeroes[String(param1)] = param2;
 		}
 		
+		// box selection of the own units (C++ AdventureScreen::UpdateSelectionBox): corners 0..1 of the screen, x0 < 0 hides it
+		// the parts (fill, top, bottom, left, right) are 16x16 solid textures, moved and stretched like the ping beams:
+		// vector graphics drawn here do not show in the game's Flash runtime
+		private static const SELECTION_TEX_SIZE:Number = 16;
+		private var selectionBox:Sprite;
+		private var selectionBoxParts:Array;
+
+		private function CreateSelectionBoxPart(texture:String) : Loader
+		{
+			var part:Loader = this.LoadPingImage(texture);
+			this.selectionBox.addChild(part);
+			return part;
+		}
+
+		private function PlaceSelectionBoxPart(index:int, x:Number, y:Number, w:Number, h:Number) : void
+		{
+			var part:Loader = this.selectionBoxParts[index];
+			part.x = x;
+			part.y = y;
+			part.scaleX = w / SELECTION_TEX_SIZE;
+			part.scaleY = h / SELECTION_TEX_SIZE;
+		}
+
+		public function SetSelectionBox(x0:Number, y0:Number, x1:Number, y1:Number) : void
+		{
+			try
+			{
+				if (this.selectionBox == null)
+				{
+					this.selectionBox = new Sprite();
+					this.selectionBox.mouseEnabled = false;
+					this.selectionBox.mouseChildren = false;
+					this.GetPingMarkerLayer().addChild(this.selectionBox);
+					this.selectionBoxParts = [this.CreateSelectionBoxPart("selection_fill.dds"), this.CreateSelectionBoxPart("selection_edge.dds"),
+						this.CreateSelectionBoxPart("selection_edge.dds"), this.CreateSelectionBoxPart("selection_edge.dds"),
+						this.CreateSelectionBoxPart("selection_edge.dds")];
+				}
+				if (x0 < 0)
+				{
+					this.selectionBox.visible = false;
+					return;
+				}
+				var w:Number = this.mainWindow.stage.stageWidth;
+				var h:Number = this.mainWindow.stage.stageHeight;
+				var l:Number = Math.floor(x0 * w);
+				var t:Number = Math.floor(y0 * h);
+				var bw:Number = Math.max(Math.floor(x1 * w) - l, 2);
+				var bh:Number = Math.max(Math.floor(y1 * h) - t, 2);
+				this.PlaceSelectionBoxPart(0, l, t, bw, bh);
+				this.PlaceSelectionBoxPart(1, l, t, bw, 2);
+				this.PlaceSelectionBoxPart(2, l, t + bh - 2, bw, 2);
+				this.PlaceSelectionBoxPart(3, l, t, 2, bh);
+				this.PlaceSelectionBoxPart(4, l + bw - 2, t, 2, bh);
+				this.selectionBox.visible = true;
+			}
+			catch (e:Error)
+			{
+			}
+		}
+
 		// ping marker: light beam standing on the ground point (gx, gy) + icon (+ text) at its top (nx, ny); all 0..1 of the screen;
 		// alpha <= 0 removes it
 		public function SetPingMarker(param1:int, param2:int, param3:String, param4:uint, param5:Number, param6:Number, param7:Number, param8:Number, param9:Number) : void

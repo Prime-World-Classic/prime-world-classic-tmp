@@ -256,6 +256,36 @@ namespace NWorld
 
 
   //////////////////////////////////////////////////////////////////////////
+  // class PFSummonManualGuardState
+  //////////////////////////////////////////////////////////////////////////
+  PFSummonManualGuardState::PFSummonManualGuardState( CPtr<PFBaseMovingUnit> const& pOwner, bool holdPosition )
+    : PFBaseMovingUnitState( pOwner )
+    , holdPosition( holdPosition )
+  {
+  }
+
+  bool PFSummonManualGuardState::OnStep( float dt )
+  {
+    if ( GetCurrentState() )
+    {
+      FSMStep( dt );
+      return false;
+    }
+
+    if ( !IsUnitValid( pOwner ) )
+      return true;
+
+    if ( pOwner->CheckFlagType( NDb::UNITFLAGTYPE_FORBIDATTACK ) )
+      return false;
+
+    CPtr<PFBaseUnit> pTarget = pOwner->FindTarget( holdPosition ? pOwner->GetAttackRange() : pOwner->GetTargetingRange() );
+    if ( IsUnitValid( pTarget ) && pTarget != pOwner )
+      PushState( new PFBaseUnitAttackState( pOwner->GetWorld(), pOwner, pTarget, false, false, false, false, !holdPosition ) );
+
+    return false;
+  }
+
+  //////////////////////////////////////////////////////////////////////////
 
 
   PFSummonAIBaseState::PFSummonAIBaseState( const CPtr<PFBaseMovingUnit>& pOwner )
@@ -478,4 +508,5 @@ REGISTER_WORLD_OBJECT_NM(PFSummonAIBaseState,         NWorld);
 REGISTER_WORLD_OBJECT_NM(PFSummonAIChaseTargetState,  NWorld);
 REGISTER_WORLD_OBJECT_NM(PFSummonAICombateState,      NWorld);
 REGISTER_WORLD_OBJECT_NM(PFSummonAIAttackState,       NWorld);
+REGISTER_WORLD_OBJECT_NM(PFSummonManualGuardState,    NWorld);
 //REGISTER_WORLD_OBJECT_NM(PFSummonAIResponseState,     NWorld);

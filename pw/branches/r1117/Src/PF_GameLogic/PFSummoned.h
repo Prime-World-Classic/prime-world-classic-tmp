@@ -44,7 +44,7 @@ class PFSummonedUnitAIBehaviour : public PFSummonedUnitBehaviour, public PFBaseU
 {
   WORLD_OBJECT_METHODS( 0xF732442, PFSummonedUnitAIBehaviour )
 protected:
-  PFSummonedUnitAIBehaviour() {}
+  PFSummonedUnitAIBehaviour() : playerControlled( false ) {}
   PFSummonedUnitAIBehaviour( PFBaseMovingUnit* pUnit, CPtr<PFBaseUnit> const& pMaster, const NDb::SummonBehaviourBase* pBehaviourBase,
     NDb::SummonType summonType, float lifeTime, int behaviourFlags = BEHAVIOURFLAGS_NONE );
 
@@ -52,14 +52,17 @@ protected:
   ZNOPARENT(PFBaseUnitEventListener)
   NDb::SummonType       summonType;
   bool                  isSuspended;
+  bool                  playerControlled; // orders come from the master's player (CmdSummonOrder): no following the master
 
 public:
-  ZEND int operator&( IBinSaver &f ) { f.Add(1,(PFSummonedUnitBehaviour*)this); f.Add(2,&summonType); f.Add(3,&isSuspended); return 0; }
+  ZEND int operator&( IBinSaver &f ) { f.Add(1,(PFSummonedUnitBehaviour*)this); f.Add(2,&summonType); f.Add(3,&isSuspended); f.Add(4,&playerControlled); return 0; }
 
   static PFSummonedUnitAIBehaviour* Create(PFBaseMovingUnit* pUnit, CPtr<PFBaseUnit> const& pMaster, const NDb::SummonBehaviourBase* pBehaviourBase,
     NDb::SummonType summonType, float lifeTime, int behaviourFlags = BEHAVIOURFLAGS_NONE );
 
   NDb::SummonType GetSummonType() const { return summonType; }
+  bool IsPlayerControlled() const { return playerControlled; }
+  void SetPlayerControlled( bool controlled );
   virtual int GetSummonTypeInt() const { return int(summonType); }
 
   virtual bool OnStep(float dtInSeconds);

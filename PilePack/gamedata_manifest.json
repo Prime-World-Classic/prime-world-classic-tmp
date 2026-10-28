@@ -36590,8 +36590,8 @@
     {
       "id": 184,
       "name": "gamedata042.pile",
-      "packed_size": 18313916,
-      "source_size": 63510682,
+      "packed_size": 18314243,
+      "source_size": 63511104,
       "files": [
         ["Items/Talents/Class/Alchemist/status_A1Poison.APLR_description.txt", 484, 1654016972],
         ["Items/Talents/Class/Alchemist/status_A1Poison.APLR_description_en.txt", 484, 2356444648],
@@ -47623,12 +47623,12 @@
         ["Items/Talents/Level3/G784_MoveSpeed_afterRess.TALENT_description_en.txt", 1058, 3956952812],
         ["Items/Talents/Level3/G784_MoveSpeed_afterRess.TALENT_name.txt", 32, 3838464183],
         ["Items/Talents/Level3/G784_MoveSpeed_afterRess.TALENT_name_en.txt", 36, 1200599940],
-        ["Items/Talents/Level3/G787_RangeStr.TALENT.xdb", 6268, 1652887750],
+        ["Items/Talents/Level3/G787_RangeStr.TALENT.xdb", 6328, 1659789078],
         ["Items/Talents/Level3/G787_RangeStr.TALENT_description.txt", 304, 3392483616],
         ["Items/Talents/Level3/G787_RangeStr.TALENT_description_en.txt", 312, 3492855007],
         ["Items/Talents/Level3/G787_RangeStr.TALENT_name.txt", 28, 3642972592],
         ["Items/Talents/Level3/G787_RangeStr.TALENT_name_en.txt", 28, 4120200239],
-        ["Items/Talents/Level3/G788_RangeInt.TALENT.xdb", 5244, 510587678],
+        ["Items/Talents/Level3/G788_RangeInt.TALENT.xdb", 5304, 3221110365],
         ["Items/Talents/Level3/G788_RangeInt.TALENT_description.txt", 310, 4149500972],
         ["Items/Talents/Level3/G788_RangeInt.TALENT_description_en.txt", 316, 26428249],
         ["Items/Talents/Level3/G788_RangeInt.TALENT_name.txt", 28, 2350976675],
@@ -48938,7 +48938,7 @@
         ["Items/Talents/Level4/G782_StrInt.TALENT_name.txt", 32, 775474043],
         ["Items/Talents/Level4/G782_StrInt.TALENT_name_en.txt", 36, 3401903288],
         ["Items/Talents/Level4/G782_StrInt.TALENT_shortDescription.txt", 98, 3032559607],
-        ["Items/Talents/Level4/G789_RangeDexAtSpd.TALENT.xdb", 7315, 3879682812],
+        ["Items/Talents/Level4/G789_RangeDexAtSpd.TALENT.xdb", 7367, 1687663482],
         ["Items/Talents/Level4/G789_RangeDexAtSpd.TALENT_description.txt", 342, 3545863476],
         ["Items/Talents/Level4/G789_RangeDexAtSpd.TALENT_description_en.txt", 340, 3093892479],
         ["Items/Talents/Level4/G789_RangeDexAtSpd.TALENT_name.txt", 34, 1816314005],
@@ -50107,9 +50107,9 @@
         ["Items/Talents/Level5/G786_AtSpd.TALENT_description_en.txt", 934, 473891051],
         ["Items/Talents/Level5/G786_AtSpd.TALENT_name.txt", 32, 2356589396],
         ["Items/Talents/Level5/G786_AtSpd.TALENT_name_en.txt", 40, 202719061],
-        ["Items/Talents/Level5/G789_RangeLife.TALENT.xdb", 5120, 3855051597],
-        ["Items/Talents/Level5/G789_RangeLife.TALENT_description.txt", 282, 2827062889],
-        ["Items/Talents/Level5/G789_RangeLife.TALENT_description_en.txt", 278, 1942862848],
+        ["Items/Talents/Level5/G789_RangeLife.TALENT.xdb", 5268, 3087318063],
+        ["Items/Talents/Level5/G789_RangeLife.TALENT_description.txt", 304, 3646733054],
+        ["Items/Talents/Level5/G789_RangeLife.TALENT_description_en.txt", 300, 2238478032],
         ["Items/Talents/Level5/G789_RangeLife.TALENT_name.txt", 26, 3482592231],
         ["Items/Talents/Level5/G789_RangeLife.TALENT_name_en.txt", 28, 692914066],
         ["Items/Talents/Level5/G795_SeaSymbol.TALENT.xdb", 13336, 921253195],
@@ -51107,7 +51107,7 @@
         ["Items/Talents/Level6/G781_AtSpdOrDex.TALENT_description_en.txt", 1298, 871859774],
         ["Items/Talents/Level6/G781_AtSpdOrDex.TALENT_name.txt", 24, 299777174],
         ["Items/Talents/Level6/G781_AtSpdOrDex.TALENT_name_en.txt", 26, 3876869745],
-        ["Items/Talents/Level6/G791_RangePotential.TALENT.xdb", 7129, 4139176664],
+        ["Items/Talents/Level6/G791_RangePotential.TALENT.xdb", 7187, 289980893],
         ["Items/Talents/Level6/G791_RangePotential.TALENT_description.txt", 358, 3964932800],
         ["Items/Talents/Level6/G791_RangePotential.TALENT_description_en.txt", 376, 3137312754],
         ["Items/Talents/Level6/G791_RangePotential.TALENT_name.txt", 36, 311333012],
@@ -88579,8 +88579,8 @@
     {
       "id": 240,
       "name": "gamedata098.pile",
-      "packed_size": 20865013,
-      "source_size": 38840119,
+      "packed_size": 20865159,
+      "source_size": 38843889,
       "files": [
         ["UI/Styles/Tutorial/tutorial_8_adornia.dds", 1691156, 3042114487],
         ["UI/Styles/Tutorial/tutorial_8_doct.dds", 1691156, 157847806],
@@ -88646,7 +88646,7 @@
         ["UI/UIRoot_substitutes_111_captionText_en.txt", 374, 2656928089],
         ["UI/UIRoot_substitutes_112_captionText.txt", 240, 1312889415],
         ["UI/UIRoot_substitutes_112_captionText_en.txt", 240, 2889615100],
-        ["UI/UIRoot_substitutes_113_captionText.txt", 978, 1267658075],
+        ["UI/UIRoot_substitutes_113_captionText.txt", 4748, 3492455098],
         ["UI/UIRoot_substitutes_11_captionText.txt", 102, 567352465],
         ["UI/UIRoot_substitutes_12_captionText.txt", 258, 264856405],
         ["UI/UIRoot_substitutes_12_captionText_en.txt", 250, 946288441],
@@ -89467,8 +89467,8 @@
     {
       "id": 243,
       "name": "gamedata101.pile",
-      "packed_size": 516670,
-      "source_size": 4382752,
+      "packed_size": 517224,
+      "source_size": 4387414,
       "files": [
         ["UI/Styles/Icons/PingWheel/ping_wheel_s_bg_4.dds", 262272, 3609212987],
         ["UI/Styles/Icons/PingWheel/ping_wheel_s_bg_5.dds", 262272, 1685530396],
@@ -89639,7 +89639,8 @@
         ["UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_283_propertyValue.txt", 80, 523010715],
         ["UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_283_propertyValue_en.txt", 94, 1867221658],
         ["UI/Styles/Icons/PingWheel/selection_edge.dds", 1152, 1017726986],
-        ["UI/Styles/Icons/PingWheel/selection_fill.dds", 1152, 1078985624]
+        ["UI/Styles/Icons/PingWheel/selection_fill.dds", 1152, 1078985624],
+        ["UI/UIRoot_substitutes_113_captionText_en.txt", 4662, 1112495915]
       ]
     }
   ]

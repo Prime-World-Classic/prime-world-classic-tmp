@@ -949,9 +949,9 @@
 						</offset>
 						<paralleledTarget>false</paralleledTarget>
 						<range>
-							<compiledString>FQ0AAAABAAAAGQAAAFJhbmdlX0V4TG9uZwBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0lHZHCSLRRCLEItNEItCDP/QUdkcJOgFAAAAg8QIXcNVi+xR2UUI2UUM3tnf4PbEQXUI2UUI2V386wbZRQzZXfzZRfyL5V3D</compiledString>
+							<compiledString>FSIAAAACAAAAMQAAAEsAAABSYW5nZV9FeExvbmcAAAAAQWJpbGl0eVJhbmdlU2NhbGUAVYvsg+wMi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9KLRQxQi00IUWgQAAAAi1UQiwKLTRCLUFDdXfj/0txN+Nld9NlF9FHZHCSLRRCLEItNEItCDP/QUdkcJOgHAAAAg8QIi+Vdw1WL7FHZRQjZRQze2d/g9sRBdQjZRQjZXfzrBtlFDNld/NlF/IvlXcM=</compiledString>
 							<returnType>float</returnType>
-							<sString>min( mDist2Target, cRange_ExLong )</sString>
+							<sString>min( mDist2Target, cRange_ExLong * cAbilityRangeScale )</sString>
 						</range>
 						<targetSelector href="/Items/Talents/Class/Rockman/Ability4.TALENT" id="10F8C2B1-4596-4A25-AFA1-321520CB1586">
 							<SelectApplicatorTarget>

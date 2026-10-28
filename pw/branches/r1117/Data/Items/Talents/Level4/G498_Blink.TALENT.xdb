@@ -90,9 +90,9 @@
 									<formulaName></formulaName>
 									<LoggingEvent>-1</LoggingEvent>
 									<maxDistance>
-										<compiledString>FQYAAAABAAAAEgAAAFJhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+										<compiledString>FRoAAAACAAAAKQAAAEMAAABSYW5nZQAAAEFiaWxpdHlSYW5nZVNjYWxlAFWL7IPsDItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/Si0UMUItNCFFoCAAAAItVEIsCi00Qi1BQ3V34/9LcTfjZXfTZRfSL5V3D</compiledString>
 										<returnType>float</returnType>
-										<sString>cRange</sString>
+										<sString>cRange * cAbilityRangeScale</sString>
 									</maxDistance>
 									<notifyInboundDispatches>true</notifyInboundDispatches>
 									<providerName></providerName>

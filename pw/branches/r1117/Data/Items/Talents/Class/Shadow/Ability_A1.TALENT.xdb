@@ -800,9 +800,9 @@
 					<UnitConstant>
 						<name>A1_Range</name>
 						<var>
-							<compiledString>FSQAAAADAAAAUAAAAG0AAACQAAAAQTFfUmFuZ2VNaW4AQTFfUmFuZ2VNYXgAQTFfUmFuZ2VNaW4AVYvsg+wgi0UQixCLTRCLQkj/0IlF/ItN/IsRi038i0IQ/9CLTQxRi1UIUmgYAAAAi0UQixCLTRCLQlDdXfT/0ItNDFGLVQhSaAwAAACLRRCLEItNEItCUN1d7P/Q3GXs3E30i00MUYtVCFJoAAAAAItFEIsQi00Qi0JQ3V3k/9DcReTZXeDZReCL5V3D</compiledString>
+							<compiledString>FTYAAAAEAAAAVQAAAH8AAACcAAAAvwAAAEExX1JhbmdlTWluAEExX1JhbmdlTWF4AEExX1JhbmdlTWluAEFiaWxpdHlSYW5nZVNjYWxlAFWL7IPsKItFEIsQi00Qi0JI/9CJRfyLTQxRi1UIUmgkAAAAi0UQixCLTRCLQlD/0ItN/IsRi038i0IQ3V30/9CLTQxRi1UIUmgYAAAAi0UQixCLTRCLQlDdXez/0ItNDFGLVQhSaAwAAACLRRCLEItNEItCUN1d5P/Q3GXk3E3si00MUYtVCFJoAAAAAItFEIsQi00Qi0JQ3V3c/9DcRdzcTfTZXdjZRdiL5V3D</compiledString>
 							<returnType>float</returnType>
-							<sString>cA1_RangeMin + (cA1_RangeMax-cA1_RangeMin) * mObjectParent-&gt;GetScale()</sString>
+							<sString>(cA1_RangeMin + (cA1_RangeMax-cA1_RangeMin) * mObjectParent-&gt;GetScale()) * cAbilityRangeScale</sString>
 						</var>
 					</UnitConstant>
 				</Item>

@@ -1688,9 +1688,9 @@
 						</offset>
 						<paralleledTarget>false</paralleledTarget>
 						<range>
-							<compiledString>FQkAAAABAAAAFQAAAEEyX1JhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SUdkcJItFEIsQi00Qi0IM/9BR2Rwk6AUAAACDxAhdw1WL7FHZRQjZRQze2d/g9sRBdQjZRQjZXfzrBtlFDNld/NlF/IvlXcM=</compiledString>
+							<compiledString>FR4AAAACAAAALQAAAEcAAABBMl9SYW5nZQAAAABBYmlsaXR5UmFuZ2VTY2FsZQBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0otFDFCLTQhRaAwAAACLVRCLAotNEItQUN1d+P/S3E342V302UX0UdkcJItFEIsQi00Qi0IM/9BR2Rwk6AcAAACDxAiL5V3DVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
 							<returnType>float</returnType>
-							<sString>min( mDist2Target, cA2_Range )</sString>
+							<sString>min( mDist2Target, cA2_Range * cAbilityRangeScale )</sString>
 						</range>
 						<targetSelector href="/Items/Talents/Class/IronKnight/Ability_A2.TALENT" id="6EC39905-10BA-4B1C-8F95-B65A4030CD56">
 							<SelectApplicatorTarget>

@@ -89,9 +89,9 @@
 															<formulaName></formulaName>
 															<LoggingEvent>-1</LoggingEvent>
 															<maxDistance>
-																<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAABgQQ==</compiledString>
+																<compiledString>FRIAAAACAAAAHwAAADIAAABBYmlsaXR5UmFuZ2VTY2FsZQBVi+xRi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9LcDUAAAADZXfzZRfyL5V3DAAAAAAAALEA=</compiledString>
 																<returnType>float</returnType>
-																<sString>14</sString>
+																<sString>14 * cAbilityRangeScale</sString>
 															</maxDistance>
 															<notifyInboundDispatches>true</notifyInboundDispatches>
 															<providerName></providerName>
@@ -113,9 +113,9 @@
 															<formulaName></formulaName>
 															<LoggingEvent>-1</LoggingEvent>
 															<maxDistance>
-																<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAABgQQ==</compiledString>
+																<compiledString>FRIAAAACAAAAHwAAADIAAABBYmlsaXR5UmFuZ2VTY2FsZQBVi+xRi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9LcDUAAAADZXfzZRfyL5V3DAAAAAAAALEA=</compiledString>
 																<returnType>float</returnType>
-																<sString>14</sString>
+																<sString>14 * cAbilityRangeScale</sString>
 															</maxDistance>
 															<notifyInboundDispatches>true</notifyInboundDispatches>
 															<providerName></providerName>

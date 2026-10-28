@@ -46,9 +46,9 @@
 								<formulaName></formulaName>
 								<LoggingEvent>-1</LoggingEvent>
 								<maxDistance>
-									<compiledString>FQsAAAABAAAAFwAAAEE0XzJfUmFuZ2UAVYvsi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9Jdww==</compiledString>
+									<compiledString>FR4AAAACAAAALQAAAEcAAABBNF8yX1JhbmdlAABBYmlsaXR5UmFuZ2VTY2FsZQBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0otFDFCLTQhRaAwAAACLVRCLAotNEItQUN1d+P/S3E342V302UX0i+Vdww==</compiledString>
 									<returnType>float</returnType>
-									<sString>cA4_2_Range</sString>
+									<sString>cA4_2_Range * cAbilityRangeScale</sString>
 								</maxDistance>
 								<notifyInboundDispatches>true</notifyInboundDispatches>
 								<providerName></providerName>

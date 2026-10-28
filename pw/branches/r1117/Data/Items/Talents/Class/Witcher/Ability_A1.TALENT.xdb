@@ -1207,9 +1207,9 @@
 						</offset>
 						<paralleledTarget>false</paralleledTarget>
 						<range>
-							<compiledString>FQ8AAAACAAAAHgAAAEcAAABSYW5nZQAAAFRhcmdldABVi+yD7BCLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0lHZHCRR2e7ZHCSLRRCLEItNEItCDP/QaAgAAACLTRCLEYtNEItCTN1d+P/QK0UM99gbwIPgBIlF9NtF9Nxt+Nld8NlF8FHZHCToPgAAAIPEBNkcJOgLAAAAg8QIi+VdwwAAAABVi+xR2UUI2UUM3tnf4PbEQXUI2UUI2V386wbZRQzZXfzZRfyL5V3DVYvsUdlFCNlFDN7Z3+D2xAV6CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
+							<compiledString>FSMAAAADAAAAMgAAAEwAAACBAAAAUmFuZ2UAAABBYmlsaXR5UmFuZ2VTY2FsZQAAAFRhcmdldABVi+yD7ByLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0otFDFCLTQhRaAgAAACLVRCLAotNEItQUN1d+P/S3E342V302UX0UdkcJFHZ7tkcJItFEIsQi00Qi0IM/9BoHAAAAItNEIsRi00Qi0JM3V3s/9ArRQz32BvAg+AEiUXo20Xo3G3s2V3k2UXkUdkcJOg+AAAAg8QE2Rwk6AsAAACDxAiL5V3DAAAAAFWL7FHZRQjZRQze2d/g9sRBdQjZRQjZXfzrBtlFDNld/NlF/IvlXcNVi+xR2UUI2UUM3tnf4PbEBXoI2UUI2V386wbZRQzZXfzZRfyL5V3D</compiledString>
 							<returnType>float</returnType>
-							<sString>clamp( mDist2Target - (pMisc-&gt;GetObject("Target") != pSecond ? 4 : 0 ), 0, cRange )</sString>
+							<sString>clamp( mDist2Target - (pMisc-&gt;GetObject("Target") != pSecond ? 4 : 0 ), 0, cRange * cAbilityRangeScale )</sString>
 						</range>
 						<targetSelector href="/Items/Talents/Class/Witcher/Ability_A1.TALENT" id="4B2FE7EE-AAA0-46A3-AAE8-B3742C2552EF">
 							<SelectApplicatorTarget>

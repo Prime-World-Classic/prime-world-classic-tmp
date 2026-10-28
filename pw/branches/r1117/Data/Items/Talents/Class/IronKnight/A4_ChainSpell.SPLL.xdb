@@ -45,9 +45,9 @@
 											<sString>cA4_Width * 0.5f</sString>
 										</range>
 										<rangeFromOwner>
-											<compiledString>FQwAAAABAAAAGAAAAEE0X1VzZVJhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+											<compiledString>FR4AAAACAAAALQAAAEcAAABBNF9Vc2VSYW5nZQBBYmlsaXR5UmFuZ2VTY2FsZQBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0otFDFCLTQhRaAwAAACLVRCLAotNEItQUN1d+P/S3E342V302UX0i+Vdww==</compiledString>
 											<returnType>float</returnType>
-											<sString>cA4_UseRange</sString>
+											<sString>cA4_UseRange * cAbilityRangeScale</sString>
 										</rangeFromOwner>
 										<segmentBegin>PreviousPosition</segmentBegin>
 										<segmentDirectionOffset>0</segmentDirectionOffset>
@@ -699,9 +699,9 @@
 																<sString>cA4_Width * 0.5f</sString>
 															</range>
 															<rangeFromOwner>
-																<compiledString>FQwAAAABAAAAGAAAAEE0X1VzZVJhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+																<compiledString>FR4AAAACAAAALQAAAEcAAABBNF9Vc2VSYW5nZQBBYmlsaXR5UmFuZ2VTY2FsZQBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0otFDFCLTQhRaAwAAACLVRCLAotNEItQUN1d+P/S3E342V302UX0i+Vdww==</compiledString>
 																<returnType>float</returnType>
-																<sString>cA4_UseRange</sString>
+																<sString>cA4_UseRange * cAbilityRangeScale</sString>
 															</rangeFromOwner>
 															<segmentBegin>PreviousPosition</segmentBegin>
 															<segmentDirectionOffset>0</segmentDirectionOffset>

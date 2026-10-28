@@ -3127,6 +3127,16 @@
 						</var>
 					</UnitConstant>
 				</Item>
+				<Item href="/GameLogic/AILogic.AILP" id="D14B5EA2-519B-4A2B-A2F9-6D822D640C96">
+					<UnitConstant>
+						<name>AbilityRangeScale</name>
+						<var>
+							<compiledString>FQ0AAAACAAAAEgAAACgAAABBYmlsaXR5UmFuZ2UAVYvsUWgAAAAAi0UIixCLTQiLgogBAAD/0NwNQgAAANno3sHZXfzZRfyL5V3DAAAAAAAA8D8AAABA4XqEPw==</compiledString>
+							<returnType>float</returnType>
+							<sString>1 + sender.vAbilityRange * 0.01f</sString>
+						</var>
+					</UnitConstant>
+				</Item>
 			</vars>
 		</UnitConstantsContainer>
 	</globalConstants>

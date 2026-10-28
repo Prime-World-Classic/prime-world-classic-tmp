@@ -265,7 +265,10 @@
 											<behaviorFlags>1</behaviorFlags>
 											<caption>fx</caption>
 											<consumables />
-											<effect />
+											<effect>
+												<Item href="" />
+												<Item href="" />
+											</effect>
 											<enabled>
 												<compiledString>FSEAAAACAAAALAAAAEwAAABUYXVydXNSYW1BaW1PZmYAVGF1cnVzUmFtVHVybk9mZgBVi+xRagGLRRBQaAAAAACLTQiLEYtNCIuCnAEAAP/QO0UQdSlqAYtNEFFoEAAAAItVCIsCi00Ii5CcAQAA/9I7RRB1CcdF/AEAAADrB8dF/AAAAACKRfyL5V3D</compiledString>
 												<returnType>bool</returnType>
@@ -1846,9 +1849,9 @@
 					<UnitConstant>
 						<name>A4_1_Range</name>
 						<var>
-							<compiledString>FS4AAAADAAAAWgAAAHcAAACaAAAAQTRfMV9SYW5nZU1pbgAAAEE0XzFfUmFuZ2VNYXgAAABBNF8xX1JhbmdlTWluAFWL7IPsIItFEIsQi00Qi0JI/9CJRfyLTfyLEYtN/ItCEP/Qi00MUYtVCFJoIAAAAItFEIsQi00Qi0JQ3V30/9CLTQxRi1UIUmgQAAAAi0UQixCLTRCLQlDdXez/0Nxl7NxN9ItNDFGLVQhSaAAAAACLRRCLEItNEItCUN1d5P/Q3EXk2V3g2UXgi+Vdww==</compiledString>
+							<compiledString>FUIAAAAEAAAAYQAAAIsAAACoAAAAywAAAEE0XzFfUmFuZ2VNaW4AAABBNF8xX1JhbmdlTWF4AAAAQTRfMV9SYW5nZU1pbgAAAEFiaWxpdHlSYW5nZVNjYWxlAFWL7IPsKItFEIsQi00Qi0JI/9CJRfyLTQxRi1UIUmgwAAAAi0UQixCLTRCLQlD/0ItN/IsRi038i0IQ3V30/9CLTQxRi1UIUmggAAAAi0UQixCLTRCLQlDdXez/0ItNDFGLVQhSaBAAAACLRRCLEItNEItCUN1d5P/Q3GXk3E3si00MUYtVCFJoAAAAAItFEIsQi00Qi0JQ3V3c/9DcRdzcTfTZXdjZRdiL5V3D</compiledString>
 							<returnType>float</returnType>
-							<sString>cA4_1_RangeMin + (cA4_1_RangeMax - cA4_1_RangeMin) * mObjectParent-&gt;GetScale()</sString>
+							<sString>(cA4_1_RangeMin + (cA4_1_RangeMax - cA4_1_RangeMin) * mObjectParent-&gt;GetScale()) * cAbilityRangeScale</sString>
 						</var>
 					</UnitConstant>
 				</Item>

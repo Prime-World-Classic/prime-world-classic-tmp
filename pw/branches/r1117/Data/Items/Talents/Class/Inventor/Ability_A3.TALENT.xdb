@@ -86,9 +86,9 @@
 						</offset>
 						<paralleledTarget>false</paralleledTarget>
 						<range>
-							<compiledString>FQkAAAABAAAAFQAAAEEzX1JhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SUdkcJItFEIsQi00Qi0IM/9BR2Rwk6AUAAACDxAhdw1WL7FHZRQjZRQze2d/g9sRBdQjZRQjZXfzrBtlFDNld/NlF/IvlXcM=</compiledString>
+							<compiledString>FR4AAAACAAAALQAAAEcAAABBM19SYW5nZQAAAABBYmlsaXR5UmFuZ2VTY2FsZQBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0otFDFCLTQhRaAwAAACLVRCLAotNEItQUN1d+P/S3E342V302UX0UdkcJItFEIsQi00Qi0IM/9BR2Rwk6AcAAACDxAiL5V3DVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
 							<returnType>float</returnType>
-							<sString>min( mDist2Target, cA3_Range )</sString>
+							<sString>min( mDist2Target, cA3_Range * cAbilityRangeScale )</sString>
 						</range>
 						<targetSelector href="/Items/Talents/Class/Inventor/Ability_A3.TALENT" id="D176AF29-CE73-43B4-A813-EB4EDEA9106A">
 							<SelectApplicatorTarget>

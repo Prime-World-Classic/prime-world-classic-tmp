@@ -142,9 +142,9 @@
 						</offset>
 						<paralleledTarget>false</paralleledTarget>
 						<range>
-							<compiledString>FQwAAAABAAAAGAAAAEE0X1VzZVJhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+							<compiledString>FR4AAAACAAAALQAAAEcAAABBNF9Vc2VSYW5nZQBBYmlsaXR5UmFuZ2VTY2FsZQBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0otFDFCLTQhRaAwAAACLVRCLAotNEItQUN1d+P/S3E342V302UX0i+Vdww==</compiledString>
 							<returnType>float</returnType>
-							<sString>cA4_UseRange</sString>
+							<sString>cA4_UseRange * cAbilityRangeScale</sString>
 						</range>
 						<targetSelector href="/Items/Talents/Class/IronKnight/Ability_A4.TALENT" id="DB91125F-9DB5-44AD-817A-0876F177DA39">
 							<SelectApplicatorTarget>
@@ -207,9 +207,9 @@
 						</offset>
 						<paralleledTarget>false</paralleledTarget>
 						<range>
-							<compiledString>FQwAAAABAAAAGAAAAEE0X1VzZVJhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+							<compiledString>FR4AAAACAAAALQAAAEcAAABBNF9Vc2VSYW5nZQBBYmlsaXR5UmFuZ2VTY2FsZQBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0otFDFCLTQhRaAwAAACLVRCLAotNEItQUN1d+P/S3E342V302UX0i+Vdww==</compiledString>
 							<returnType>float</returnType>
-							<sString>cA4_UseRange</sString>
+							<sString>cA4_UseRange * cAbilityRangeScale</sString>
 						</range>
 						<targetSelector href="/Items/Talents/Class/IronKnight/Ability_A4.TALENT" id="7E179AB7-39E9-44DD-8780-C42B3AD10DE6">
 							<SelectApplicatorTarget>
@@ -248,9 +248,9 @@
 						</offset>
 						<paralleledTarget>false</paralleledTarget>
 						<range>
-							<compiledString>FQwAAAABAAAAGAAAAEE0X1VzZVJhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+							<compiledString>FR4AAAACAAAALQAAAEcAAABBNF9Vc2VSYW5nZQBBYmlsaXR5UmFuZ2VTY2FsZQBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0otFDFCLTQhRaAwAAACLVRCLAotNEItQUN1d+P/S3E342V302UX0i+Vdww==</compiledString>
 							<returnType>float</returnType>
-							<sString>cA4_UseRange</sString>
+							<sString>cA4_UseRange * cAbilityRangeScale</sString>
 						</range>
 						<targetSelector href="/Items/Talents/Class/IronKnight/Ability_A4.TALENT" id="EF7AE965-3A31-483B-8E91-DF021284C2B4">
 							<SelectApplicatorTarget>
@@ -289,9 +289,9 @@
 						</offset>
 						<paralleledTarget>false</paralleledTarget>
 						<range>
-							<compiledString>FQwAAAABAAAAGAAAAEE0X1VzZVJhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+							<compiledString>FR4AAAACAAAALQAAAEcAAABBNF9Vc2VSYW5nZQBBYmlsaXR5UmFuZ2VTY2FsZQBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0otFDFCLTQhRaAwAAACLVRCLAotNEItQUN1d+P/S3E342V302UX0i+Vdww==</compiledString>
 							<returnType>float</returnType>
-							<sString>cA4_UseRange</sString>
+							<sString>cA4_UseRange * cAbilityRangeScale</sString>
 						</range>
 						<targetSelector href="/Items/Talents/Class/IronKnight/Ability_A4.TALENT" id="71911332-50E0-4F8F-8BC7-28A751AE378E">
 							<SelectApplicatorTarget>
@@ -524,9 +524,9 @@
 									<flags>0</flags>
 									<mode>Normal</mode>
 									<range>
-										<compiledString>FQwAAAABAAAAGAAAAEE0X1VzZVJhbmdlAFWL7ItFDFCLTQhRaAAAAACLVRCLAotNEItQUP/SXcM=</compiledString>
+										<compiledString>FR4AAAACAAAALQAAAEcAAABBNF9Vc2VSYW5nZQBBYmlsaXR5UmFuZ2VTY2FsZQBVi+yD7AyLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0otFDFCLTQhRaAwAAACLVRCLAotNEItQUN1d+P/S3E342V302UX0i+Vdww==</compiledString>
 										<returnType>float</returnType>
-										<sString>cA4_UseRange</sString>
+										<sString>cA4_UseRange * cAbilityRangeScale</sString>
 									</range>
 									<targetFilter>679477251</targetFilter>
 									<targetSelector href="" />

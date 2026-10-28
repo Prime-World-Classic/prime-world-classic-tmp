@@ -886,9 +886,9 @@
 					<UnitConstant>
 						<name>MaxTeleportDist</name>
 						<var>
-							<compiledString>FQkAAAACAAAAFgAAACkAAABBNF9SYW5nZQBVi+xRi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9LcBTcAAADZXfzZRfyL5V3DAAAAAAAACEA=</compiledString>
+							<compiledString>FR4AAAADAAAALQAAAEAAAABNAAAAQTRfUmFuZ2UAAAAAQWJpbGl0eVJhbmdlU2NhbGUAVYvsg+wMi0UMUItNCFFoAAAAAItVEIsCi00Qi1BQ/9LcBW4AAACLRQxQi00IUWgMAAAAi1UQiwKLTRCLUFDdXfj/0txN+Nld9NlF9IvlXcMAAAAAAAAIQA==</compiledString>
 							<returnType>float</returnType>
-							<sString>cA4_Range + 3</sString>
+							<sString>(cA4_Range + 3) * cAbilityRangeScale</sString>
 						</var>
 					</UnitConstant>
 				</Item>

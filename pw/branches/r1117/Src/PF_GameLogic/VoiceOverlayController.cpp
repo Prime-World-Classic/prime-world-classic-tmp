@@ -29,6 +29,10 @@ namespace
   const int MAX_LINE = 512;
   const int MAX_BUILD_LINE = 4096;
   const int MAX_TRAINING_BUILDS = 16;
+  // cbar: asked again while the launcher keeps silent about it (the back end may be slow)
+  const float CONSUMABLE_BAR_PERIOD = 3.0f;
+  const int CONSUMABLE_BAR_TRIES = 10;
+  const int CONSUMABLE_BAR_MASK = 0x1FF;
 
   const char szOverlayCommand[] = "VoiceOverlayCmd";
 
@@ -172,8 +176,13 @@ VoiceOverlayController::VoiceOverlayController( UI::FlashContainer2 * flashWnd, 
   pollUnlockKey( _pollUnlockKey ),
   hintShown( false ),
   hasCurrent( false ),
-  launcherHeard( false )
+  launcherHeard( false ),
+  consumableBarWanted( false ),
+  consumableBarKnown( false ),
+  consumableBarTries( 0 ),
+  consumableBarTimer( 0.f )
 {
+  memset( consumableBar, 0, sizeof( consumableBar ) );
   flashWnd->AddFSListner( szOverlayCommand, this );
   Input::Binds * binds = Input::BindsManager::Instance()->GetBinds();
   DebugLog( "controller created, unlock bind %s", binds && binds->FindCommand( "voice_overlay_unlock_on" ) ? "present" : "MISSING" );
@@ -301,6 +310,71 @@ bool VoiceOverlayController::ParseTrainingBuild( const char * data, int size )
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void VoiceOverlayController::RequestConsumableBar()
+{
+  consumableBarWanted = true;
+  // the first question goes with the first poll the launcher answers
+  consumableBarTimer = CONSUMABLE_BAR_PERIOD;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool VoiceOverlayController::GetConsumableBar( int masks[CONSUMABLE_BAR_SLOTS] ) const
+{
+  if ( !consumableBarKnown )
+    return false;
+  memcpy( masks, consumableBar, sizeof( consumableBar ) );
+  return true;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void VoiceOverlayController::UpdateConsumableBarRequest( float timeDelta )
+{
+  if ( !consumableBarWanted || consumableBarKnown || consumableBarTries >= CONSUMABLE_BAR_TRIES || !IsLauncherAnswering() )
+    return;
+  consumableBarTimer += timeDelta;
+  if ( consumableBarTimer < CONSUMABLE_BAR_PERIOD )
+    return;
+  consumableBarTimer = 0.f;
+  ++consumableBarTries;
+  Send( "cbar" );
+  DebugLog( "cbar %d", consumableBarTries );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// "PWC 1", then "c <24 masks>" (launcher voiceGameBridge.js); the header alone - nothing is chosen
+bool VoiceOverlayController::ParseConsumableBar( const char * data, int size )
+{
+  if ( strncmp( data, "PWC 1", 5 ) != 0 )
+    return false;
+
+  int masks[CONSUMABLE_BAR_SLOTS];
+  memset( masks, 0, sizeof( masks ) );
+
+  const char * line = strchr( data, '\n' );
+  if ( line && line[1] == 'c' && line[2] == ' ' )
+  {
+    char text[MAX_LINE];
+    const char * lineEnd = strchr( line + 1, '\n' );
+    const int lineLen = (int)( ( lineEnd ? lineEnd : data + size ) - ( line + 3 ) );
+    const int len = lineLen < MAX_LINE - 1 ? lineLen : MAX_LINE - 1;
+    memcpy( text, line + 3, len );
+    text[len] = 0;
+
+    vector<string> fields;
+    NStr::SplitString( string( text ), &fields, ' ' );
+    if ( fields.size() != CONSUMABLE_BAR_SLOTS )
+      return false;
+    for ( int i = 0; i < fields.size(); ++i )
+      masks[i] = atoi( fields[i].c_str() ) & CONSUMABLE_BAR_MASK;
+  }
+
+  memcpy( consumableBar, masks, sizeof( masks ) );
+  consumableBarKnown = true;
+  DebugLog( "cbar answered" );
+  return true;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void VoiceOverlayController::SetUnlocked( bool _unlocked )
 {
   DebugLog( "unlock key %s (was %d, shown %d)", _unlocked ? "down" : "up", (int)unlocked, (int)shown );
@@ -424,6 +498,7 @@ void VoiceOverlayController::Update( float timeDelta )
     if ( pttHeld )
       Send( "ptt 1" );
   }
+  UpdateConsumableBarRequest( timeDelta );
 
   if ( shown && silenceTime > SILENCE_TIMEOUT )
     HideOverlay();
@@ -450,6 +525,11 @@ void VoiceOverlayController::ReceiveAll()
     if ( strncmp( buffer, "PWB ", 4 ) == 0 )
     {
       ParseTrainingBuild( buffer, size );
+      continue;
+    }
+    if ( strncmp( buffer, "PWC ", 4 ) == 0 )
+    {
+      ParseConsumableBar( buffer, size );
       continue;
     }
 

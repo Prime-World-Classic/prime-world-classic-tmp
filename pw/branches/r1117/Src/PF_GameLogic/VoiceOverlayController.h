@@ -43,6 +43,12 @@ public:
   bool IsLauncherAnswering() const;
   void RequestTrainingBuild( int requestId, const char * heroId );
   bool TakeTrainingBuild( int requestId, Training::WebBuild & build );
+  // Consumables of the action bar chosen in the launcher (back end build.battleConsumables): asked again
+  // until the launcher answers. Read only - the battle never saves them. GetConsumableBar: false until then,
+  // masks - a bit per consumable (CONSUMABLE_BAR_KINDS) for each of the 24 buttons.
+  enum { CONSUMABLE_BAR_SLOTS = 24 };
+  void RequestConsumableBar();
+  bool GetConsumableBar( int masks[CONSUMABLE_BAR_SLOTS] ) const;
 
   // Must run before AdventureScreen registers its handlers: a handler resolves its
   // command by name once, at registration, and never sees a command bound later.
@@ -82,6 +88,8 @@ private:
   void ReceiveAll();
   bool ParseState( const char * data, int size, State & state );
   bool ParseTrainingBuild( const char * data, int size );
+  bool ParseConsumableBar( const char * data, int size );
+  void UpdateConsumableBarRequest( float timeDelta );
   void ApplyState( const State & state );
   void HideOverlay();
   void UpdatePushToTalk();
@@ -106,6 +114,11 @@ private:
   bool launcherHeard;  // the launcher answered a poll at least once
   // answers of the launcher by the request (several heroes may be added at once), until taken
   nstl::map<int, Training::WebBuild> trainingBuilds;
+  bool consumableBarWanted;
+  bool consumableBarKnown;
+  int consumableBarTries;
+  float consumableBarTimer;
+  int consumableBar[CONSUMABLE_BAR_SLOTS];
 };
 
 }

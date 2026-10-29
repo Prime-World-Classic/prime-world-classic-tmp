@@ -226,6 +226,13 @@ public:
 
   //inventory
   void AddInventoryItemToActionBar(int index);
+  // Buttons of the action bar through members main.swf already has (ActionButton.isFreeSlot / isReserved,
+  // ActionBar.BuyItemInSlot - the drop of a shop item onto a button), the movie itself is not changed:
+  // a free button; keeping a free button for an item (others take it only when no other button is free);
+  // the next item added to the bar goes into this button (false - the player already chose one by a drop)
+  bool IsActionBarSlotFree( int slot );
+  void ReserveActionBarSlot( int slot );
+  bool PutNextItemIntoActionBarSlot( int slot );
   void SetInventoryItemIcon(int index, const char * path);
   void SetInventoryItemState(int index, int count, ActionBarSlotState::EActionBarSlotState state, float cooldown, float maxCooldownValue);
 

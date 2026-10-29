@@ -23,6 +23,7 @@ namespace NGameX
 {
 class AdventureFlashInterface;
 class AdventureTooltip;
+class VoiceOverlayController;
 _interface IUIEventHandler;
 
 class InventoryController : public UI::IFSCommandListner, public BaseObjectST
@@ -41,7 +42,12 @@ public:
   void SetTargetingItem(int _targetingConsumable) {targetingConsumable = _targetingConsumable;}
   void DropTarget();
 
+  // Buttons of the action bar the player chose for consumables in the launcher: a new item goes into the first
+  // free one of its buttons, and other items keep away from them while there are other free buttons
+  void SetLauncherBridge( VoiceOverlayController * bridge ) { launcherBridge = bridge; }
+
 private:
+  void AddToActionBar( int index, const NWorld::PFConsumable * consumable );
 
   struct InventorySlotStatus
   {
@@ -71,6 +77,7 @@ private:
 
   Weak<AdventureFlashInterface>          flashInterface;
   Weak<IUIEventHandler>         eventHandler;
+  Weak<VoiceOverlayController>  launcherBridge;
 
 };
 

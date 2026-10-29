@@ -9,6 +9,7 @@
 #include "DBConsumable.h"
 #include "PFAbilityData.h"
 #include "FlashFSCommands.h"
+#include "VoiceOverlayController.h"
 
 //for tooltips
 #include "AdventureTooltip.h"
@@ -22,6 +23,41 @@
 namespace
 {
   static const int NO_TARGET = -1;
+
+  // Consumables the launcher lets put onto the action bar: bit N of a button's mask is the item N
+  // (launcher content/modules/build/consumables.js, pw-api objects/buildConsumables.js - the same order)
+  struct ConsumableKind
+  {
+    const char * file;
+    int bit;
+  };
+  const ConsumableKind consumableKinds[] =
+  {
+    { "HealingPotion.ARCT", 0 },
+    { "EnergyPotion.ARCT", 1 },
+    { "SpeedPotion.ARCT", 2 },
+    { "TeleportScroll.ARCT", 3 },
+    { "AdvanceTeleportScroll.ARCT", 3 }, // the scroll of the Dragonwald shop
+    { "CleansingPotion.ARCT", 4 },
+    { "LittleTSightPotion.ARCT", 5 },
+    { "TrueSightPotion.ARCT", 6 },
+    { "EyeOfSeeing.ARCT", 7 },
+    { "KU-Stick.ARCT", 8 },
+  };
+
+  // the bit of the item, -1 - not one of them
+  int ConsumableBit( const NWorld::PFConsumable * consumable )
+  {
+    if ( !IsValid( consumable ) || !consumable->GetDBDesc() )
+      return -1;
+    const string & path = consumable->GetDBDesc()->GetDBID().GetFileName();
+    const int slash = path.rfind( '/' );
+    const string file = path.substr( slash >= 0 ? slash + 1 : 0 );
+    for ( int i = 0; i < ARRAY_SIZE( consumableKinds ); ++i )
+      if ( NStr::ICmp( file.c_str(), consumableKinds[i].file ) == 0 )
+        return consumableKinds[i].bit;
+    return -1;
+  }
 }
 
 namespace NGameX
@@ -106,7 +142,7 @@ void InventoryController::Update( int mouseX, int mouseY )
     {
       flashInterface->SetInventoryItemIcon(i, consumable->GetDBDesc()->image->textureFileName.c_str());
       if ( consumable->GetActionBarIndex() != -2 )
-        flashInterface->AddInventoryItemToActionBar(i);
+        AddToActionBar(i, consumable);
     }
     
 
@@ -128,6 +164,31 @@ void InventoryController::Update( int mouseX, int mouseY )
   {
     tooltip->SetLocation(mouseX , mouseY);
   }
+}
+
+void InventoryController::AddToActionBar( int index, const NWorld::PFConsumable * consumable )
+{
+  int masks[VoiceOverlayController::CONSUMABLE_BAR_SLOTS];
+  if ( IsValid( launcherBridge ) && launcherBridge->GetConsumableBar( masks ) )
+  {
+    // buttons of the player's consumables: a used up item freed its button and the mark with it
+    for ( int slot = 0; slot < VoiceOverlayController::CONSUMABLE_BAR_SLOTS; ++slot )
+      if ( masks[slot] )
+        flashInterface->ReserveActionBarSlot( slot );
+
+    const int bit = ConsumableBit( consumable );
+    if ( bit >= 0 )
+    {
+      for ( int slot = 0; slot < VoiceOverlayController::CONSUMABLE_BAR_SLOTS; ++slot )
+      {
+        if ( !( masks[slot] & ( 1 << bit ) ) || !flashInterface->IsActionBarSlotFree( slot ) )
+          continue;
+        flashInterface->PutNextItemIntoActionBarSlot( slot );
+        break;
+      }
+    }
+  }
+  flashInterface->AddInventoryItemToActionBar( index );
 }
 
 InventoryController::InventorySlotStatus InventoryController::GetItemStatus( const NWorld::PFConsumable * consumable )

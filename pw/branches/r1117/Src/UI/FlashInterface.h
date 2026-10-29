@@ -207,10 +207,18 @@ public:
   bool AtomGetBool( avmplus::Atom atom );
   int AtomGetInt( avmplus::Atom atom );
 
+  // An object the movie returned (a display object and so on): its property and a method with an int argument.
+  // Not an object (null, undefined) - undefined / false.
+  avmplus::Atom GetObjectProperty( avmplus::Atom object, const char * name );
+  bool SetObjectProperty( avmplus::Atom object, const char * name, bool value );
+  bool CallObjectMethod( avmplus::Atom object, const char * method, int arg );
+  bool AtomIsObject( avmplus::Atom atom );
+
 protected:
   FlashInterface() {};
 
   avmplus::ScriptObject * AtomToObject( avmplus::Atom atom );
+  avmplus::ScriptObject * ObjectOfAtom( avmplus::Atom atom );
 
 private:
   avmplus::ScriptObject * mainInterface;

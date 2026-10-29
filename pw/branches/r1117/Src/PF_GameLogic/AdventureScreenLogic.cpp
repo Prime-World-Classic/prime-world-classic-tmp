@@ -515,6 +515,12 @@ void AdventureScreenLogic::SetHero(NWorld::PFBaseHero const *pHero)
   actionBarController = new ActionBarController( uiData, flashWnd, flashInterface, m_owner, pMale, actionBarTooltip );
   shopController = new ShopController( uiData, flashWnd, generalTooltip, flashInterface, m_owner, pMale );
   inventoryController = new InventoryController( flashWnd, generalTooltip,flashInterface, m_owner, pHero );
+  // consumables of the action bar chosen in the launcher (read only, the battle does not save them)
+  if ( voiceOverlayController && !m_owner->IsInReplayMode() && !m_owner->IsSpectator() )
+  {
+    inventoryController->SetLauncherBridge( voiceOverlayController );
+    voiceOverlayController->RequestConsumableBar();
+  }
   impulseBuffsController = new ImpulseBuffsController( flashWnd, generalTooltip, flashInterface, uiData->impulsiveBuffsParams, m_owner->GetImpulseBuffsManager(), pHero );
   
   int heroExp = 0;
@@ -558,6 +564,8 @@ void AdventureScreenLogic::SetControlledHero( NWorld::PFBaseHero const * pHero, 
   actionBarController = new ActionBarController( uiData, flashWnd, flashInterface, m_owner, pMale, actionBarTooltip );
   shopController = new ShopController( uiData, flashWnd, generalTooltip, flashInterface, m_owner, pMale );
   inventoryController = new InventoryController( flashWnd, generalTooltip, flashInterface, m_owner, pHero );
+  if ( voiceOverlayController && !m_owner->IsInReplayMode() && !m_owner->IsSpectator() )
+    inventoryController->SetLauncherBridge( voiceOverlayController );
 
   ourHeroBuffs->SetUnit( pHero );
   talentPanel->SetHero( pMale );

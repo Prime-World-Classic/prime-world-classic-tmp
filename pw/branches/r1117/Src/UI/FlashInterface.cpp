@@ -80,6 +80,51 @@ avmplus::ScriptObject * FlashInterface::AtomToObject( avmplus::Atom atom )
   return 0;
 }
 
+avmplus::ScriptObject * FlashInterface::ObjectOfAtom( avmplus::Atom atom )
+{
+  if ( !mainInterface || !avmplus::AvmCore::isObject( atom ) )
+    return 0;
+  return mainInterface->toplevel()->core()->atomToScriptObject( atom );
+}
+
+avmplus::Atom FlashInterface::GetObjectProperty( avmplus::Atom object, const char * name )
+{
+  if ( !mainInterface ) return undefinedAtom;
+  FLASH_ENTER_FUNCTION_RETURN( mainInterface->gc(), undefinedAtom );
+  avmplus::ScriptObject * scriptObject = ObjectOfAtom( object );
+  if ( !scriptObject )
+    return avmplus::AtomConstants::undefinedAtom;
+  return avmplus::GetMultinamePropertyFromObject( scriptObject, name );
+}
+
+bool FlashInterface::SetObjectProperty( avmplus::Atom object, const char * name, bool value )
+{
+  if ( !mainInterface ) return false;
+  FLASH_ENTER_FUNCTION_RETURN( mainInterface->gc(), false );
+  avmplus::ScriptObject * scriptObject = ObjectOfAtom( object );
+  if ( !scriptObject )
+    return false;
+  avmplus::SetPropertyToObject( scriptObject, scriptObject->core()->internConstantStringLatin1( name ), value ? avmplus::AtomConstants::trueAtom : avmplus::AtomConstants::falseAtom );
+  return true;
+}
+
+bool FlashInterface::CallObjectMethod( avmplus::Atom object, const char * method, int arg )
+{
+  if ( !mainInterface ) return false;
+  FLASH_ENTER_FUNCTION_RETURN( mainInterface->gc(), false );
+  avmplus::ScriptObject * scriptObject = ObjectOfAtom( object );
+  if ( !scriptObject )
+    return false;
+  avmplus::Atom argv[2] = { scriptObject->atom(), scriptObject->core()->intToAtom( arg ) };
+  avmplus::Atom result;
+  return avmplus::FlashScriptObject::CallMethodI( scriptObject, method, 1, argv, result );
+}
+
+bool FlashInterface::AtomIsObject( avmplus::Atom atom )
+{
+  return avmplus::AvmCore::isObject( atom );
+}
+
 bool FlashInterface::AtomGetBool( avmplus::Atom atom )
 {
   return avmplus::AvmCore::boolean( atom );

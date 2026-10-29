@@ -212,8 +212,10 @@ namespace
     return false;
   }
 
-  // a hero without a player (playerId -1) on the given side: no AI, does not come back after death
-  NWorld::PFBaseHero * AddHero( NWorld::PFWorld * world, const NDb::Hero * dbHero, NDb::EFaction faction, const CVec3 & pos, bool dummy )
+  // a hero without a player (playerId -1) on the given side: no AI, does not come back after death.
+  // talents: the player's build of this hero (ReadBuildParams); none - the build of the data
+  NWorld::PFBaseHero * AddHero( NWorld::PFWorld * world, const NDb::Hero * dbHero, NDb::EFaction faction, const CVec3 & pos, bool dummy,
+    const NCore::PlayerTalentSet * talents )
   {
     NWorld::PFBaseHero::SpawnInfo info;
     info.pHero           = dbHero;
@@ -223,6 +225,11 @@ namespace
     info.inTeamId        = 1; // colour index, must be > 0
     info.isClone         = false;
     info.placement       = Placement( pos, QNULL, CVec3( 1.0f, 1.0f, 1.0f ) );
+    if ( talents && !talents->empty() )
+    {
+      info.usePlayerInfoTalentSet = true;
+      info.playerInfo.talents = *talents;
+    }
 
     // the hero was not preloaded: its files are loaded right now
     const bool oldAssertValue = NDb::GetDbResourceCache().EnableAssertionLoadingFiles( false );
@@ -561,13 +568,16 @@ void Execute( NWorld::PFWorld * world, int userId, const string & action, const 
     SetSkin( pMale, ParamStr( params, 0 ) );
   else if ( action == "add" )
   {
-    // "add <hero index> ally|enemy|dummy": on the side of the target hero (the player's one) or against it
+    // "add <hero index> ally|enemy|dummy [build ...]": on the side of the target hero (the player's one) or against
+    // it, with the player's build of the added hero when the launcher gave it (AppendBuildParams)
     const NDb::Hero * dbHero = FindDbHero( ParamInt( params, 0 ) );
     const string side = ParamStr( params, 1 );
     if ( dbHero && pTarget && ( side == "ally" || side == "enemy" || side == "dummy" ) )
     {
+      NCore::PlayerTalentSet talents;
+      const bool withBuild = ReadBuildParams( world, params, 2, talents );
       const NDb::EFaction faction = side == "ally" ? pTarget->GetFaction() : OppositeFaction( pTarget->GetFaction() );
-      AddHero( world, dbHero, faction, PlaceInFront( pTarget ), side == "dummy" );
+      AddHero( world, dbHero, faction, PlaceInFront( pTarget ), side == "dummy", withBuild ? &talents : 0 );
     }
   }
   else if ( action == "remove" )

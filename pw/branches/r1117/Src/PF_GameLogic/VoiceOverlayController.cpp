@@ -28,6 +28,7 @@ namespace
   const int MAX_DATAGRAM = 8192;
   const int MAX_LINE = 512;
   const int MAX_BUILD_LINE = 4096;
+  const int MAX_TRAINING_BUILDS = 16;
 
   const char szOverlayCommand[] = "VoiceOverlayCmd";
 
@@ -171,8 +172,7 @@ VoiceOverlayController::VoiceOverlayController( UI::FlashContainer2 * flashWnd, 
   pollUnlockKey( _pollUnlockKey ),
   hintShown( false ),
   hasCurrent( false ),
-  launcherHeard( false ),
-  trainingBuildId( 0 )
+  launcherHeard( false )
 {
   flashWnd->AddFSListner( szOverlayCommand, this );
   Input::Binds * binds = Input::BindsManager::Instance()->GetBinds();
@@ -226,10 +226,11 @@ void VoiceOverlayController::RequestTrainingBuild( int requestId, const char * h
 
 bool VoiceOverlayController::TakeTrainingBuild( int requestId, Training::WebBuild & build )
 {
-  if ( !trainingBuildId || trainingBuildId != requestId )
+  nstl::map<int, Training::WebBuild>::iterator it = trainingBuilds.find( requestId );
+  if ( it == trainingBuilds.end() )
     return false;
-  build = trainingBuild;
-  trainingBuildId = 0;
+  build = it->second;
+  trainingBuilds.erase( it );
   return true;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -291,8 +292,10 @@ bool VoiceOverlayController::ParseTrainingBuild( const char * data, int size )
 
   if ( !header )
     return false;
-  trainingBuild = build;
-  trainingBuildId = requestId;
+  // answers nobody waits for any more (late, after the panel's timeout) do not pile up
+  if ( trainingBuilds.size() >= MAX_TRAINING_BUILDS )
+    trainingBuilds.clear();
+  trainingBuilds[requestId] = build;
   DebugLog( "tbuild %d answered", requestId );
   return true;
 }

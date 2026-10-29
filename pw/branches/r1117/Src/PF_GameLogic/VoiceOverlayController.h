@@ -104,8 +104,8 @@ private:
   State current;
   bool hasCurrent;
   bool launcherHeard;  // the launcher answered a poll at least once
-  int trainingBuildId; // the request the launcher answered last, 0 = none (or taken)
-  Training::WebBuild trainingBuild;
+  // answers of the launcher by the request (several heroes may be added at once), until taken
+  nstl::map<int, Training::WebBuild> trainingBuilds;
 };
 
 }

@@ -390,7 +390,7 @@ void AdventureFlashInterface::ReserveActionBarSlot( int slot )
     SetObjectProperty( GetActionBarItemDisplayObject( slot, false ), "isReserved", true );
 }
 
-bool AdventureFlashInterface::PutNextItemIntoActionBarSlot( int slot )
+int AdventureFlashInterface::PutNextItemIntoActionBarSlot( int slot )
 {
   // the buttons are children of the ActionBar clip
   avmplus::Atom bar = GetActionBarItemDisplayObject( slot, false );
@@ -400,10 +400,10 @@ bool AdventureFlashInterface::PutNextItemIntoActionBarSlot( int slot )
     if ( !AtomIsObject( GetObjectProperty( bar, "BuyItemInSlot" ) ) )
       continue;
     if ( AtomGetInt( GetObjectProperty( bar, "BuyToIndex" ) ) != -1 )
-      return false;
-    return CallObjectMethod( bar, "BuyItemInSlot", slot );
+      return -2;
+    return CallObjectMethod( bar, "BuyItemInSlot", slot ) ? 1 : 0;
   }
-  return false;
+  return -1;
 }
 
 void AdventureFlashInterface::SetInventoryItemIcon( int index, const char * path )

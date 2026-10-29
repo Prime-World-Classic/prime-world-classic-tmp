@@ -49,6 +49,8 @@ public:
   enum { CONSUMABLE_BAR_SLOTS = 24 };
   void RequestConsumableBar();
   bool GetConsumableBar( int masks[CONSUMABLE_BAR_SLOTS] ) const;
+  // a line of Bin\voice_overlay.log (rare events only)
+  static void Log( const char * format, ... );
 
   // Must run before AdventureScreen registers its handlers: a handler resolves its
   // command by name once, at registration, and never sees a command bound later.

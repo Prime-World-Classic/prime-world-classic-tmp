@@ -42,6 +42,9 @@ namespace
     { "LittleTSightPotion.ARCT", 5 },
     { "TrueSightPotion.ARCT", 6 },
     { "EyeOfSeeing.ARCT", 7 },
+    { "EyeOfSeeingCheap.ARCT", 7 }, // the same lantern at other prices
+    { "EyeOfSeeingCheapest.ARCT", 7 },
+    { "EyeOfSeeing_ARAM.ARCT", 7 },
     { "KU-Stick.ARCT", 8 },
   };
 
@@ -50,9 +53,12 @@ namespace
   {
     if ( !IsValid( consumable ) || !consumable->GetDBDesc() )
       return -1;
+    // "Items/Consumables/HealingPotion.ARCT.xdb"
     const string & path = consumable->GetDBDesc()->GetDBID().GetFileName();
     const int slash = path.rfind( '/' );
-    const string file = path.substr( slash >= 0 ? slash + 1 : 0 );
+    string file = path.substr( slash >= 0 ? slash + 1 : 0 );
+    if ( file.size() > 4 && NStr::ICmp( file.c_str() + file.size() - 4, ".xdb" ) == 0 )
+      file = file.substr( 0, file.size() - 4 );
     for ( int i = 0; i < ARRAY_SIZE( consumableKinds ); ++i )
       if ( NStr::ICmp( file.c_str(), consumableKinds[i].file ) == 0 )
         return consumableKinds[i].bit;
@@ -168,8 +174,13 @@ void InventoryController::Update( int mouseX, int mouseY )
 
 void InventoryController::AddToActionBar( int index, const NWorld::PFConsumable * consumable )
 {
+  const char * file = IsValid( consumable ) && consumable->GetDBDesc() ? consumable->GetDBDesc()->GetDBID().GetFileName().c_str() : "?";
   int masks[VoiceOverlayController::CONSUMABLE_BAR_SLOTS];
-  if ( IsValid( launcherBridge ) && launcherBridge->GetConsumableBar( masks ) )
+  if ( !IsValid( launcherBridge ) )
+    VoiceOverlayController::Log( "consumable %s: no launcher bridge", file );
+  else if ( !launcherBridge->GetConsumableBar( masks ) )
+    VoiceOverlayController::Log( "consumable %s: the launcher has not answered yet", file );
+  else
   {
     // buttons of the player's consumables: a used up item freed its button and the mark with it
     for ( int slot = 0; slot < VoiceOverlayController::CONSUMABLE_BAR_SLOTS; ++slot )
@@ -177,18 +188,27 @@ void InventoryController::AddToActionBar( int index, const NWorld::PFConsumable 
         flashInterface->ReserveActionBarSlot( slot );
 
     const int bit = ConsumableBit( consumable );
+    int chosen = -1;
+    int result = 0;
     if ( bit >= 0 )
     {
       for ( int slot = 0; slot < VoiceOverlayController::CONSUMABLE_BAR_SLOTS; ++slot )
       {
-        if ( !( masks[slot] & ( 1 << bit ) ) || !flashInterface->IsActionBarSlotFree( slot ) )
+        if ( !( masks[slot] & ( 1 << bit ) ) )
           continue;
-        flashInterface->PutNextItemIntoActionBarSlot( slot );
+        const bool free = flashInterface->IsActionBarSlotFree( slot );
+        VoiceOverlayController::Log( "consumable %s: button %d %s", file, slot, free ? "free" : "taken" );
+        if ( !free )
+          continue;
+        chosen = slot;
+        result = flashInterface->PutNextItemIntoActionBarSlot( slot );
         break;
       }
     }
+    VoiceOverlayController::Log( "consumable %s: bit %d, button %d, put %d", file, bit, chosen, result );
   }
   flashInterface->AddInventoryItemToActionBar( index );
+  VoiceOverlayController::Log( "consumable %s: on the bar at %d", file, flashInterface->GetInventoryItemActionBarIndex( index ) );
 }
 
 InventoryController::InventorySlotStatus InventoryController::GetItemStatus( const NWorld::PFConsumable * consumable )

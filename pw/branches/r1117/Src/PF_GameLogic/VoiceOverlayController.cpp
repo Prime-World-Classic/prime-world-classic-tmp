@@ -38,7 +38,7 @@ namespace
 
   // Diagnostics: Bin\voice_overlay.log, rewritten every game start. Only rare events
   // (unlock key, show/hide, Flash replies), never the 10 Hz polling.
-  void DebugLog( const char * format, ... )
+  void DebugLogV( const char * format, va_list args )
   {
     static bool started = false;
     FILE * file = fopen( "voice_overlay.log", started ? "a" : "w" );
@@ -50,12 +50,17 @@ namespace
     ::GetLocalTime( &time );
     fprintf( file, "%02d:%02d:%02d.%03d ", time.wHour, time.wMinute, time.wSecond, time.wMilliseconds );
 
-    va_list args;
-    va_start( args, format );
     vfprintf( file, format, args );
-    va_end( args );
     fputc( '\n', file );
     fclose( file );
+  }
+
+  void DebugLog( const char * format, ... )
+  {
+    va_list args;
+    va_start( args, format );
+    DebugLogV( format, args );
+    va_end( args );
   }
 
   // Skips `count` space-separated fields; the rest of the line is a nick that may contain spaces.
@@ -216,6 +221,15 @@ void VoiceOverlayController::NotifySmartCast( const char * talentId, bool on )
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void VoiceOverlayController::Log( const char * format, ... )
+{
+  va_list args;
+  va_start( args, format );
+  DebugLogV( format, args );
+  va_end( args );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool VoiceOverlayController::IsLauncherAnswering() const
 {
   return launcherHeard && silenceTime < SILENCE_TIMEOUT;
@@ -370,7 +384,11 @@ bool VoiceOverlayController::ParseConsumableBar( const char * data, int size )
 
   memcpy( consumableBar, masks, sizeof( masks ) );
   consumableBarKnown = true;
-  DebugLog( "cbar answered" );
+  char chosen[CONSUMABLE_BAR_SLOTS * 12 + 1] = "";
+  for ( int i = 0; i < CONSUMABLE_BAR_SLOTS; ++i )
+    if ( masks[i] )
+      sprintf( chosen + strlen( chosen ), " %d:%d", i, masks[i] );
+  DebugLog( "cbar answered:%s", chosen[0] ? chosen : " nothing chosen" );
   return true;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

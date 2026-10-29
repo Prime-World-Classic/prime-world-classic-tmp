@@ -3,6 +3,8 @@
 	<BackLink DBID="/Items/Talents/Class/Taurus/Ability_A1.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Taurus/Ability_A1u.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Taurus/Ability_A1u2.TALENT" Count="1" />
+	<BackLink DBID="/Items/Talents/Level2/G567_CasterBase.TALENT" Count="1" />
+	<BackLink DBID="/Items/Talents/TalentKits/Redset6_2_CDR/appl_Redset6_2_RefreshCooldown.APLR" Count="1" />
 	<BackLink DBID="/Items/Talents/Taurus.TALENTSET" Count="1" />
 	<activationConditions />
 	<activeCustomTrigger>true</activeCustomTrigger>
@@ -1167,6 +1169,7 @@
 	<node></node>
 	<passiveApplicators>
 		<Item href="/Items/Talents/Class/Taurus/status_A1_I2C.APLR" />
+		<Item href="/Items/Talents/TalentKits/Redset7_11_MiniRefresher/trigger_G766_RefreshAndNotify.APLR" />
 	</passiveApplicators>
 	<persistentId>Taurus_A1</persistentId>
 	<prerequisiteTalents />

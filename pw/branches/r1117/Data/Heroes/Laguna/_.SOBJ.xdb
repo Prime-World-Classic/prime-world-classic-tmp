@@ -279,7 +279,7 @@
 					</attached>
 					<caption></caption>
 					<faceFXAnims />
-					<groupFlags>0</groupFlags>
+					<groupFlags>4</groupFlags>
 					<keys />
 					<locatorList href="/Heroes/Laguna/_.LOLS" />
 					<mayaFileName>/Heroes/Laguna/_.mayaSkel</mayaFileName>

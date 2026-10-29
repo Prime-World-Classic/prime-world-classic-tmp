@@ -2,6 +2,7 @@
 <Talent>
 	<BackLink DBID="/Items/Talents/Class/Taurus/Ability_A3u.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Class/Taurus/Ability_A3u2.TALENT" Count="1" />
+	<BackLink DBID="/Items/Talents/TalentKits/Redset6_2_CDR/appl_Redset6_2_RefreshCooldown.APLR" Count="1" />
 	<BackLink DBID="/Items/Talents/Taurus.TALENTSET" Count="1" />
 	<activationConditions />
 	<activeCustomTrigger>true</activeCustomTrigger>
@@ -271,7 +272,9 @@
 	<naftaCost>300</naftaCost>
 	<name textref="/Items/Talents/Class/Taurus/Ability_A3.TALENT_name.txt" />
 	<node>ability3</node>
-	<passiveApplicators />
+	<passiveApplicators>
+		<Item href="/Items/Talents/TalentKits/Redset7_11_MiniRefresher/trigger_G766_RefreshAndNotify.APLR" />
+	</passiveApplicators>
 	<persistentId>Taurus_A3</persistentId>
 	<prerequisiteTalents />
 	<rarity>Class</rarity>

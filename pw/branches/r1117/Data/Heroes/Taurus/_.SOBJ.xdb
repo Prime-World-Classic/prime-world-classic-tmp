@@ -1343,7 +1343,7 @@
 					</attached>
 					<caption></caption>
 					<faceFXAnims />
-					<groupFlags>0</groupFlags>
+					<groupFlags>4</groupFlags>
 					<keys />
 					<locatorList href="/Heroes/Taurus/_.LOLS" />
 					<mayaFileName>/Heroes/Taurus/_.mayaSkel</mayaFileName>

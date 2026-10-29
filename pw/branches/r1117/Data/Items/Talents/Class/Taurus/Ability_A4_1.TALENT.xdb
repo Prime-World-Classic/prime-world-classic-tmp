@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Talent>
 	<BackLink DBID="/Items/Talents/Class/Taurus/Ability_A4_1u.TALENT" Count="1" />
+	<BackLink DBID="/Items/Talents/Level2/G567_CasterBase.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Taurus.TALENTSET" Count="1" />
 	<activationConditions />
 	<activeCustomTrigger>true</activeCustomTrigger>
@@ -1889,9 +1890,9 @@
 					<UnitConstant>
 						<name>A4_1u_Damage</name>
 						<var>
-							<compiledString>FQAAAAACAAAACAAAABIAAABVi+xqAVHZBUQAAADZHCRR2QVAAAAA2RwkagCLRQiLEItNCIuCMAEAAP/QUdkcJGoBi00QixGLTRCLQmD/0F3DAAAWQwAA+kM=</compiledString>
+							<compiledString>FQAAAAACAAAACAAAABIAAABVi+xqAVHZBUQAAADZHCRR2QVAAAAA2RwkagCLRQiLEItNCIuCMAEAAP/QUdkcJGoBi00QixGLTRCLQmD/0F3DAACgQgCAJ0Q=</compiledString>
 							<returnType>float</returnType>
-							<sString>damageScale(sStrength, 150, 500)</sString>
+							<sString>damageScale(sStrength, 80, 670)</sString>
 						</var>
 					</UnitConstant>
 				</Item>

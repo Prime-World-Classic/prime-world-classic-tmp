@@ -185,6 +185,12 @@
 		<Item href="/Items/Talents/Class/Bomber/Ability_A1.TALENT" />
 		<Item href="/Items/Talents/Class/Bomber/Ability_A2.TALENT" />
 		<Item href="/Items/Talents/Class/Bomber/Ability_A3.TALENT" />
+		<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" />
+		<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" />
+		<Item href="/Items/Talents/Class/Laguna/Ability_A3.TALENT" />
+		<Item href="/Items/Talents/Class/Taurus/Ability_A1.TALENT" />
+		<Item href="/Items/Talents/Class/Taurus/Ability_A2.TALENT" />
+		<Item href="/Items/Talents/Class/Taurus/Ability_A3.TALENT" />
 	</talents>
 	<useListAs>ListAsRule</useListAs>
 </RefreshCooldownApplicator>

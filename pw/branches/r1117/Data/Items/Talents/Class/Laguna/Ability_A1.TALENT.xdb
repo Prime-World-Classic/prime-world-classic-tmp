@@ -1,5 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Talent>
+	<BackLink DBID="/Items/Talents/Level2/G567_CasterBase.TALENT" Count="1" />
+	<BackLink DBID="/Items/Talents/TalentKits/Redset6_2_CDR/appl_Redset6_2_RefreshCooldown.APLR" Count="1" />
 	<BackLink DBID="/Items/Talents/Trickster.TALENTSET" Count="1" />
 	<activationConditions />
 	<activeCustomTrigger>true</activeCustomTrigger>
@@ -1602,9 +1604,9 @@
 					<UnitConstant>
 						<name>A1_Damage</name>
 						<var>
-							<compiledString>FQAAAAACAAAACAAAABIAAABVi+xqAVHZBUQAAADZHCRR2QVAAAAA2RwkagCLRQiLEItNCIuCNAEAAP/QUdkcJGoBi00QixGLTRCLQmD/0F3DAABwQgAAvkM=</compiledString>
+							<compiledString>FQAAAAACAAAACAAAABIAAABVi+xqAVHZBUQAAADZHCRR2QVAAAAA2RwkagCLRQiLEItNCIuCNAEAAP/QUdkcJGoBi00QixGLTRCLQmD/0F3DAACOQgDABUQ=</compiledString>
 <returnType>float</returnType>
-<sString>damageScale( sIntellect, 60, 380)</sString>
+<sString>damageScale( sIntellect, 71, 535)</sString>
 						</var>
 					</UnitConstant>
 				</Item>
@@ -1828,6 +1830,7 @@
 	<node>ability1</node>
 	<passiveApplicators>
 		<Item href="/Items/Talents/Class/Laguna/status_A1u_Current.APLR" />
+		<Item href="/Items/Talents/TalentKits/Redset7_11_MiniRefresher/trigger_G766_RefreshAndNotify.APLR" />
 	</passiveApplicators>
 	<persistentId>Laguna_A1</persistentId>
 	<prerequisiteTalents />

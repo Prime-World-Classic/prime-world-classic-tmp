@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <SpellApplicator>
+	<BackLink DBID="/Items/Talents/Class/Laguna/Ability_A3.TALENT" Count="1" />
 	<BackLink DBID="/Items/Talents/Level2/G792_SeaSymbol.TALENT" Count="3" />
 	<BackLink DBID="/Items/Talents/Class/Healer/Ability1.TALENT" Count="5" />
 	<BackLink DBID="/Items/Talents/Class/Healer/A4HealSpell.SPLL" Count="1" />

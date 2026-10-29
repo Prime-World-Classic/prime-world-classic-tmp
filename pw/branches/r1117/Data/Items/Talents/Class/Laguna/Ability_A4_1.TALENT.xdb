@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Talent>
+	<BackLink DBID="/Items/Talents/Level2/G567_CasterBase.TALENT" Count="1" />
 	<activationConditions />
 	<activeCustomTrigger>true</activeCustomTrigger>
 	<allowChase>
@@ -977,9 +978,9 @@
 					<UnitConstant>
 						<name>DiveRadius</name>
 						<var>
-							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAACgQA==</compiledString>
+							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAAAgQQ==</compiledString>
 							<returnType>float</returnType>
-							<sString>5.0f</sString>
+							<sString>10.0f</sString>
 						</var>
 					</UnitConstant>
 				</Item>
@@ -1037,9 +1038,9 @@
 					<UnitConstant>
 						<name>PathDamage</name>
 						<var>
-							<compiledString>FQAAAAACAAAACAAAABIAAABVi+xqAVHZBWMAAADZHCRR2QVfAAAA2RwkagCLRQiLEItNCIuCMAEAAP/QUdkcJItNCIsRi00Ii4I0AQAA/9BR2Rwk6B8AAACDxATZHCRqAYtNEIsRi00Qi0Jg/9BdwwAAjEIAAPpDVYvsUdlFCNlFDN7Z3+D2xAV6CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
+							<compiledString>FQAAAAACAAAACAAAABIAAABVi+xqAVHZBWMAAADZHCRR2QVfAAAA2RwkagCLRQiLEItNCIuCMAEAAP/QUdkcJItNCIsRi00Ii4I0AQAA/9BR2Rwk6B8AAACDxATZHCRqAYtNEIsRi00Qi0Jg/9BdwwAAvkIAAC9EVYvsUdlFCNlFDN7Z3+D2xAV6CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
 							<returnType>float</returnType>
-							<sString>damageScale( max(sIntellect, sStrength), 70, 500)</sString>
+							<sString>damageScale( max(sIntellect, sStrength), 95, 700)</sString>
 						</var>
 					</UnitConstant>
 				</Item>

@@ -632,6 +632,13 @@
 					<Item href="/Items/Talents/Class/Bomber/Ability_A3.TALENT" />
 					<Item href="/Items/Talents/Class/Bomber/Ability_A4_2.TALENT" />
 					<Item href="/Items/Talents/Class/Highlander/Ability3_Upg1.TALENT" />
+					<Item href="/Items/Talents/Class/Taurus/Ability_A1.TALENT" />
+					<Item href="/Items/Talents/Class/Taurus/Ability_A4_1.TALENT" />
+					<Item href="/Items/Talents/Class/Taurus/Ability_A4_2.TALENT" />
+					<Item href="/Items/Talents/Class/Laguna/Ability_A1.TALENT" />
+					<Item href="/Items/Talents/Class/Laguna/Ability_A2.TALENT" />
+					<Item href="/Items/Talents/Class/Laguna/Ability_A4_1.TALENT" />
+					<Item href="/Items/Talents/Class/Laguna/Ability_A4_2.TALENT" />
 				</talents>
 				<targetAbility>TalentFromList</targetAbility>
 				<useListAs>ListAsRule</useListAs>

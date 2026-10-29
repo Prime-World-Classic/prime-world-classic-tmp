@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Talent>
 	<BackLink DBID="/Items/Talents/Laguna.TALENTSET" Count="1" />
+	<BackLink DBID="/Items/Talents/TalentKits/Redset6_2_CDR/appl_Redset6_2_RefreshCooldown.APLR" Count="1" />
 	<activationConditions />
 	<activeCustomTrigger>true</activeCustomTrigger>
 	<allowChase>
@@ -81,6 +82,7 @@
 			</PermanentStatModApplicator>
 		</Item>
 		<Item href="/Items/Talents/Class/Laguna/status_A3_Fish.APLR" />
+		<Item href="/Items/Talents/TalentKits/Redset_SeaSymbol/APPL_SeaSymbol.APLR" />
 	</applicators>
 	<askId>3</askId>
 	<autoTargetSelector href="" />
@@ -239,7 +241,9 @@
 	<naftaCost>300</naftaCost>
 	<name textref="/Items/Talents/Class/Laguna/Ability_A3.TALENT_name.txt" />
 	<node>ability2</node>
-	<passiveApplicators />
+	<passiveApplicators>
+		<Item href="/Items/Talents/TalentKits/Redset7_11_MiniRefresher/trigger_G766_RefreshAndNotify.APLR" />
+	</passiveApplicators>
 	<persistentId>Laguna_A3</persistentId>
 	<prerequisiteTalents />
 	<rarity>Class</rarity>

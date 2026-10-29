@@ -18,7 +18,9 @@ class SelectHeroScreen : public NMainLoop::DefaultScreenBase
   NI_DECLARE_REFCOUNT_CLASS_1( SelectHeroScreen, NMainLoop::DefaultScreenBase )
 
 public:
-  SelectHeroScreen( Game::IGameContextUiInterface * _ctx );
+  // _devLobby: the dev lobby LobbyScreenDev (hero grid, teams, parties) for the local game;
+  // otherwise LobbyScreen, the "waiting for players" screen of the players
+  SelectHeroScreen( Game::IGameContextUiInterface * _ctx, bool _devLobby = false );
   
   virtual bool Init( UI::User * uiUser );
   virtual void CommonStep( bool bAppActive );
@@ -40,6 +42,7 @@ private:
   wstring           debugPlayerStatus;
 
   bool canBeKicked;
+  bool devLobby;
   float lobbyTimeout;
 };
 

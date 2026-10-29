@@ -4,6 +4,7 @@
 	<BackLink DBID="/Heroes/Ratcatcher/_.HROB" Count="1" />
 	<BackLink DBID="/Heroes/Ratcatcher/S0/_B.HEROSKIN" Count="2" />
 	<BackLink DBID="/UI/Screens/Lobby/Lobby_Main" Count="3" />
+	<BackLink DBID="/UI/Screens/Lobby/Lobby_MainDev" Count="3" />
 	<generatedFileName></generatedFileName>
 	<importOnlyShape>false</importOnlyShape>
 	<mipLevels>0</mipLevels>

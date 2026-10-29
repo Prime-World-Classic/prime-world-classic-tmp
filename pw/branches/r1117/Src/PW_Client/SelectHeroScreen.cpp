@@ -18,9 +18,10 @@ extern bool g_localGameRun;
 namespace NGameX
 {  
 
-SelectHeroScreen::SelectHeroScreen( Game::IGameContextUiInterface * _ctx ) :
+SelectHeroScreen::SelectHeroScreen( Game::IGameContextUiInterface * _ctx, bool _devLobby ) :
 gameCtx( _ctx ),
 canBeKicked(false),
+devLobby(_devLobby),
 lobbyTimeout(0.f)
 {   
 }
@@ -38,7 +39,7 @@ bool SelectHeroScreen::Init( UI::User * uiUser )
   if ( logic != NULL )
   {  
     logic->SetOwner( this );
-    logic->LoadScreenLayout( "LobbyScreen" );
+    logic->LoadScreenLayout( devLobby ? "LobbyScreenDev" : "LobbyScreen" );
 
     logic->DebugDisplayPlayers( debugPlayerStatus );
   }

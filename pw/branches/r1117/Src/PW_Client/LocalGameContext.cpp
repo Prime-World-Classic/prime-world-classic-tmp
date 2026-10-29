@@ -288,7 +288,8 @@ void LocalGameContext::CreateGame( const char * _mapId, int _maxPlayers )
   if ( lobbyScreen )
     NScreenCommands::PushCommand( NScreenCommands::CreatePopScreenCommand( lobbyScreen ) );
 
-  Weak<NGameX::SelectHeroScreen> screen = new NGameX::SelectHeroScreen( this );
+  // Local game: no lobby server picks the hero, the player does it on the dev lobby screen
+  Weak<NGameX::SelectHeroScreen> screen = new NGameX::SelectHeroScreen( this, true );
   NScreenCommands::PushCommand( NScreenCommands::CreatePushScreenCommand( screen ) );
   heroScreen = screen;
 

@@ -1389,6 +1389,11 @@
 			<screenId>LobbyScreen</screenId>
 		</Item>
 		<Item>
+			<baseLayout href="/UI/Screens/Lobby/Lobby_MainDev" />
+			<comment>LobbyScreenDev: hero selection of the local game (local_game 1)</comment>
+			<screenId>LobbyScreenDev</screenId>
+		</Item>
+		<Item>
 			<baseLayout href="/UI/Screens/Lobby/Lobby_SelectGameMode" />
 			<comment>Lobby_SelectGameMode</comment>
 			<screenId>Lobby_SelectGameMode</screenId>

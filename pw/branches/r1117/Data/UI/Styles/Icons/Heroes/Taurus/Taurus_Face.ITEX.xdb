@@ -2,6 +2,7 @@
 <UITexture>
 	<BackLink DBID="/Heroes/Taurus/_.HROB" Count="4" />
 	<BackLink DBID="/UI/Screens/Lobby/Lobby_Main" Count="3" />
+	<BackLink DBID="/UI/Screens/Lobby/Lobby_MainDev" Count="3" />
 	<generatedFileName></generatedFileName>
 	<importOnlyShape>false</importOnlyShape>
 	<mipLevels>0</mipLevels>

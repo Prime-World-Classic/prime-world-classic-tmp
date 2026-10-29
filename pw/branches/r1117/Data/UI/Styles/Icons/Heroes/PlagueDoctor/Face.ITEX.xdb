@@ -2,6 +2,7 @@
 <UITexture>
 	<BackLink DBID="/Heroes/PlagueDoctor/_.HROB" Count="2" />
 	<BackLink DBID="/UI/Screens/Lobby/Lobby_Main" Count="3" />
+	<BackLink DBID="/UI/Screens/Lobby/Lobby_MainDev" Count="3" />
 	<generatedFileName></generatedFileName>
 	<importOnlyShape>false</importOnlyShape>
 	<mipLevels>0</mipLevels>

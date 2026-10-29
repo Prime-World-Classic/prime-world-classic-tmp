@@ -5,6 +5,7 @@
 #include "UI/FSCommandListner.h"
 #include "UI/FlashContainer2.h"
 #include "BindsController.h"
+#include "PFTraining.h"
 
 namespace NWorld
 {
@@ -17,6 +18,7 @@ namespace NGameX
 {
 
 class AdventureScreen;
+class VoiceOverlayController;
 
 // Training panel of the combat UI (main.swf, Training/TrainingPanel.as): learn the next talent in order / all talents, refresh,
 // training modes (no damage, no cooldowns, no mana), hero and skin change, heroes added on the player's side or
@@ -24,12 +26,14 @@ class AdventureScreen;
 // tab at the left edge of the screen (user var training_panel_collapsed).
 // Buttons come back as FSCommand "TrainingPanelCmd" and go to the world as the command CmdTraining (PFTraining.cpp):
 // builds with cheats have the panel in any battle, shipping builds only on the training map with one human player.
+// A hero chosen in the list comes with the player's build of it: the launcher is asked over the voice bridge
+// (launcherBridge), no answer in BUILD_TIMEOUT - the build of the data.
 class TrainingPanelController: public UI::FlashInterface, public UI::IFSCommandListner
 {
   NI_DECLARE_REFCOUNT_CLASS_2( TrainingPanelController, UI::FlashInterface, UI::IFSCommandListner )
 
 public:
-  TrainingPanelController( UI::FlashContainer2 * flashWnd, const char* className, AdventureScreen * screen, BindsController * bindsController );
+  TrainingPanelController( UI::FlashContainer2 * flashWnd, const char* className, AdventureScreen * screen, BindsController * bindsController, VoiceOverlayController * launcherBridge );
   ~TrainingPanelController();
 
   // the panel is shown in this battle (shipping: the training map with one human player)
@@ -48,6 +52,9 @@ private:
   void SendLibrary( int level, int slot );
   void UpdateLoadingAssertion( float deltaTime );
   void SetGridOpen( bool open );
+  void ChooseHero( int index );
+  void UpdateHeroRequest( float deltaTime );
+  void SendHero( int index, const Training::WebBuild * build );
 
   Weak<UI::FlashContainer2> flashContainer;
   AdventureScreen * screen;
@@ -63,6 +70,11 @@ private:
   CPtr<NWorld::PFBaseHero> lastHero;
   wstring lastState;
   wstring lastUnits;
+  // the hero chosen in the list waits for the player's build from the launcher
+  Weak<VoiceOverlayController> launcherBridge;
+  int heroRequestId;     // 0 = no request
+  int heroRequestIndex;
+  float heroRequestTime; // left to wait
 };
 
 }

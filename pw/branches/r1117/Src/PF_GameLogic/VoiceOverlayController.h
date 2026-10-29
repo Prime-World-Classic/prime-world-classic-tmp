@@ -4,6 +4,7 @@
 #include "UI/FlashInterface.h"
 #include "UI/FSCommandListner.h"
 #include "UI/FlashContainer2.h"
+#include "PFTraining.h"
 
 namespace NGameX
 {
@@ -36,6 +37,12 @@ public:
   void SetChat( ChatUiController * chat );
   // Smart cast switched on the action bar: the launcher saves it into the build (back end).
   void NotifySmartCast( const char * talentId, bool on );
+  // Training: a hero chosen in the battle - the launcher answers with the player's build of it (back end
+  // build.trainingBuild). The answer comes later; TakeTrainingBuild gives it once: true when the launcher answered
+  // this request, build.talents are all empty when the launcher has no build (the build of the data then).
+  bool IsLauncherAnswering() const;
+  void RequestTrainingBuild( int requestId, const char * heroId );
+  bool TakeTrainingBuild( int requestId, Training::WebBuild & build );
 
   // Must run before AdventureScreen registers its handlers: a handler resolves its
   // command by name once, at registration, and never sees a command bound later.
@@ -74,6 +81,7 @@ private:
   void Send( const char * text );
   void ReceiveAll();
   bool ParseState( const char * data, int size, State & state );
+  bool ParseTrainingBuild( const char * data, int size );
   void ApplyState( const State & state );
   void HideOverlay();
   void UpdatePushToTalk();
@@ -95,6 +103,9 @@ private:
   bool hintShown;
   State current;
   bool hasCurrent;
+  bool launcherHeard;  // the launcher answered a poll at least once
+  int trainingBuildId; // the request the launcher answered last, 0 = none (or taken)
+  Training::WebBuild trainingBuild;
 };
 
 }

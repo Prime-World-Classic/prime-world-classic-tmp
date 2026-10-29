@@ -47,6 +47,15 @@ namespace
 
   const char szHeroesDb[] = "Heroes/_.HRDB.xdb"; // hero indices of the panel and of hero_change
 
+  const wchar_t szBuildParam[] = L"build";
+  // the build of the data (the session sends the same layout, WebSessionParse.h BuildTalentSet)
+  const int BUILD_LEVELS = 6;
+  const int BUILD_LEVEL_SLOTS = WebBuild::SLOTS / BUILD_LEVELS;
+  // refine rate of a talent the back end did not know (as HeroSpawn.cpp)
+  const int s_rarityToRefine[] = { 5, 10, 10, 12, 9, 7, 5 };
+  // the back end gives 5..12 (persistent_talents.refineRate); a refine rate in the command is not trusted above this
+  const int MAX_REFINE = 15;
+
   CPtr<NWorld::PFBaseUnit> & LastHitDummy()
   {
     static CPtr<NWorld::PFBaseUnit> dummy;
@@ -272,6 +281,80 @@ namespace
     }
     return 0;
   }
+
+  // "build", 36 talents, 36 refine rates, 24 panel cells (AppendBuildParams) from params[start] -> the talent set as
+  // the session gives it to a player (WebSessionParse.h BuildTalentSet), finished as HeroSpawn.cpp does: abilities
+  // without a panel cell go to the panel one by one, an unknown refine rate comes from the rarity
+  bool ReadBuildParams( NWorld::PFWorld * world, const vector<wstring> & params, int start, NCore::PlayerTalentSet & talents )
+  {
+    const int talentsAt = start + 1;
+    const int refineAt = talentsAt + WebBuild::SLOTS;
+    const int barAt = refineAt + WebBuild::SLOTS;
+    if ( params.size() < barAt + WebBuild::BAR_SLOTS || params[start] != wstring( szBuildParam ) || !world->GetResourcesCollection() )
+      return false;
+
+    // bar[a] != 0: the build slot abs(bar[a])-1 is on the panel cell a, minus = smart cast
+    int panelCell[WebBuild::SLOTS];
+    bool smartCast[WebBuild::SLOTS];
+    for ( int i = 0; i < WebBuild::SLOTS; ++i )
+    {
+      panelCell[i] = -1;
+      smartCast[i] = false;
+    }
+    for ( int a = 0; a < WebBuild::BAR_SLOTS; ++a )
+    {
+      const int value = ParamInt( params, barAt + a );
+      const int slot = abs( value ) - 1;
+      if ( value != 0 && slot >= 0 && slot < WebBuild::SLOTS )
+      {
+        panelCell[slot] = a;
+        smartCast[slot] = value < 0;
+      }
+    }
+
+    for ( int level = 0; level < BUILD_LEVELS; ++level )
+      for ( int slot = 0; slot < BUILD_LEVEL_SLOTS; ++slot )
+      {
+        // the web build is stored bottom-up relative to the in-game grid
+        const int web = ( BUILD_LEVELS - 1 - level ) * BUILD_LEVEL_SLOTS + slot;
+        const string talentId = ParamStr( params, talentsAt + web );
+        if ( talentId.empty() )
+          continue;
+        const int refine = Clamp( ParamInt( params, refineAt + web ), 0, MAX_REFINE );
+        const NCore::TalentInfo info( Crc32Checksum().AddString( talentId.c_str() ).Get(), refine, panelCell[web], smartCast[web] );
+        talents.insert( nstl::pair<const uint, NCore::TalentInfo>( (uint)( level * BUILD_LEVEL_SLOTS + slot + 1 ), info ) );
+      }
+
+    bool useUserSlots = false;
+    for ( NCore::PlayerTalentSet::const_iterator it = talents.begin(); it != talents.end(); ++it )
+      if ( it->second.actionBarIdx != -1 )
+        useUserSlots = true;
+
+    int actionBarIdx = 0;
+    const NWorld::PFResourcesCollection::TalentMap & known = world->GetResourcesCollection()->GetTalents();
+    for ( NCore::PlayerTalentSet::iterator it = talents.begin(); it != talents.end(); ++it )
+    {
+      NWorld::PFResourcesCollection::TalentMap::const_iterator talentIt = known.find( it->second.id );
+      if ( talentIt == known.end() || !talentIt->second )
+        continue;
+      const NDb::Talent * pTalent = talentIt->second;
+
+      const bool isActive = pTalent->type == NDb::ABILITYTYPE_ACTIVE || pTalent->type == NDb::ABILITYTYPE_MULTIACTIVE ||
+        pTalent->type == NDb::ABILITYTYPE_CHANNELLING || pTalent->type == NDb::ABILITYTYPE_SWITCHABLE;
+      if ( isActive )
+      {
+        it->second.actionBarIdx = useUserSlots ? it->second.actionBarIdx : actionBarIdx++;
+        it->second.isInstaCast = it->second.isInstaCast || ( !useUserSlots && ( pTalent->flags & NDb::ABILITYFLAGS_INSTACAST ) );
+      }
+      else
+        it->second.actionBarIdx = -1;
+
+      const int rarity = (int)pTalent->rarity;
+      if ( it->second.refineRate == 0 && rarity >= 0 && rarity < sizeof( s_rarityToRefine ) / sizeof( s_rarityToRefine[0] ) )
+        it->second.refineRate = s_rarityToRefine[rarity];
+    }
+    return !talents.empty();
+  }
 } // namespace
 
 bool g_modesUsed =
@@ -359,7 +442,8 @@ bool CanControl( NWorld::PFBaseUnit const * unit, NWorld::PFBaseHero const * own
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-NWorld::PFBaseHero * ChangeHero( NWorld::PFWorld * world, NWorld::PFBaseHero * oldHero, const NDb::Hero * dbHero )
+// talents: the player's build (ReadBuildParams); none - the build of the data
+static NWorld::PFBaseHero * ChangeHero( NWorld::PFWorld * world, NWorld::PFBaseHero * oldHero, const NDb::Hero * dbHero, const NCore::PlayerTalentSet * talents )
 {
   if ( !world || !IsValid( oldHero ) || !dbHero )
     return 0;
@@ -379,6 +463,11 @@ NWorld::PFBaseHero * ChangeHero( NWorld::PFWorld * world, NWorld::PFBaseHero * o
   info.originalFaction = pOldHero->GetOriginalFaction();
   info.inTeamId        = pOldHero->GetInTeamId() > 0 ? pOldHero->GetInTeamId() : 1;
   info.isClone         = false;
+  if ( talents && !talents->empty() )
+  {
+    info.usePlayerInfoTalentSet = true;
+    info.playerInfo.talents = *talents;
+  }
 
   if ( pPlayer )
   {
@@ -420,6 +509,11 @@ NWorld::PFBaseHero * ChangeHero( NWorld::PFWorld * world, NWorld::PFBaseHero * o
   return pNewHero;
 }
 
+NWorld::PFBaseHero * ChangeHero( NWorld::PFWorld * world, NWorld::PFBaseHero * oldHero, const NDb::Hero * dbHero )
+{
+  return ChangeHero( world, oldHero, dbHero, 0 );
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool SetSkin( NWorld::PFBaseMaleHero * hero, const string & skinId )
 {
@@ -457,7 +551,12 @@ void Execute( NWorld::PFWorld * world, int userId, const string & action, const 
       SetMode( pTarget, ParamStr( params, 0 ), ParamInt( params, 1 ) != 0 );
   }
   else if ( action == "hero" )
-    ChangeHero( world, pHero, FindDbHero( ParamInt( params, 0 ) ) );
+  {
+    // "hero <index> [build ...]": with the player's build when the launcher gave it (AppendBuildParams)
+    NCore::PlayerTalentSet talents;
+    const bool withBuild = ReadBuildParams( world, params, 1, talents );
+    ChangeHero( world, pHero, FindDbHero( ParamInt( params, 0 ) ), withBuild ? &talents : 0 );
+  }
   else if ( action == "skin" )
     SetSkin( pMale, ParamStr( params, 0 ) );
   else if ( action == "add" )
@@ -547,10 +646,6 @@ namespace Training
 {
 void Send( const char * action, NWorld::PFBaseUnit * target, const CVec3 & pos, const char * param1, const char * param2, const char * param3 )
 {
-  AdventureScreen * advScreen = AdventureScreen::Instance();
-  if ( !advScreen || advScreen->IsInReplayMode() )
-    return;
-
   vector<wstring> params;
   if ( param1 )
     params.push_back( NStr::ToUnicode( param1 ) );
@@ -559,7 +654,27 @@ void Send( const char * action, NWorld::PFBaseUnit * target, const CVec3 & pos, 
   if ( param3 )
     params.push_back( NStr::ToUnicode( param3 ) );
 
+  Send( action, target, pos, params );
+}
+
+void Send( const char * action, NWorld::PFBaseUnit * target, const CVec3 & pos, const vector<wstring> & params )
+{
+  AdventureScreen * advScreen = AdventureScreen::Instance();
+  if ( !advScreen || advScreen->IsInReplayMode() )
+    return;
+
   advScreen->SendGameCommand( new CmdTraining( action, params, target, pos ) );
+}
+
+void AppendBuildParams( const WebBuild & build, vector<wstring> & params )
+{
+  params.push_back( szBuildParam );
+  for ( int i = 0; i < WebBuild::SLOTS; ++i )
+    params.push_back( NStr::ToUnicode( build.talents[i] ) );
+  for ( int i = 0; i < WebBuild::SLOTS; ++i )
+    params.push_back( NStr::StrFmtW( L"%d", build.refine[i] ) );
+  for ( int i = 0; i < WebBuild::BAR_SLOTS; ++i )
+    params.push_back( NStr::StrFmtW( L"%d", build.bar[i] ) );
 }
 }
 

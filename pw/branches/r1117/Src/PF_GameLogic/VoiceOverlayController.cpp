@@ -27,6 +27,7 @@ namespace
   const float SILENCE_TIMEOUT = 2.0f;
   const int MAX_DATAGRAM = 8192;
   const int MAX_LINE = 512;
+  const int MAX_BUILD_LINE = 4096;
 
   const char szOverlayCommand[] = "VoiceOverlayCmd";
 
@@ -70,6 +71,17 @@ namespace
     wstring result;
     NStr::UTF8ToUnicode( &result, string( text ) );
     return result;
+  }
+
+  // persistentId of a talent or a hero: goes to the launcher as one field
+  bool IsSafeId( const char * id )
+  {
+    if ( !id || !*id || strlen( id ) > 64 )
+      return false;
+    for ( const char * p = id; *p; ++p )
+      if ( !( ( *p >= 'a' && *p <= 'z' ) || ( *p >= 'A' && *p <= 'Z' ) || ( *p >= '0' && *p <= '9' ) || *p == '_' || *p == '-' ) )
+        return false;
+    return true;
   }
 
   template<class T>
@@ -158,7 +170,9 @@ VoiceOverlayController::VoiceOverlayController( UI::FlashContainer2 * flashWnd, 
   unlocked( false ),
   pollUnlockKey( _pollUnlockKey ),
   hintShown( false ),
-  hasCurrent( false )
+  hasCurrent( false ),
+  launcherHeard( false ),
+  trainingBuildId( 0 )
 {
   flashWnd->AddFSListner( szOverlayCommand, this );
   Input::Binds * binds = Input::BindsManager::Instance()->GetBinds();
@@ -183,16 +197,104 @@ void VoiceOverlayController::EnsureDefaultUnlockBind()
 
 void VoiceOverlayController::NotifySmartCast( const char * talentId, bool on )
 {
-  if ( !talentId || !*talentId || strlen( talentId ) > 64 )
+  if ( !IsSafeId( talentId ) )
     return;
-  for ( const char * p = talentId; *p; ++p )
-    if ( !( ( *p >= 'a' && *p <= 'z' ) || ( *p >= 'A' && *p <= 'Z' ) || ( *p >= '0' && *p <= '9' ) || *p == '_' || *p == '-' ) )
-      return;
   OpenSocket();
   char text[96];
   _snprintf_s( text, sizeof( text ), _TRUNCATE, "smartcast %s %d", talentId, on ? 1 : 0 );
   Send( text );
   DebugLog( "smartcast %s %d", talentId, on ? 1 : 0 );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool VoiceOverlayController::IsLauncherAnswering() const
+{
+  return launcherHeard && silenceTime < SILENCE_TIMEOUT;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void VoiceOverlayController::RequestTrainingBuild( int requestId, const char * heroId )
+{
+  if ( !IsSafeId( heroId ) || !OpenSocket() )
+    return;
+  char text[96];
+  _snprintf_s( text, sizeof( text ), _TRUNCATE, "tbuild %d %s", requestId, heroId );
+  Send( text );
+  DebugLog( "tbuild %d %s", requestId, heroId );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool VoiceOverlayController::TakeTrainingBuild( int requestId, Training::WebBuild & build )
+{
+  if ( !trainingBuildId || trainingBuildId != requestId )
+    return false;
+  build = trainingBuild;
+  trainingBuildId = 0;
+  return true;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// "PWB 1 <request>", then "b <36 talents, - empty>", "r <36 refine rates>", "a <24 panel cells>" (launcher
+// voiceGameBridge.js); the header alone - the launcher has no build
+bool VoiceOverlayController::ParseTrainingBuild( const char * data, int size )
+{
+  Training::WebBuild build;
+  int requestId = 0;
+  bool header = false;
+  const char * p = data;
+  const char * end = data + size;
+
+  while ( p < end )
+  {
+    const char * lineEnd = p;
+    while ( lineEnd < end && *lineEnd != '\n' )
+      ++lineEnd;
+
+    // 36 talent ids do not fit MAX_LINE
+    char line[MAX_BUILD_LINE];
+    const int lineLen = (int)( lineEnd - p );
+    const int len = lineLen < MAX_BUILD_LINE - 1 ? lineLen : MAX_BUILD_LINE - 1;
+    memcpy( line, p, len );
+    line[len] = 0;
+    if ( len > 0 && line[len - 1] == '\r' )
+      line[len - 1] = 0;
+    p = lineEnd + 1;
+
+    if ( !header )
+    {
+      if ( sscanf_s( line, "PWB 1 %d", &requestId ) != 1 || requestId <= 0 )
+        return false;
+      header = true;
+      continue;
+    }
+    if ( !line[0] || line[1] != ' ' )
+      continue;
+
+    vector<string> fields;
+    NStr::SplitString( string( line + 2 ), &fields, ' ' );
+    if ( line[0] == 'b' && fields.size() == Training::WebBuild::SLOTS )
+    {
+      for ( int i = 0; i < fields.size(); ++i )
+        build.talents[i] = IsSafeId( fields[i].c_str() ) ? fields[i] : string();
+    }
+    else if ( line[0] == 'r' && fields.size() == Training::WebBuild::SLOTS )
+    {
+      for ( int i = 0; i < fields.size(); ++i )
+        build.refine[i] = atoi( fields[i].c_str() );
+    }
+    else if ( line[0] == 'a' && fields.size() == Training::WebBuild::BAR_SLOTS )
+    {
+      for ( int i = 0; i < fields.size(); ++i )
+        build.bar[i] = atoi( fields[i].c_str() );
+    }
+  }
+
+  if ( !header )
+    return false;
+  trainingBuild = build;
+  trainingBuildId = requestId;
+  DebugLog( "tbuild %d answered", requestId );
+  return true;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -342,11 +444,18 @@ void VoiceOverlayController::ReceiveAll()
 
     buffer[size] = 0;
 
+    if ( strncmp( buffer, "PWB ", 4 ) == 0 )
+    {
+      ParseTrainingBuild( buffer, size );
+      continue;
+    }
+
     State state;
     if ( !ParseState( buffer, size, state ) )
       continue;
 
     silenceTime = 0.f;
+    launcherHeard = true;
     ApplyState( state );
   }
 }

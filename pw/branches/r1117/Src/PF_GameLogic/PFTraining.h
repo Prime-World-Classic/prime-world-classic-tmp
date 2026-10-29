@@ -55,6 +55,22 @@ namespace Training
 
   // client: sends the training command about a unit (and a point on the map)
   void Send( const char * action, NWorld::PFBaseUnit * target, const CVec3 & pos, const char * param1 = 0, const char * param2 = 0, const char * param3 = 0 );
+  void Send( const char * action, NWorld::PFBaseUnit * target, const CVec3 & pos, const vector<wstring> & params );
+
+  // The player's build for a hero chosen in the battle: the panel asks the launcher (VoiceOverlayController, command
+  // tbuild), the launcher asks the back end (build.trainingBuild: the player's build of the hero, else the default one).
+  // Web order, as players[].build/buildRefine/bar of the session (Shared/WebSessionParse.h); "" = empty slot
+  struct WebBuild
+  {
+    enum { SLOTS = 36, BAR_SLOTS = 24 };
+    string talents[SLOTS];
+    int refine[SLOTS];
+    int bar[BAR_SLOTS];
+
+    WebBuild() { memset( refine, 0, sizeof( refine ) ); memset( bar, 0, sizeof( bar ) ); }
+  };
+  // the build goes in the command "hero" after the hero index: "build", 36 talents, 36 refine rates, 24 panel cells
+  void AppendBuildParams( const WebBuild & build, vector<wstring> & params );
 
   // shared with the console cheats hero_change and set_skin (PFCheat.cpp)
   NWorld::PFBaseHero * ChangeHero( NWorld::PFWorld * world, NWorld::PFBaseHero * oldHero, const NDb::Hero * dbHero );

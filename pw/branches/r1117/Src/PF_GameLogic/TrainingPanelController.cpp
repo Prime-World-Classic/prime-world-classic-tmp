@@ -2,6 +2,7 @@
 #include "TrainingPanelController.h"
 
 #include "AdventureScreen.h"
+#include "VoiceOverlayController.h"
 #include "PFWorld.h"
 #include "PFPlayer.h"
 #include "PFMaleHero.h"
@@ -22,6 +23,9 @@ namespace
   const float STATE_PERIOD = 0.2f;
   // icons load while the choice window is open and this long after the panel shows or acts
   const float LOADING_TIME = 5.0f;
+  // the launcher answers with the player's build in a moment (one back end request); no answer this long - the
+  // launcher is not there (the game started without it): the build of the data
+  const float BUILD_TIMEOUT = 4.0f;
 
   static bool g_trainingPanel = true;
   static bool g_trainingPanelCollapsed = false;
@@ -69,7 +73,7 @@ namespace NGameX
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-TrainingPanelController::TrainingPanelController( UI::FlashContainer2 * flashWnd, const char* className, AdventureScreen * _screen, BindsController * _bindsController ) :
+TrainingPanelController::TrainingPanelController( UI::FlashContainer2 * flashWnd, const char* className, AdventureScreen * _screen, BindsController * _bindsController, VoiceOverlayController * _launcherBridge ) :
   FlashInterface( flashWnd, className ),
   flashContainer( flashWnd ),
   screen( _screen ),
@@ -79,7 +83,11 @@ TrainingPanelController::TrainingPanelController( UI::FlashContainer2 * flashWnd
   gridOpen( false ),
   loadingTime( 0.0f ),
   loadingAllowed( false ),
-  oldAssertionValue( false )
+  oldAssertionValue( false ),
+  launcherBridge( _launcherBridge ),
+  heroRequestId( 0 ),
+  heroRequestIndex( -1 ),
+  heroRequestTime( 0.0f )
 {
   flashWnd->AddFSListner( szTrainingCommand, this );
 }
@@ -119,6 +127,8 @@ void TrainingPanelController::SetGridOpen( bool open )
 
 void TrainingPanelController::Update( float deltaTime )
 {
+  UpdateHeroRequest( deltaTime );
+
   NWorld::PFBaseHero * pHero = screen ? screen->GetHero() : 0;
 
   if ( !g_trainingPanel || !IsValid( pHero ) )
@@ -404,6 +414,71 @@ void TrainingPanelController::SendLibrary( int level, int slot )
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// A hero of the list: with the player's build of it (the back end through the launcher), the answer comes in Update.
+// A new choice while waiting replaces the old one
+void TrainingPanelController::ChooseHero( int index )
+{
+  NDb::Ptr<NDb::HeroesDB> pHeroes = NDb::Get<NDb::HeroesDB>( NDb::DBID( szHeroesDb ) );
+  if ( !pHeroes || index < 0 || index >= pHeroes->heroes.size() || !pHeroes->heroes[index] )
+    return;
+
+  const string & heroId = pHeroes->heroes[index]->persistentId;
+  if ( !IsValid( launcherBridge ) || !launcherBridge->IsLauncherAnswering() || !IsSafeParam( heroId.c_str() ) )
+  {
+    SendHero( index, 0 );
+    return;
+  }
+
+  static int s_lastRequestId = 0;
+  heroRequestId = ++s_lastRequestId;
+  heroRequestIndex = index;
+  heroRequestTime = BUILD_TIMEOUT;
+  launcherBridge->RequestTrainingBuild( heroRequestId, heroId.c_str() );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void TrainingPanelController::UpdateHeroRequest( float deltaTime )
+{
+  if ( !heroRequestId )
+    return;
+
+  Training::WebBuild build;
+  const bool answered = IsValid( launcherBridge ) && launcherBridge->TakeTrainingBuild( heroRequestId, build );
+  heroRequestTime -= deltaTime;
+  if ( !answered && heroRequestTime > 0.0f )
+    return;
+
+  // the launcher without a build (no back end) sends the header alone: the build of the data
+  bool hasBuild = false;
+  for ( int i = 0; i < Training::WebBuild::SLOTS && answered; ++i )
+    hasBuild = hasBuild || !build.talents[i].empty();
+  if ( !answered )
+    MessageTrace( "training panel: no build from the launcher for hero %d", heroRequestIndex );
+
+  const int index = heroRequestIndex;
+  heroRequestId = 0;
+  heroRequestIndex = -1;
+  SendHero( index, hasBuild ? &build : 0 );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void TrainingPanelController::SendHero( int index, const Training::WebBuild * build )
+{
+  NWorld::PFBaseHero * pHero = screen ? screen->GetHero() : 0;
+  if ( !IsValid( pHero ) )
+    return;
+
+  vector<wstring> params;
+  params.push_back( NStr::StrFmtW( L"%d", index ) );
+  if ( build )
+    Training::AppendBuildParams( *build, params );
+  Training::Send( "hero", pHero, pHero->GetPosition(), params );
+  timeToState = 0.0f;
+  loadingTime = LOADING_TIME;
+  UpdateLoadingAssertion( 0.0f );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool TrainingPanelController::IsAvailable( NWorld::PFWorld const * world, int localUserId )
 {
   return Training::IsAllowed( world, localUserId );
@@ -465,12 +540,7 @@ void TrainingPanelController::OnFSCommand( UI::FlashContainer2* _wnd, const char
         Send( "mode", screen->GetHero(), s_modes[i], on ? "1" : "0" );
   }
   else if ( strncmp( args, "hero ", 5 ) == 0 )
-  {
-    const int index = atoi( args + 5 );
-    NDb::Ptr<NDb::HeroesDB> pHeroes = NDb::Get<NDb::HeroesDB>( NDb::DBID( szHeroesDb ) );
-    if ( pHeroes && index >= 0 && index < pHeroes->heroes.size() && pHeroes->heroes[index] )
-      Send( "hero", screen->GetHero(), NStr::StrFmt( "%d", index ) );
-  }
+    ChooseHero( atoi( args + 5 ) );
   else if ( strncmp( args, "skin ", 5 ) == 0 )
   {
     if ( IsSafeParam( args + 5 ) )

@@ -31,7 +31,22 @@
 	<compiledDescriptionA textref="" />
 	<compiledDescriptionB textref="" />
 	<conditionFormulas />
-	<constants href="" />
+	<constants href="/Maps/Multiplayer/Myth/Abilities/GoldStartBonus.ABLT" id="ADE91D72-CD95-49E2-BDDA-4DCFF18F80BE">
+		<UnitConstantsContainer>
+			<vars>
+				<Item href="/Maps/Multiplayer/Myth/Abilities/GoldStartBonus.ABLT" id="9124D0AE-A813-4AC4-994D-884B27EAA569">
+					<UnitConstant>
+						<name>GoldStartBonus_Percent</name>
+						<var>
+							<compiledString>FQkAAAAEAAEAEAAAABgAAAA3AAAAPQAAAEgAAABkdXJhdGlvbgBVi+xRUdkFaQAAANkcJGgAAAAAi0UQixCLTRCLQlT/0FHZHCToOwAAAIPECNwNYQAAANw1WQAAAIPsCN0cJOiu////g8QI2V382UX8i+VdwwAAAAAAwIJAAAAAAAAASUAAABZEVYvsUdlFCNlFDN7Z3+D2xEF1CNlFCNld/OsG2UUM2V382UX8i+Vdww==</compiledString>
+							<returnType>float</returnType>
+							<sString>ceil(50.0 * min(appl.GetVariable("duration"), 600.0) / 600.0)</sString>
+						</var>
+					</UnitConstant>
+				</Item>
+			</vars>
+		</UnitConstantsContainer>
+	</constants>
 	<cooldownTime>
 		<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
 		<returnType>float</returnType>

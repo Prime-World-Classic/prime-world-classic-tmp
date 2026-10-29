@@ -32,7 +32,32 @@
 	<compiledDescriptionA textref="" />
 	<compiledDescriptionB textref="" />
 	<conditionFormulas />
-	<constants href="" />
+	<constants href="/Heroes/DefaultStatus/LeaverBonus.ABLT" id="3C6354FE-8D9B-4A02-AE16-4BAD57880485">
+		<UnitConstantsContainer>
+			<vars>
+				<Item href="/Heroes/DefaultStatus/LeaverBonus.ABLT" id="DF968386-FBF4-496C-B914-7A1B49119475">
+					<UnitConstant>
+						<name>LeaverBonus_Count</name>
+						<var>
+							<compiledString>FQwAAAABAAAAFwAAAExlYXZlckJvbnVzAFWL7FFqAItFEFBoAAAAAItNDIsRi00Mi4KgAQAA/9CJRfzbRfyL5V3D</compiledString>
+							<returnType>float</returnType>
+							<sString>pSecond-&gt;CountApplicators("LeaverBonus", pMisc, GLOBAL)</sString>
+						</var>
+					</UnitConstant>
+				</Item>
+				<Item href="/Heroes/DefaultStatus/LeaverBonus.ABLT" id="189A7319-F581-4FED-8487-5C5176EA34D9">
+					<UnitConstant>
+						<name>LeaverBonus_Percent</name>
+						<var>
+							<compiledString>FQwAAAAEAAAAFwAAADEAAABCAAAASAAAAExlYXZlckJvbnVzAFWL7FFqAItFEFBoAAAAAItNDIsRi00Mi4KgAQAA/9BQg+wI3QVmAAAA3Rwk6DEAAACDxAzcJV4AAADcDVYAAADZXfzZRfyL5V3DAAAAAAAAWUAAAAAAAADwP83MzMzMzPA/VYvsi0UQUIPsCN1FCN0cJOgFAAAAg8QMXcNVi+yD7BiDfRAAfAiLRRCJRfzrCItNEPfZiU382ejdXfDrCd1FCNxNCN1dCItV/IPiAXQJ3UXw3E0I3V3wi0X80eiJRfx1G4N9EAB9Ctno3HXw3V3o6wbdRfDdXejdRejrAuu/i+Vdww==</compiledString>
+							<returnType>float</returnType>
+							<sString>100.0 * (pow(1.05, pSecond-&gt;CountApplicators("LeaverBonus", pMisc, GLOBAL)) - 1.0)</sString>
+						</var>
+					</UnitConstant>
+				</Item>
+			</vars>
+		</UnitConstantsContainer>
+	</constants>
 	<cooldownTime>
 		<compiledString>FQAAAAAAAAAAVYvs2e5dwwAAAAA=</compiledString>
 		<returnType>float</returnType>

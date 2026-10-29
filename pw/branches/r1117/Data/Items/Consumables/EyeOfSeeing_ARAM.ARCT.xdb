@@ -271,7 +271,7 @@
 		<sString>0.0f</sString>
 	</manaCost>
 	<marker></marker>
-	<maxQuantity>10</maxQuantity>
+	<maxQuantity>100</maxQuantity>
 	<microAI href="" />
 	<minUseRangeCorrection>0</minUseRangeCorrection>
 	<naftaCost>600</naftaCost>

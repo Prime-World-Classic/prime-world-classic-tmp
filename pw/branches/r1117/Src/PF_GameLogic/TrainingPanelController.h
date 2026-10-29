@@ -26,8 +26,8 @@ class VoiceOverlayController;
 // tab at the left edge of the screen (user var training_panel_collapsed).
 // Buttons come back as FSCommand "TrainingPanelCmd" and go to the world as the command CmdTraining (PFTraining.cpp):
 // builds with cheats have the panel in any battle, shipping builds only on the training map with one human player.
-// A hero chosen in the list (the player's new hero or an added one) comes with the player's build of it: the launcher
-// is asked over the voice bridge (launcherBridge), no answer in BUILD_TIMEOUT - the build of the data.
+// The player's new hero chosen in the list comes with the player's build of it: the launcher is asked over the voice
+// bridge (launcherBridge), no answer in BUILD_TIMEOUT - the build of the data. Added heroes take the build of the data.
 class TrainingPanelController: public UI::FlashInterface, public UI::IFSCommandListner
 {
   NI_DECLARE_REFCOUNT_CLASS_2( TrainingPanelController, UI::FlashInterface, UI::IFSCommandListner )
@@ -52,10 +52,9 @@ private:
   void SendLibrary( int level, int slot );
   void UpdateLoadingAssertion( float deltaTime );
   void SetGridOpen( bool open );
-  // side: 0 - the player's hero changes to this one ("hero"), else the hero is added: "ally", "enemy", "dummy" ("add")
-  void RequestBuild( int index, const char * side );
-  void UpdateBuildRequests( float deltaTime );
-  void SendWithBuild( int index, const string & side, const Training::WebBuild * build );
+  void RequestHeroBuild( int index );
+  void UpdateHeroBuild( float deltaTime );
+  void SendHero( int index, const Training::WebBuild * build );
 
   Weak<UI::FlashContainer2> flashContainer;
   AdventureScreen * screen;
@@ -71,17 +70,18 @@ private:
   CPtr<NWorld::PFBaseHero> lastHero;
   wstring lastState;
   wstring lastUnits;
-  // the heroes chosen in the list (the change and the added ones) wait for the player's build from the launcher
+  // the player's new hero chosen in the list waits for the player's build from the launcher
   struct BuildRequest
   {
-    int id;
+    int id;        // 0 = no request
     int heroIndex;
     string heroId; // persistentId
-    string side;   // "" = the change of the player's hero
     float time;    // left to wait
+
+    BuildRequest() : id( 0 ), heroIndex( -1 ), time( 0.0f ) {}
   };
   Weak<VoiceOverlayController> launcherBridge;
-  nstl::vector<BuildRequest> buildRequests;
+  BuildRequest request;
   // the builds already received, by the hero persistentId: the same hero again goes at once, without the back end
   // (the build does not change during the battle - the launcher is hidden)
   nstl::map<string, Training::WebBuild> buildCache;

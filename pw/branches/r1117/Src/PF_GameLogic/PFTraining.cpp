@@ -47,7 +47,10 @@ namespace
 
   const char szHeroesDb[] = "Heroes/_.HRDB.xdb"; // hero indices of the panel and of hero_change
 
-  const wchar_t szBuildParam[] = L"build";
+  const char szBuildParam[] = "build";
+  // slots in one CmdTrainingBuild: ~17 bytes each, the server takes a world command of at most 256 bytes
+  // (game_command_max_size)
+  const int BUILD_PART_SLOTS = 8;
   // the build of the data (the session sends the same layout, WebSessionParse.h BuildTalentSet)
   const int BUILD_LEVELS = 6;
   const int BUILD_LEVEL_SLOTS = WebBuild::SLOTS / BUILD_LEVELS;
@@ -212,10 +215,8 @@ namespace
     return false;
   }
 
-  // a hero without a player (playerId -1) on the given side: no AI, does not come back after death.
-  // talents: the player's build of this hero (ReadBuildParams); none - the build of the data
-  NWorld::PFBaseHero * AddHero( NWorld::PFWorld * world, const NDb::Hero * dbHero, NDb::EFaction faction, const CVec3 & pos, bool dummy,
-    const NCore::PlayerTalentSet * talents )
+  // a hero without a player (playerId -1) on the given side: no AI, does not come back after death
+  NWorld::PFBaseHero * AddHero( NWorld::PFWorld * world, const NDb::Hero * dbHero, NDb::EFaction faction, const CVec3 & pos, bool dummy )
   {
     NWorld::PFBaseHero::SpawnInfo info;
     info.pHero           = dbHero;
@@ -225,11 +226,6 @@ namespace
     info.inTeamId        = 1; // colour index, must be > 0
     info.isClone         = false;
     info.placement       = Placement( pos, QNULL, CVec3( 1.0f, 1.0f, 1.0f ) );
-    if ( talents && !talents->empty() )
-    {
-      info.usePlayerInfoTalentSet = true;
-      info.playerInfo.talents = *talents;
-    }
 
     // the hero was not preloaded: its files are loaded right now
     const bool oldAssertValue = NDb::GetDbResourceCache().EnableAssertionLoadingFiles( false );
@@ -289,15 +285,12 @@ namespace
     return 0;
   }
 
-  // "build", 36 talents, 36 refine rates, 24 panel cells (AppendBuildParams) from params[start] -> the talent set as
-  // the session gives it to a player (WebSessionParse.h BuildTalentSet), finished as HeroSpawn.cpp does: abilities
-  // without a panel cell go to the panel one by one, an unknown refine rate comes from the rarity
-  bool ReadBuildParams( NWorld::PFWorld * world, const vector<wstring> & params, int start, NCore::PlayerTalentSet & talents )
+  // the web build (the launcher) -> the talent set as the session gives it to a player (WebSessionParse.h
+  // BuildTalentSet), finished as HeroSpawn.cpp does: abilities without a panel cell go to the panel one by one, an
+  // unknown refine rate comes from the rarity
+  bool MakeTalentSet( NWorld::PFWorld * world, const WebBuild & build, NCore::PlayerTalentSet & talents )
   {
-    const int talentsAt = start + 1;
-    const int refineAt = talentsAt + WebBuild::SLOTS;
-    const int barAt = refineAt + WebBuild::SLOTS;
-    if ( params.size() < barAt + WebBuild::BAR_SLOTS || params[start] != wstring( szBuildParam ) || !world->GetResourcesCollection() )
+    if ( !world || !world->GetResourcesCollection() )
       return false;
 
     // bar[a] != 0: the build slot abs(bar[a])-1 is on the panel cell a, minus = smart cast
@@ -310,7 +303,7 @@ namespace
     }
     for ( int a = 0; a < WebBuild::BAR_SLOTS; ++a )
     {
-      const int value = ParamInt( params, barAt + a );
+      const int value = build.bar[a];
       const int slot = abs( value ) - 1;
       if ( value != 0 && slot >= 0 && slot < WebBuild::SLOTS )
       {
@@ -324,11 +317,10 @@ namespace
       {
         // the web build is stored bottom-up relative to the in-game grid
         const int web = ( BUILD_LEVELS - 1 - level ) * BUILD_LEVEL_SLOTS + slot;
-        const string talentId = ParamStr( params, talentsAt + web );
+        const string & talentId = build.talents[web];
         if ( talentId.empty() )
           continue;
-        const int refine = Clamp( ParamInt( params, refineAt + web ), 0, MAX_REFINE );
-        const NCore::TalentInfo info( Crc32Checksum().AddString( talentId.c_str() ).Get(), refine, panelCell[web], smartCast[web] );
+        const NCore::TalentInfo info( Crc32Checksum().AddString( talentId.c_str() ).Get(), build.refine[web], panelCell[web], smartCast[web] );
         talents.insert( nstl::pair<const uint, NCore::TalentInfo>( (uint)( level * BUILD_LEVEL_SLOTS + slot + 1 ), info ) );
       }
 
@@ -361,6 +353,26 @@ namespace
         it->second.refineRate = s_rarityToRefine[rarity];
     }
     return !talents.empty();
+  }
+
+  // the parts of the build (CmdTrainingBuild) by the sender, until its command "hero <index> build" takes them
+  nstl::map<int, NCore::PlayerTalentSet> & PendingBuilds()
+  {
+    static nstl::map<int, NCore::PlayerTalentSet> builds;
+    return builds;
+  }
+
+  // a slot from a command is not trusted: the slot of the build, the refine rate and the panel cell are checked
+  bool AddPendingSlot( NCore::PlayerTalentSet & talents, uint key, const NCore::TalentInfo & info )
+  {
+    if ( key < 1 || key > (uint)WebBuild::SLOTS || !info.id )
+      return false;
+    NCore::TalentInfo checked = info;
+    checked.refineRate = Clamp( info.refineRate, 0, MAX_REFINE );
+    if ( checked.actionBarIdx < -1 || checked.actionBarIdx >= WebBuild::BAR_SLOTS )
+      checked.actionBarIdx = -1;
+    talents[key] = checked;
+    return true;
   }
 } // namespace
 
@@ -449,7 +461,7 @@ bool CanControl( NWorld::PFBaseUnit const * unit, NWorld::PFBaseHero const * own
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// talents: the player's build (ReadBuildParams); none - the build of the data
+// talents: the player's build (CmdTrainingBuild); none - the build of the data
 static NWorld::PFBaseHero * ChangeHero( NWorld::PFWorld * world, NWorld::PFBaseHero * oldHero, const NDb::Hero * dbHero, const NCore::PlayerTalentSet * talents )
 {
   if ( !world || !IsValid( oldHero ) || !dbHero )
@@ -559,25 +571,28 @@ void Execute( NWorld::PFWorld * world, int userId, const string & action, const 
   }
   else if ( action == "hero" )
   {
-    // "hero <index> [build ...]": with the player's build when the launcher gave it (AppendBuildParams)
+    // "hero <index> [build]": with the player's build sent before it in CmdTrainingBuild parts (SendBuild)
     NCore::PlayerTalentSet talents;
-    const bool withBuild = ReadBuildParams( world, params, 1, talents );
-    ChangeHero( world, pHero, FindDbHero( ParamInt( params, 0 ) ), withBuild ? &talents : 0 );
+    nstl::map<int, NCore::PlayerTalentSet>::iterator pending = PendingBuilds().find( userId );
+    if ( pending != PendingBuilds().end() )
+    {
+      if ( ParamStr( params, 1 ) == szBuildParam )
+        talents = pending->second;
+      PendingBuilds().erase( pending );
+    }
+    ChangeHero( world, pHero, FindDbHero( ParamInt( params, 0 ) ), talents.empty() ? 0 : &talents );
   }
   else if ( action == "skin" )
     SetSkin( pMale, ParamStr( params, 0 ) );
   else if ( action == "add" )
   {
-    // "add <hero index> ally|enemy|dummy [build ...]": on the side of the target hero (the player's one) or against
-    // it, with the player's build of the added hero when the launcher gave it (AppendBuildParams)
+    // "add <hero index> ally|enemy|dummy": on the side of the target hero (the player's one) or against it
     const NDb::Hero * dbHero = FindDbHero( ParamInt( params, 0 ) );
     const string side = ParamStr( params, 1 );
     if ( dbHero && pTarget && ( side == "ally" || side == "enemy" || side == "dummy" ) )
     {
-      NCore::PlayerTalentSet talents;
-      const bool withBuild = ReadBuildParams( world, params, 2, talents );
       const NDb::EFaction faction = side == "ally" ? pTarget->GetFaction() : OppositeFaction( pTarget->GetFaction() );
-      AddHero( world, dbHero, faction, PlaceInFront( pTarget ), side == "dummy", withBuild ? &talents : 0 );
+      AddHero( world, dbHero, faction, PlaceInFront( pTarget ), side == "dummy" );
     }
   }
   else if ( action == "remove" )
@@ -652,6 +667,27 @@ void CmdTraining::Execute( NCore::IWorldBase * pWorldBase )
   Training::Execute( world, GetId(), action, params, IsValid( target ) ? target.GetPtr() : 0, pos );
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A part of the player's build for the next "hero <index> build" (Training::SendBuild): slots of the talent set as the
+// session gives it (NCore::PlayerInfo::talents); first - the first part, the parts sent before are dropped
+DEFINE_2_PARAM_CMD( 0x11629411, CmdTrainingBuild, bool, first, NCore::PlayerTalentSet, talents );
+
+void CmdTrainingBuild::Execute( NCore::IWorldBase * pWorldBase )
+{
+  NWorld::PFWorld * world = dynamic_cast<NWorld::PFWorld *>( pWorldBase );
+  if ( !Training::IsAllowed( world, GetId() ) )
+  {
+    DebugTrace( "Training build rejected (user %d)", GetId() );
+    return;
+  }
+
+  NCore::PlayerTalentSet & pending = Training::PendingBuilds()[GetId()];
+  if ( first )
+    pending.clear();
+  for ( NCore::PlayerTalentSet::const_iterator it = talents.begin(); it != talents.end(); ++it )
+    Training::AddPendingSlot( pending, it->first, it->second );
+}
+
 namespace Training
 {
 void Send( const char * action, NWorld::PFBaseUnit * target, const CVec3 & pos, const char * param1, const char * param2, const char * param3 )
@@ -676,18 +712,40 @@ void Send( const char * action, NWorld::PFBaseUnit * target, const CVec3 & pos, 
   advScreen->SendGameCommand( new CmdTraining( action, params, target, pos ) );
 }
 
-void AppendBuildParams( const WebBuild & build, vector<wstring> & params )
+bool SendBuild( const WebBuild & build )
 {
-  params.push_back( szBuildParam );
-  for ( int i = 0; i < WebBuild::SLOTS; ++i )
-    params.push_back( NStr::ToUnicode( build.talents[i] ) );
-  for ( int i = 0; i < WebBuild::SLOTS; ++i )
-    params.push_back( NStr::StrFmtW( L"%d", build.refine[i] ) );
-  for ( int i = 0; i < WebBuild::BAR_SLOTS; ++i )
-    params.push_back( NStr::StrFmtW( L"%d", build.bar[i] ) );
+  AdventureScreen * advScreen = AdventureScreen::Instance();
+  if ( !advScreen || advScreen->IsInReplayMode() )
+    return false;
+
+  NCore::PlayerTalentSet talents;
+  if ( !MakeTalentSet( advScreen->GetWorld(), build, talents ) )
+    return false;
+
+  NCore::PlayerTalentSet part;
+  bool first = true;
+  for ( NCore::PlayerTalentSet::const_iterator it = talents.begin(); it != talents.end(); ++it )
+  {
+    part[it->first] = it->second;
+    if ( part.size() == BUILD_PART_SLOTS )
+    {
+      advScreen->SendGameCommand( new CmdTrainingBuild( first, part ) );
+      first = false;
+      part.clear();
+    }
+  }
+  if ( !part.empty() )
+    advScreen->SendGameCommand( new CmdTrainingBuild( first, part ) );
+  return true;
+}
+
+const char * BuildParam()
+{
+  return szBuildParam;
 }
 }
 
 } // namespace NGameX
 
 REGISTER_SAVELOAD_CLASS_NM( CmdTraining, NGameX )
+REGISTER_SAVELOAD_CLASS_NM( CmdTrainingBuild, NGameX )

@@ -26,9 +26,6 @@ namespace
   // the launcher answers with the player's build in a moment (one back end request); no answer this long - the
   // launcher is not there (the game started without it): the build of the data
   const float BUILD_TIMEOUT = 4.0f;
-  // more heroes than this waiting at once (clicks faster than the back end answers): the next ones go with the build
-  // of the data
-  const int MAX_BUILD_REQUESTS = 8;
 
   static bool g_trainingPanel = true;
   static bool g_trainingPanelCollapsed = false;
@@ -127,7 +124,7 @@ void TrainingPanelController::SetGridOpen( bool open )
 
 void TrainingPanelController::Update( float deltaTime )
 {
-  UpdateBuildRequests( deltaTime );
+  UpdateHeroBuild( deltaTime );
 
   NWorld::PFBaseHero * pHero = screen ? screen->GetHero() : 0;
 
@@ -414,81 +411,67 @@ void TrainingPanelController::SendLibrary( int level, int slot )
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// A hero of the list, the player's new one or an added one: with the player's build of it (the back end through the
-// launcher; a build received once in this battle - from the cache at once), the answer comes in Update. A new change
-// of the player's hero while waiting replaces the old one; added heroes all wait
-void TrainingPanelController::RequestBuild( int index, const char * side )
+// The player's new hero from the list: with the player's build of it (the back end through the launcher; a build
+// received once in this battle - from the cache at once), the answer comes in Update. A new choice while waiting
+// replaces the old one. Added heroes (ally, enemy, dummy) take the build of the data and do not ask
+void TrainingPanelController::RequestHeroBuild( int index )
 {
   NDb::Ptr<NDb::HeroesDB> pHeroes = NDb::Get<NDb::HeroesDB>( NDb::DBID( szHeroesDb ) );
   if ( !pHeroes || index < 0 || index >= pHeroes->heroes.size() || !pHeroes->heroes[index] )
     return;
 
-  const string sideText = side ? side : "";
+  request.id = 0;
   const string & heroId = pHeroes->heroes[index]->persistentId;
   nstl::map<string, Training::WebBuild>::const_iterator cached = buildCache.find( heroId );
   if ( cached != buildCache.end() )
   {
-    SendWithBuild( index, sideText, &cached->second );
+    SendHero( index, &cached->second );
     return;
   }
 
-  if ( sideText.empty() )
-    for ( int i = buildRequests.size() - 1; i >= 0; --i )
-      if ( buildRequests[i].side.empty() )
-        buildRequests.erase( buildRequests.begin() + i );
-
-  if ( !IsValid( launcherBridge ) || !launcherBridge->IsLauncherAnswering() || !IsSafeParam( heroId.c_str() )
-    || buildRequests.size() >= MAX_BUILD_REQUESTS )
+  if ( !IsValid( launcherBridge ) || !launcherBridge->IsLauncherAnswering() || !IsSafeParam( heroId.c_str() ) )
   {
-    SendWithBuild( index, sideText, 0 );
+    SendHero( index, 0 );
     return;
   }
 
   static int s_lastRequestId = 0;
-  BuildRequest request;
   request.id = ++s_lastRequestId;
   request.heroIndex = index;
   request.heroId = heroId;
-  request.side = sideText;
   request.time = BUILD_TIMEOUT;
-  buildRequests.push_back( request );
   launcherBridge->RequestTrainingBuild( request.id, heroId.c_str() );
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void TrainingPanelController::UpdateBuildRequests( float deltaTime )
+void TrainingPanelController::UpdateHeroBuild( float deltaTime )
 {
-  for ( int i = 0; i < buildRequests.size(); )
-  {
-    BuildRequest & request = buildRequests[i];
-    Training::WebBuild build;
-    const bool answered = IsValid( launcherBridge ) && launcherBridge->TakeTrainingBuild( request.id, build );
-    request.time -= deltaTime;
-    if ( !answered && request.time > 0.0f )
-    {
-      ++i;
-      continue;
-    }
+  if ( !request.id )
+    return;
 
-    // the launcher without a build (no back end, over its limit) sends the header alone: the build of the data,
-    // not cached - the next time the launcher is asked again
-    bool hasBuild = false;
-    for ( int s = 0; s < Training::WebBuild::SLOTS && answered; ++s )
-      hasBuild = hasBuild || !build.talents[s].empty();
-    if ( hasBuild )
-      buildCache[request.heroId] = build;
-    if ( !answered )
-      MessageTrace( "training panel: no build from the launcher for hero %s", request.heroId.c_str() );
+  Training::WebBuild build;
+  const bool answered = IsValid( launcherBridge ) && launcherBridge->TakeTrainingBuild( request.id, build );
+  request.time -= deltaTime;
+  if ( !answered && request.time > 0.0f )
+    return;
 
-    const BuildRequest done = request;
-    buildRequests.erase( buildRequests.begin() + i );
-    SendWithBuild( done.heroIndex, done.side, hasBuild ? &build : 0 );
-  }
+  // the launcher without a build (no back end, over its limit) sends the header alone: the build of the data,
+  // not cached - the next time the launcher is asked again
+  bool hasBuild = false;
+  for ( int s = 0; s < Training::WebBuild::SLOTS && answered; ++s )
+    hasBuild = hasBuild || !build.talents[s].empty();
+  if ( hasBuild )
+    buildCache[request.heroId] = build;
+  if ( !answered )
+    MessageTrace( "training panel: no build from the launcher for hero %s", request.heroId.c_str() );
+
+  request.id = 0;
+  SendHero( request.heroIndex, hasBuild ? &build : 0 );
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// "hero <index> [build ...]" or "add <index> <side> [build ...]" (PFTraining.cpp)
-void TrainingPanelController::SendWithBuild( int index, const string & side, const Training::WebBuild * build )
+// the build parts (CmdTrainingBuild), then "hero <index> [build]" (PFTraining.cpp)
+void TrainingPanelController::SendHero( int index, const Training::WebBuild * build )
 {
   NWorld::PFBaseHero * pHero = screen ? screen->GetHero() : 0;
   if ( !IsValid( pHero ) )
@@ -496,11 +479,9 @@ void TrainingPanelController::SendWithBuild( int index, const string & side, con
 
   vector<wstring> params;
   params.push_back( NStr::StrFmtW( L"%d", index ) );
-  if ( !side.empty() )
-    params.push_back( NStr::ToUnicode( side ) );
-  if ( build )
-    Training::AppendBuildParams( *build, params );
-  Training::Send( side.empty() ? "hero" : "add", pHero, pHero->GetPosition(), params );
+  if ( build && Training::SendBuild( *build ) )
+    params.push_back( NStr::ToUnicode( Training::BuildParam() ) );
+  Training::Send( "hero", pHero, pHero->GetPosition(), params );
   timeToState = 0.0f;
   loadingTime = LOADING_TIME;
   UpdateLoadingAssertion( 0.0f );
@@ -568,7 +549,7 @@ void TrainingPanelController::OnFSCommand( UI::FlashContainer2* _wnd, const char
         Send( "mode", screen->GetHero(), s_modes[i], on ? "1" : "0" );
   }
   else if ( strncmp( args, "hero ", 5 ) == 0 )
-    RequestBuild( atoi( args + 5 ), 0 );
+    RequestHeroBuild( atoi( args + 5 ) );
   else if ( strncmp( args, "skin ", 5 ) == 0 )
   {
     if ( IsSafeParam( args + 5 ) )
@@ -581,8 +562,13 @@ void TrainingPanelController::OnFSCommand( UI::FlashContainer2* _wnd, const char
     char side[16] = "";
     if ( sscanf( args + 4, "%d %15s", &index, side ) != 2 )
       return;
-    if ( strcmp( side, "ally" ) == 0 || strcmp( side, "enemy" ) == 0 || strcmp( side, "dummy" ) == 0 )
-      RequestBuild( index, side );
+    NDb::Ptr<NDb::HeroesDB> pHeroes = NDb::Get<NDb::HeroesDB>( NDb::DBID( szHeroesDb ) );
+    if ( pHeroes && index >= 0 && index < pHeroes->heroes.size() && pHeroes->heroes[index]
+      && ( strcmp( side, "ally" ) == 0 || strcmp( side, "enemy" ) == 0 || strcmp( side, "dummy" ) == 0 ) )
+    {
+      const string indexText = NStr::StrFmt( "%d", index );
+      Send( "add", screen->GetHero(), indexText.c_str(), side );
+    }
   }
   else if ( strncmp( args, "library ", 8 ) == 0 )
   {

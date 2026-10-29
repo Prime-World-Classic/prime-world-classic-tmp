@@ -69,8 +69,11 @@ namespace Training
 
     WebBuild() { memset( refine, 0, sizeof( refine ) ); memset( bar, 0, sizeof( bar ) ); }
   };
-  // the build goes in the command "hero" after the hero index: "build", 36 talents, 36 refine rates, 24 panel cells
-  void AppendBuildParams( const WebBuild & build, vector<wstring> & params );
+  // client: the build goes right before the command "hero <index> build" (BuildParam) as CmdTrainingBuild parts - the
+  // talent set as the session gives it to a player (NCore::PlayerInfo::talents), a few slots per part: the server
+  // takes a world command of at most 256 bytes (game_command_max_size). false - nothing sent (no talents)
+  bool SendBuild( const WebBuild & build );
+  const char * BuildParam();
 
   // shared with the console cheats hero_change and set_skin (PFCheat.cpp)
   NWorld::PFBaseHero * ChangeHero( NWorld::PFWorld * world, NWorld::PFBaseHero * oldHero, const NDb::Hero * dbHero );

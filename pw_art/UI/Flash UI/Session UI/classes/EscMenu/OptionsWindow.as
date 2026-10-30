@@ -74,11 +74,11 @@
 
 		private static var buildPage:int = 0;
 
-		// categories (buttons of the left column): Game (graphics + sound), Keys, Communication, Chat wheel, Ping wheel,
-		// Summoned creatures, Advanced
+		// categories (buttons of the left column): Game (graphics + sound), Keys, Communication, Chat wheel, Ping wheel, Advanced;
+		// the Summoned creatures page has no button: manual control of the summons is off and not offered to the players
 		private static const CAT_GAME:int = 0;
 		private static const CAT_KEYS:int = 1;
-		private static const CAT_COUNT:int = 7;
+		private static const CAT_COUNT:int = 6;
 
 		// page shown by a category (-1 = not a page)
 		private static function CatPage(category:int) : int
@@ -101,10 +101,6 @@
 			}
 			if (category == 5)
 			{
-				return PAGE_SUMMONS;
-			}
-			if (category == 6)
-			{
 				return 0;
 			}
 			return -1;
@@ -113,8 +109,7 @@
 		private static function get CAT_NAMES():Array
 		{
 			return [Localization.PreferenceMenu_GameLabel, Localization.ShortcutsMenu_Header, Localization.Options_CommunicationPage,
-				Localization.Options_ChatWheelPage, Localization.Options_PingWheelPage, String(pageNames[PAGE_SUMMONS]),
-				Localization.Options_AdvancedPage];
+				Localization.Options_ChatWheelPage, Localization.Options_PingWheelPage, Localization.Options_AdvancedPage];
 		}
 
 		// titles of the sections of the "Game" category

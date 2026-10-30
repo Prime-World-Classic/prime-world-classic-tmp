@@ -419,6 +419,7 @@ static const AdvancedVarDesc s_advancedVars[] =
   { "adv_hdr_interface", "", ADV_HEADER, 0.0f, 0.0f, 0, L"", "", L"\u0418\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441", L"Interface" },
   { "adv_team_portraits_scale", "team_portraits_scale", ADV_SLIDER, 50.0f, 200.0f, 16, L"%.0f%%", "", L"\u0420\u0430\u0437\u043c\u0435\u0440 \u043f\u043e\u0440\u0442\u0440\u0435\u0442\u043e\u0432 \u043a\u043e\u043c\u0430\u043d\u0434", L"Team portraits size" },
   { "adv_cursor_scale", "cursor_scale", ADV_SLIDER, 50.0f, 300.0f, 26, L"%.0f%%", "", L"\u0420\u0430\u0437\u043c\u0435\u0440 \u043a\u0443\u0440\u0441\u043e\u0440\u0430", L"Cursor size" },
+  { "adv_minimap_icon_scale", "minimap_icon_scale", ADV_SLIDER, 50.0f, 200.0f, 16, L"%.0f%%", "", L"\u0420\u0430\u0437\u043c\u0435\u0440 \u0437\u043d\u0430\u0447\u043a\u043e\u0432 \u043d\u0430 \u043c\u0438\u043d\u0438\u043a\u0430\u0440\u0442\u0435", L"Minimap icon size" },
   { "adv_overtip_status", "overtip_status", ADV_CHECKBOX, 0.0f, 0.0f, 0, L"", "", L"\u0422\u0435\u043a\u0441\u0442\u043e\u0432\u044b\u0439 \u0438\u043d\u0434\u0438\u043a\u0430\u0442\u043e\u0440 \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0439 \u043d\u0430\u0434 \u043f\u0435\u0440\u0441\u043e\u043d\u0430\u0436\u0430\u043c\u0438", L"Text status indicator above characters" },
   { "adv_overtip_status_heroes", "overtip_status_heroes_only", ADV_CHECKBOX, 0.0f, 0.0f, 0, L"", "adv_overtip_status", L"\u0418\u043d\u0434\u0438\u043a\u0430\u0442\u043e\u0440 \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0439 \u0442\u043e\u043b\u044c\u043a\u043e \u043d\u0430\u0434 \u0433\u0435\u0440\u043e\u044f\u043c\u0438", L"Status indicator above heroes only" },
   { "adv_page_comm", "", ADV_PAGE, 1.0f, 0.0f, 0, L"", "", L"", L"" },
@@ -449,17 +450,6 @@ static const AdvancedVarDesc s_advancedVars[] =
   { "adv_ping_wheel_delay", "ping_wheel_delay", ADV_SLIDER, 0.1f, 0.5f, 9, L"%.2f", "adv_ping_wheel", L"\u0417\u0430\u0434\u0435\u0440\u0436\u043a\u0430 \u043a\u043e\u043b\u0435\u0441\u0430 \u0441\u0438\u0433\u043d\u0430\u043b\u043e\u0432, \u0441", L"Signal wheel delay, s" },
   { "adv_ping_wheel_transparency", "ping_wheel_transparency", ADV_SLIDER, 0.0f, 90.0f, 10, L"%.0f%%", "adv_ping_wheel", L"\u041f\u0440\u043e\u0437\u0440\u0430\u0447\u043d\u043e\u0441\u0442\u044c \u0444\u043e\u043d\u0430 \u043a\u043e\u043b\u0435\u0441\u0430", L"Wheel background transparency" },
   { "adv_ping_wheel_scale", "ping_wheel_scale", ADV_SLIDER, 60.0f, 160.0f, 11, L"%.0f%%", "adv_ping_wheel", L"\u0420\u0430\u0437\u043c\u0435\u0440 \u043a\u043e\u043b\u0435\u0441\u0430", L"Wheel size" },
-  { "adv_page_summons", "", ADV_PAGE, 5.0f, 0.0f, 0, L"", "", L"\u041f\u0440\u0438\u0437\u0432\u0430\u043d\u043d\u044b\u0435 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0430", L"Summoned creatures" },
-  { "adv_hdr_summons", "", ADV_HEADER, 0.0f, 0.0f, 0, L"", "", L"\u0423\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u043f\u0440\u0438\u0437\u0432\u0430\u043d\u043d\u044b\u043c\u0438 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0430\u043c\u0438", L"Summoned creatures control" },
-  { "adv_summon_manual", "summon_manual_control", ADV_CHECKBOX, 0.0f, 0.0f, 0, L"", "", L"\u0412\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0440\u0443\u0447\u043d\u043e\u0435 \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435", L"Enable manual control" },
-  { "adv_key_summon_all", "summon_select_all", ADV_KEY, 0.0f, 0.0f, 0, L"", "", L"\u0412\u044b\u0431\u0440\u0430\u0442\u044c \u0432\u0441\u0435\u0445", L"Select all" },
-  { "adv_note_summon_all", "", ADV_NOTE, 0.0f, 0.0f, 0, L"", "", L"(\u0433\u0435\u0440\u043e\u0439, \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0430 \u0441\u043b\u0435\u0434\u0443\u044e\u0442 \u0437\u0430 \u043d\u0438\u043c)", L"(the hero, the creatures follow it)" },
-  { "adv_key_summon_hero", "summon_select_hero", ADV_KEY, 0.0f, 0.0f, 0, L"", "", L"\u0412\u044b\u0431\u0440\u0430\u0442\u044c \u0442\u043e\u043b\u044c\u043a\u043e \u0433\u0435\u0440\u043e\u044f", L"Select the hero only" },
-  { "adv_note_summon_hero", "", ADV_NOTE, 0.0f, 0.0f, 0, L"", "", L"(\u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0430 \u0441\u0442\u043e\u044f\u0442 \u0438\u043b\u0438 \u0432\u044b\u043f\u043e\u043b\u043d\u044f\u044e\u0442 \u0441\u0432\u043e\u0438 \u043f\u0440\u0438\u043a\u0430\u0437\u044b)", L"(the creatures stay or go on with their orders)" },
-  { "adv_key_summon_summons", "summon_select_summons", ADV_KEY, 0.0f, 0.0f, 0, L"", "", L"\u0412\u044b\u0431\u0440\u0430\u0442\u044c \u043f\u0440\u0438\u0437\u0432\u0430\u043d\u043d\u044b\u0445", L"Select the summoned" },
-  { "adv_note_summon_summons", "", ADV_NOTE, 0.0f, 0.0f, 0, L"", "", L"(\u0432\u0441\u0435\u043c \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0430\u043c \u043e\u0434\u043d\u0438 \u0438 \u0442\u0435 \u0436\u0435 \u043f\u0440\u0438\u043a\u0430\u0437\u044b)", L"(the same orders to all the creatures)" },
-  { "adv_key_summon_next", "summon_select_next", ADV_KEY, 0.0f, 0.0f, 0, L"", "", L"\u041f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u043d\u0430 \u0441\u043b\u0435\u0434\u0443\u044e\u0449\u0435\u0433\u043e", L"Switch to the next one" },
-  { "adv_note_summon_next", "", ADV_NOTE, 0.0f, 0.0f, 0, L"", "", L"(\u0432\u043d\u0443\u0442\u0440\u0438 \u0432\u044b\u0431\u0440\u0430\u043d\u043d\u043e\u0439 \u0433\u0440\u0443\u043f\u043f\u044b)", L"(within the selected group)" },
   { "adv_page_game_sound", "", ADV_PAGE, 4.0f, 0.0f, 0, L"", "", L"", L"" },
   { "adv_ping_sound_volume", "ping_sound_volume", ADV_SLIDER, 0.0f, 100.0f, 11, L"%.0f%%", "adv_ping_sound", L"\u0413\u0440\u043e\u043c\u043a\u043e\u0441\u0442\u044c \u0441\u0438\u0433\u043d\u0430\u043b\u043e\u0432", L"Signal volume" }, // Flash puts it into the sound section (no value text)
   { "adv_hdr_frame_rate", "", ADV_HEADER, 0.0f, 0.0f, 0, L"", "", L"\u0427\u0430\u0441\u0442\u043e\u0442\u0430 \u043a\u0430\u0434\u0440\u043e\u0432", L"Frame Rate" },
@@ -610,7 +600,7 @@ void PreferencesProcessor::Init( const NDb::Preferences &desc )
 
     if( adv.type == ADV_PAGE )
     {
-      CallMethod( "SetAdvancedTargetPage", static_cast<int>( adv.minValue ) ); // following rows go to this page (0 = Advanced, 1 = Communication, 2 = Chat wheel, 3 = Ping wheel, 4 = Game: under the sound, 5 = Summoned creatures)
+      CallMethod( "SetAdvancedTargetPage", static_cast<int>( adv.minValue ) ); // following rows go to this page (0 = Advanced, 1 = Communication, 2 = Chat wheel, 3 = Ping wheel, 4 = Game: under the sound, 5 = Summoned creatures: no button)
       if ( adv.label[0] != 0 )
         CallMethod( "SetAdvancedPageName", static_cast<int>( adv.minValue ), AdvancedLabel( adv ) ); // name of the category button
       continue;

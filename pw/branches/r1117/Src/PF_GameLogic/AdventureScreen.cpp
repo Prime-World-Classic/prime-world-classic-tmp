@@ -10226,7 +10226,7 @@ REGISTER_VAR( "ping_ground_radius", g_pingGroundRadius, STORAGE_NONE );
 REGISTER_VAR( "ping_beam_height", g_pingBeamHeight, STORAGE_NONE );
 REGISTER_VAR( "ping_sound", g_pingSound, STORAGE_USER );
 REGISTER_VAR( "auto_attack", g_autoAttack, STORAGE_USER );
-REGISTER_VAR( "summon_manual_control", g_summonManualControl, STORAGE_USER );
+REGISTER_VAR( "summon_manual_control", g_summonManualControl, STORAGE_NONE ); // off by default, not in the settings
 REGISTER_VAR( "smart_cast_toggles", g_smartCastToggles, STORAGE_USER );
 REGISTER_VAR( "smart_cast_items", g_smartCastItems, STORAGE_USER );
 REGISTER_VAR( "praise", g_praise, STORAGE_USER );

@@ -26005,7 +26005,7 @@
     {
       "id": 174,
       "name": "gamedata032.pile",
-      "packed_size": 19768195,
+      "packed_size": 19768196,
       "source_size": 46761773,
       "files": [
         ["Heroes/IronKnight/S2/stun.anim", 45568, 3526808529],
@@ -26349,7 +26349,7 @@
         ["Heroes/Laguna/_.HROB_heroNameA.txt", 14, 2821060916],
         ["Heroes/Laguna/_.HROB_heroNameB.txt", 14, 2821060916],
         ["Heroes/Laguna/_.LOLS.xdb", 6090, 496318929],
-        ["Heroes/Laguna/_.MTRL.xdb", 2710, 3154717373],
+        ["Heroes/Laguna/_.MTRL.xdb", 2710, 300373508],
         ["Heroes/Laguna/_.SOBJ.xdb", 11663, 1156708910],
         ["Heroes/Laguna/_.dds", 16777344, 2885012768],
         ["Heroes/Laguna/_.skel", 9728, 3018467979],

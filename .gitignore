@@ -124,6 +124,12 @@ pw/branches/r1117/Tools/WineClientBuild/server_ip.env
 # см. BUILD_CLIENT_X64.md
 /build/
 
+# папки локального запуска, их собирает deploy_dev_build.bat (x32 — Bin_Dev, x64 — Bin_Dev64)
+pw/branches/r1117/Bin_Dev/
+pw/branches/r1117/Bin_Dev64/
+# личные настройки клиента этой машины (local_map, local_hero, local_players), подключает Profiles/custom.cfg
+pw/branches/r1117/Profiles/local.cfg
+
 # client-modern: out-of-source CMake-сборки клиента (см. PLAN_client_modern.md)
 # в Tools/ClientCMake в ветке только генераторы/тулзы (gen_cmake.py, check_exe.py,
 # gen_server_ip.py); модель, сгенерированный граф (gen/), build-каталог,

@@ -41,6 +41,9 @@ REM   build_client_x64_win.cmd --clean              drop gen/ and build dir
 REM   build_client_x64_win.cmd --gen-only           generate CMakeLists only
 REM   build_client_x64_win.cmd --keep-going         ninja -k0 (survey of errors)
 REM   build_client_x64_win.cmd --check              verify existing artifact only
+REM   build_client_x64_win.cmd --release            ReleaseSingleExe (cheats, console,
+REM                                                 asserts, local_game): build dir tag
+REM                                                 x64-win-rel, artifact build\PW_Game_Release.exe
 REM   build_client_x64_win.cmd --build-dir D:\pwbuild\x64-win
 REM   set PW_BUILD_JOBS=8 & build_client_x64_win.cmd
 REM   set PW_EXTRA_OPTS=/std:c++17                  ADDS to toolchain defaults
@@ -102,6 +105,7 @@ set "DO_CLEAN=0"
 set "DO_GEN=0"
 set "DO_KEEP=0"
 set "DO_CHECK=0"
+set "DO_REL=0"
 set "BUILD_DIR=%PW_BUILD_DIR%"
 :args
 if "%~1"=="" goto argsdone
@@ -110,6 +114,7 @@ if /i "%~1"=="--clean"      (set "DO_CLEAN=1" & set "KNOWN=1")
 if /i "%~1"=="--gen-only"   (set "DO_GEN=1"  & set "KNOWN=1")
 if /i "%~1"=="--keep-going" (set "DO_KEEP=1" & set "KNOWN=1")
 if /i "%~1"=="--check"      (set "DO_CHECK=1" & set "KNOWN=1")
+if /i "%~1"=="--release"    (set "DO_REL=1"   & set "KNOWN=1")
 if /i "%~1"=="--help"       goto usage
 if /i "%~1"=="-h"           goto usage
 REM cmd treats '=' as an argument separator, so --build-dir=PATH arrives split in
@@ -124,6 +129,15 @@ if "%KNOWN%"=="0" (echo == unknown argument: %~1 -- see --help & exit /b 2)
 shift
 goto args
 :argsdone
+
+REM --release: the dev configuration (cheats, console, asserts, local_game) in its own
+REM build tree and under its own artifact name, so it never overwrites the Shipping one.
+set "OUT_NAME=PW_Game.exe"
+if "%DO_REL%"=="1" (
+  set "CFG=ReleaseSingleExe|Win32"
+  if "%PW_BUILD_TAG%"=="" set "TC_TAG=x64-win-rel"
+  set "OUT_NAME=PW_Game_Release.exe"
+)
 
 set "REPO=%SELF%"
 for %%i in ("%REPO%") do set "REPO=%%~fi"
@@ -254,6 +268,8 @@ if "%DO_CLEAN%"=="1" (
         rmdir /s /q "%BUILD_DIR%" 2>nul
     )
 )
+REM parse_vcproj.py takes the configuration from PW_CFG only (the 3rd argument is ignored)
+set "PW_CFG=%CFG%"
 "%PYTHON%" "%WCB%\parse_vcproj.py" "%BR%\Src" "%CCT%\model.json" "%CFG%" >"%CCT%\parse.out" 2>&1
 if errorlevel 1 (
     echo ERROR: parse_vcproj
@@ -344,10 +360,10 @@ REM drop location for both toolchains (build_client_x64_wine.sh does the same),
 REM plus .pdb/.map when the build was configured with PW_PDB=1 / /MAP.
 set "OUT=%REPO%build"
 if not exist "%OUT%" mkdir "%OUT%"
-copy /y "%EXE%" "%OUT%\PW_Game.exe" >nul
+copy /y "%EXE%" "%OUT%\%OUT_NAME%" >nul
 if exist "%BUILD_DIR%\PW_Game.pdb" copy /y "%BUILD_DIR%\PW_Game.pdb" "%OUT%\" >nul
 if exist "%BUILD_DIR%\PW_Game.map" copy /y "%BUILD_DIR%\PW_Game.map" "%OUT%\" >nul
-echo == artifact: %OUT%\PW_Game.exe
+echo == artifact: %OUT%\%OUT_NAME%
 exit /b 0
 
 :usage

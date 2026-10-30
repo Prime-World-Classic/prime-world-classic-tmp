@@ -207,8 +207,8 @@
 									<constraint>None</constraint>
 									<dontUpdate>false</dontUpdate>
 									<effect>
-										<Item href="/Heroes/Taurus/Effects/ChargeRing.EFFT" />
-										<Item href="/Heroes/Taurus/Effects/ChargeRing.EFFT" />
+										<Item href="/Heroes/Taurus/Effects/ChargeRing_Team.EFFT" />
+										<Item href="/Heroes/Taurus/Effects/ChargeRing_Team.EFFT" />
 									</effect>
 									<enabled>
 										<compiledString>FQ8AAAACAAAAFAAAACoAAABUYXVydXNDaGFyZ2luZwBVi+xRaAAAAACLRQyLEItNDIuCiAEAAP/Q3B1MAAAA3+D2xEF1CcdF/AEAAADrB8dF/AAAAACKRfyL5V3DAAAAAAAAAAA=</compiledString>
@@ -639,8 +639,8 @@
 												<DispatchImmediate>
 													<alwaysApply>false</alwaysApply>
 													<applyEffect>
-														<Item href="/Heroes/Taurus/Effects/Stomp1.EFFT" />
-														<Item href="/Heroes/Taurus/Effects/Stomp1.EFFT" />
+														<Item href="/Heroes/Taurus/Effects/Stomp1_Team.EFFT" />
+														<Item href="/Heroes/Taurus/Effects/Stomp1_Team.EFFT" />
 													</applyEffect>
 													<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
 													<applyEffectOrientation>Default</applyEffectOrientation>
@@ -704,8 +704,8 @@
 												<DispatchImmediate>
 													<alwaysApply>false</alwaysApply>
 													<applyEffect>
-														<Item href="/Heroes/Taurus/Effects/Stomp2.EFFT" />
-														<Item href="/Heroes/Taurus/Effects/Stomp2.EFFT" />
+														<Item href="/Heroes/Taurus/Effects/Stomp2_Team.EFFT" />
+														<Item href="/Heroes/Taurus/Effects/Stomp2_Team.EFFT" />
 													</applyEffect>
 													<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
 													<applyEffectOrientation>Default</applyEffectOrientation>
@@ -769,8 +769,8 @@
 												<DispatchImmediate>
 													<alwaysApply>false</alwaysApply>
 													<applyEffect>
-														<Item href="/Heroes/Taurus/Effects/Stomp3.EFFT" />
-														<Item href="/Heroes/Taurus/Effects/Stomp3.EFFT" />
+														<Item href="/Heroes/Taurus/Effects/Stomp3_Team.EFFT" />
+														<Item href="/Heroes/Taurus/Effects/Stomp3_Team.EFFT" />
 													</applyEffect>
 													<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
 													<applyEffectOrientation>Default</applyEffectOrientation>
@@ -834,8 +834,8 @@
 												<DispatchImmediate>
 													<alwaysApply>false</alwaysApply>
 													<applyEffect>
-														<Item href="/Heroes/Taurus/Effects/Stomp4.EFFT" />
-														<Item href="/Heroes/Taurus/Effects/Stomp4.EFFT" />
+														<Item href="/Heroes/Taurus/Effects/Stomp4_Team.EFFT" />
+														<Item href="/Heroes/Taurus/Effects/Stomp4_Team.EFFT" />
 													</applyEffect>
 													<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
 													<applyEffectOrientation>Default</applyEffectOrientation>

@@ -380,8 +380,8 @@
 											<caption>эффект подготовки прыжка (JumpCharge.EFFT)</caption>
 											<consumables />
 											<effect>
-												<Item href="/Heroes/Taurus/Effects/JumpCharge.EFFT" />
-												<Item href="/Heroes/Taurus/Effects/JumpCharge.EFFT" />
+												<Item href="/Heroes/Taurus/Effects/JumpCharge_Team.EFFT" />
+												<Item href="/Heroes/Taurus/Effects/JumpCharge_Team.EFFT" />
 											</effect>
 											<enabled>
 												<compiledString>FSEAAAACAAAALAAAAEwAAABUYXVydXNKbXBBaW1PZmYAVGF1cnVzSm1wVHVybk9mZgBVi+xRagGLRRBQaAAAAACLTQiLEYtNCIuCnAEAAP/QO0UQdSlqAYtNEFFoEAAAAItVCIsCi00Ii5CcAQAA/9I7RRB1CcdF/AEAAADrB8dF/AAAAACKRfyL5V3D</compiledString>
@@ -413,8 +413,8 @@
 											<caption>JumpMark.EFFT только для предзагрузки (выключен): метку посадки ставит клиент, AdventureScreen::UpdateJumpMark</caption>
 											<consumables />
 											<effect>
-												<Item href="/Heroes/Taurus/Effects/JumpMark.EFFT" />
-												<Item href="/Heroes/Taurus/Effects/JumpMark.EFFT" />
+												<Item href="/Heroes/Taurus/Effects/JumpMark_Team.EFFT" />
+												<Item href="/Heroes/Taurus/Effects/JumpMark_Team.EFFT" />
 											</effect>
 											<enabled>
 												<compiledString>FQAAAAAAAAAAVYvsMsBdww==</compiledString>
@@ -636,8 +636,8 @@
 																													<DispatchImmediate>
 																														<alwaysApply>false</alwaysApply>
 																														<applyEffect>
-																															<Item href="/Heroes/Taurus/Effects/JumpLaunch.EFFT" />
-																															<Item href="/Heroes/Taurus/Effects/JumpLaunch.EFFT" />
+																															<Item href="/Heroes/Taurus/Effects/JumpLaunch_Team.EFFT" />
+																															<Item href="/Heroes/Taurus/Effects/JumpLaunch_Team.EFFT" />
 																														</applyEffect>
 																														<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
 																														<applyEffectOrientation>Default</applyEffectOrientation>
@@ -1157,8 +1157,8 @@
 																																		<DispatchImmediate>
 																																			<alwaysApply>false</alwaysApply>
 																																			<applyEffect>
-																																				<Item href="/Heroes/Taurus/Effects/JumpLand.EFFT" />
-																																				<Item href="/Heroes/Taurus/Effects/JumpLand.EFFT" />
+																																				<Item href="/Heroes/Taurus/Effects/JumpLand_Team.EFFT" />
+																																				<Item href="/Heroes/Taurus/Effects/JumpLand_Team.EFFT" />
 																																			</applyEffect>
 																																			<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
 																																			<applyEffectOrientation>Default</applyEffectOrientation>

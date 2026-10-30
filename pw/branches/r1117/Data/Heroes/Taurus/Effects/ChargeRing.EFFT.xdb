@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BasicEffectAttached>
-	<BackLink DBID="/Items/Talents/Class/Taurus/Ability_A1.TALENT" Count="2" />
+	<BackLink DBID="/Heroes/Taurus/Effects/ChargeRing_Team.EFFT" Count="1" />
 	<attachFlags>1</attachFlags>
 	<attachType>Ground</attachType>
 	<component href="/Heroes/Taurus/Effects/ChargeRing.PRXY" />

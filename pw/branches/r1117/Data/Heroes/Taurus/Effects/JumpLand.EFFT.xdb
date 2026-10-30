@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BasicEffectStandalone>
-	<BackLink DBID="/Items/Talents/Class/Taurus/Ability_A4_2.TALENT" Count="2" />
+	<BackLink DBID="/Heroes/Taurus/Effects/JumpLand_Team.EFFT" Count="1" />
 	<component href="/Heroes/Taurus/Effects/JumpLand.PRXY" />
 	<deathType>Time</deathType>
 	<enableCondition href="" />

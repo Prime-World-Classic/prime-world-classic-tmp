@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<EffectSwitcher>
+	<BackLink DBID="/Heroes/Taurus/_.HROB" Count="2" />
+	<deathType>Manual</deathType>
+	<effectOnInvisible href="/Heroes/Taurus/Effects/Hit.EFFT" />
+	<effectOnVisible href="/Heroes/Taurus/Effects/Hit_Red.EFFT" />
+	<enableCondition href="" />
+	<isVisibleUnderWarfog>false</isVisibleUnderWarfog>
+	<lifeTime>0</lifeTime>
+	<logic>FactionVisibility</logic>
+</EffectSwitcher>

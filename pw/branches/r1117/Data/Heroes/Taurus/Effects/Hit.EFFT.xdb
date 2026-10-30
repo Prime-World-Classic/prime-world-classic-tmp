@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BasicEffectAttached>
-	<BackLink DBID="/Heroes/Taurus/_.HROB" Count="2" />
+	<BackLink DBID="/Heroes/Taurus/Effects/Hit_Team.EFFT" Count="1" />
 	<attachFlags>2</attachFlags>
 	<attachType>Body</attachType>
 	<component href="/Heroes/Taurus/Effects/Hit.PRXY" />

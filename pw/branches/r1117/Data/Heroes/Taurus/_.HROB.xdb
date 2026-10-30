@@ -713,8 +713,8 @@
 				<DispatchImmediate>
 					<alwaysApply>false</alwaysApply>
 					<applyEffect>
-						<Item href="/Heroes/Taurus/Effects/Hit.EFFT" />
-						<Item href="/Heroes/Taurus/Effects/Hit.EFFT" />
+						<Item href="/Heroes/Taurus/Effects/Hit_Team.EFFT" />
+						<Item href="/Heroes/Taurus/Effects/Hit_Team.EFFT" />
 					</applyEffect>
 					<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
 					<applyEffectOrientation>Default</applyEffectOrientation>

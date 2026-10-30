@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BasicEffectStandalone>
+	<BackLink DBID="/Heroes/Taurus/Effects/RamGlowL_Team.EFFT" Count="1" />
+	<component href="/Heroes/Taurus/Effects/RamGlowL_Red.PRXY" />
+	<deathType>Time</deathType>
+	<enableCondition href="" />
+	<fadeIn>0</fadeIn>
+	<fadeOut>0.2</fadeOut>
+	<isVisibleUnderWarfog>false</isVisibleUnderWarfog>
+	<lifeTime>0.03</lifeTime>
+	<parentFlags>2</parentFlags>
+	<parentType>Ground</parentType>
+	<visibilityLimited>false</visibilityLimited>
+	<visibleTime>0</visibleTime>
+</BasicEffectStandalone>

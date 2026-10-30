@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<EffectSwitcher>
+	<BackLink DBID="/Items/Talents/Class/Taurus/Ability_A1.TALENT" Count="2" />
+	<deathType>Manual</deathType>
+	<effectOnInvisible href="/Heroes/Taurus/Effects/ChargeRing_Red.EFFT" />
+	<effectOnVisible href="/Heroes/Taurus/Effects/ChargeRing.EFFT" />
+	<enableCondition href="" />
+	<isVisibleUnderWarfog>false</isVisibleUnderWarfog>
+	<lifeTime>0</lifeTime>
+	<logic>SenderFaction</logic>
+</EffectSwitcher>

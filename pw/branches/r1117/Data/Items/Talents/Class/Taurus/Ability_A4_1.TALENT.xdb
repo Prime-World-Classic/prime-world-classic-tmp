@@ -1082,8 +1082,8 @@
 																													<DispatchImmediate>
 																														<alwaysApply>false</alwaysApply>
 																														<applyEffect>
-																															<Item href="/Heroes/Taurus/Effects/RamGlowL.EFFT" />
-																															<Item href="/Heroes/Taurus/Effects/RamGlowL.EFFT" />
+																															<Item href="/Heroes/Taurus/Effects/RamGlowL_Team.EFFT" />
+																															<Item href="/Heroes/Taurus/Effects/RamGlowL_Team.EFFT" />
 																														</applyEffect>
 																														<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
 																														<applyEffectOrientation>Default</applyEffectOrientation>
@@ -1166,8 +1166,8 @@
 																													<DispatchImmediate>
 																														<alwaysApply>false</alwaysApply>
 																														<applyEffect>
-																															<Item href="/Heroes/Taurus/Effects/RamGlowR.EFFT" />
-																															<Item href="/Heroes/Taurus/Effects/RamGlowR.EFFT" />
+																															<Item href="/Heroes/Taurus/Effects/RamGlowR_Team.EFFT" />
+																															<Item href="/Heroes/Taurus/Effects/RamGlowR_Team.EFFT" />
 																														</applyEffect>
 																														<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
 																														<applyEffectOrientation>Default</applyEffectOrientation>
@@ -1377,8 +1377,8 @@
 																																		<DispatchImmediate>
 																																			<alwaysApply>false</alwaysApply>
 																																			<applyEffect>
-																																				<Item href="/Heroes/Taurus/Effects/RamImpact.EFFT" />
-																																				<Item href="/Heroes/Taurus/Effects/RamImpact.EFFT" />
+																																				<Item href="/Heroes/Taurus/Effects/RamImpact_Team.EFFT" />
+																																				<Item href="/Heroes/Taurus/Effects/RamImpact_Team.EFFT" />
 																																			</applyEffect>
 																																			<applyEffectIgnoreVisibility>false</applyEffectIgnoreVisibility>
 																																			<applyEffectOrientation>Default</applyEffectOrientation>

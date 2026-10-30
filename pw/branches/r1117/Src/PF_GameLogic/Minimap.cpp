@@ -32,6 +32,12 @@ namespace
 
   static bool g_showAllSignalsInSharedVision = false;
   REGISTER_VAR("show_all_signals_in_shared_vision", g_showAllSignalsInSharedVision, STORAGE_NONE);
+
+  // size of the minimap icons, % (settings: Interface); 100 - the icon pixels as is
+  static float g_minimapIconScale = 100.0f;
+  REGISTER_VAR( "minimap_icon_scale", g_minimapIconScale, STORAGE_USER );
+
+  float MinimapIconScale() { return Clamp( g_minimapIconScale, 50.0f, 200.0f ) * 0.01f; }
 }
 
 namespace
@@ -1059,8 +1065,10 @@ void Minimap::_AddRect(float _x, float _y, Render::Color color, const Render::Te
 
   const float x = texelSize.x * (floor(_x / texelSize.x));
   const float y = texelSize.y * (floor(_y / texelSize.y));
-  const float w = texelSize.x * (uv2.x - uv1.x) * float(texture->GetWidth());
-  const float h = texelSize.y * (uv2.y - uv1.y) * float(texture->GetHeight());
+  // whole target pixels: the target is shown without filtering (SetTextureSmooth false)
+  const float iconScale = MinimapIconScale();
+  const float w = texelSize.x * Max( 1.f, floorf( (uv2.x - uv1.x) * float(texture->GetWidth()) * iconScale + 0.5f ) );
+  const float h = texelSize.y * Max( 1.f, floorf( (uv2.y - uv1.y) * float(texture->GetHeight()) * iconScale + 0.5f ) );
 
   const float dx = texelSize.x * 0.5f;
   const float dy = texelSize.y * 0.5f;

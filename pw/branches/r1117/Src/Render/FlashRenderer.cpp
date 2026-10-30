@@ -425,11 +425,9 @@ void FlashRenderer::PrepareTexture( BatchTexture& batch, bool primary )
     batch.useDiffuse = false;
     NDb::SamplerState sampleState;
     sampleState.mipFilter = NDb::MIPFILTERTYPE_NONE;
-    // the whole UI is stretched from 1024 lines to the screen: point sampling turns every bitmap without
-    // "smoothing" (most of main.fla, the loaded hero icons) into blocks with stepped edges on 2K/4K
-    const bool smoothing = batch.smoothing || gFlashAntialias;
-    sampleState.magFilter = smoothing ? NDb::MAGFILTERTYPE_LINEAR : NDb::MAGFILTERTYPE_POINT;
-    sampleState.minFilter = smoothing ? NDb::MINFILTERTYPE_LINEAR : NDb::MINFILTERTYPE_POINT;
+    // point sampling only where C++ asked for it (SetTextureSmooth false: the minimap image), the rest is smooth anyway
+    sampleState.magFilter = batch.smoothing ? NDb::MAGFILTERTYPE_LINEAR : NDb::MAGFILTERTYPE_POINT;
+    sampleState.minFilter = batch.smoothing ? NDb::MINFILTERTYPE_LINEAR : NDb::MINFILTERTYPE_POINT;
     sampleState.addressU = (batch.textureMode == EBitmapWrapMode::REPEAT) ? NDb::TEXTUREADDRESSTYPE_WRAP : NDb::TEXTUREADDRESSTYPE_CLAMP;
     sampleState.addressV = sampleState.addressU;
     sampleState.addressW = sampleState.addressU;

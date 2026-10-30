@@ -396,12 +396,13 @@
 																		<LoggingEvent>-1</LoggingEvent>
 																		<providerName></providerName>
 																		<sceneObjectIndex>
-																			<compiledString></compiledString>
+																			<compiledString>FQ8AAAABAAAAEwAAAHdpdGNoZG9jdG9yX1MyAFWL7GgAAAAAi0UIixCLTQiLgugBAAD/0A+2wPfYG8D32F3D</compiledString>
 																			<returnType>int</returnType>
-																			<sString>0</sString>
+																			<sString>sender.IsSkinUsed("witchdoctor_S2") ? 1 : 0</sString>
 																		</sceneObjectIndex>
 																		<sceneObjects>
 																			<Item href="/Summons/Crow/CrowObject/_.SOBJ" />
+																			<Item href="/Summons/Crow/CrowObject/S2/_.SOBJ" />
 																		</sceneObjects>
 																		<startCondition>
 																			<compiledString>FQAAAAAAAAAAVYvssAFdww==</compiledString>

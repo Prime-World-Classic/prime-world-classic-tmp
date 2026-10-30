@@ -2,6 +2,7 @@
 <BasicMaterial>
 	<BackLink DBID="/Summons/Crow/S2/_.ANSC" Count="1" />
 	<BackLink DBID="/Heroes/WitchDoctor/S2/_.SOBJ" Count="1" />
+	<BackLink DBID="/Summons/Crow/CrowObject/S2/_.ANSC" Count="1" />
 	<caption></caption>
 	<diffuseColor>
 		<A>1</A>

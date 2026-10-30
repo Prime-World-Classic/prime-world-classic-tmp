@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <LocatorList>
 	<BackLink DBID="/Summons/Crow/CrowObject/_.ANSC" Count="1" />
+	<BackLink DBID="/Summons/Crow/CrowObject/S2/_.ANSC" Count="1" />
 	<locators>
 		<Item>
 			<flags>15</flags>

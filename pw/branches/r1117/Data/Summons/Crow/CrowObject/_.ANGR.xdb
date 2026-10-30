@@ -5,6 +5,7 @@
 	<BackLink DBID="/Summons/Crow/S1/_B.ANSC" Count="1" />
 	<BackLink DBID="/Summons/Crow/S2/_.ANSC" Count="1" />
 	<BackLink DBID="/Summons/Crow/CrowObject/_.ANSC" Count="1" />
+	<BackLink DBID="/Summons/Crow/CrowObject/S2/_.ANSC" Count="1" />
 	<defaultNode>idle</defaultNode>
 	<macroNodes>
 		<Item>

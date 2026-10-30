@@ -36590,8 +36590,8 @@
     {
       "id": 184,
       "name": "gamedata042.pile",
-      "packed_size": 18316900,
-      "source_size": 63516368,
+      "packed_size": 18316992,
+      "source_size": 63516564,
       "files": [
         ["Items/Talents/Class/Alchemist/status_A1Poison.APLR_description.txt", 484, 1654016972],
         ["Items/Talents/Class/Alchemist/status_A1Poison.APLR_description_en.txt", 484, 2356444648],
@@ -44997,7 +44997,7 @@
         ["Items/Talents/Class/WitchDoctor/Ability2_Upg1.TALENT_description_en.txt", 1618, 3129348424],
         ["Items/Talents/Class/WitchDoctor/Ability2_Upg1.TALENT_name.txt", 42, 254578409],
         ["Items/Talents/Class/WitchDoctor/Ability2_Upg1.TALENT_name_en.txt", 50, 3933472540],
-        ["Items/Talents/Class/WitchDoctor/Ability3.TALENT.xdb", 51930, 1953099583],
+        ["Items/Talents/Class/WitchDoctor/Ability3.TALENT.xdb", 52126, 686060334],
         ["Items/Talents/Class/WitchDoctor/Ability3.TALENT_commonDescription.txt", 10428, 1744416564],
         ["Items/Talents/Class/WitchDoctor/Ability3.TALENT_commonDescription_en.txt", 10398, 3319916216],
         ["Items/Talents/Class/WitchDoctor/Ability3.TALENT_description.txt", 2874, 2189606305],
@@ -66937,8 +66937,8 @@
     {
       "id": 216,
       "name": "gamedata074.pile",
-      "packed_size": 20339287,
-      "source_size": 48659157,
+      "packed_size": 20339308,
+      "source_size": 48659355,
       "files": [
         ["Social/Lootboxes/LB_Red123.xdb", 1801, 372492780],
         ["Social/Lootboxes/LB_Red123_Set1.xdb", 953, 39748486],
@@ -71754,7 +71754,7 @@
         ["Summons/Crow/CrowObject/Effect/_MoveGreenpolySurface2.stat", 3072, 936244802],
         ["Summons/Crow/CrowObject/FXApply.EFFT.xdb", 1097, 831506362],
         ["Summons/Crow/CrowObject/FXMove.EFFT.xdb", 904, 2237079183],
-        ["Summons/Crow/CrowObject/_.ANGR.xdb", 6651, 2036240957],
+        ["Summons/Crow/CrowObject/_.ANGR.xdb", 6717, 997808340],
         ["Summons/Crow/CrowObject/_.ANSC.xdb", 5654, 2081214214],
         ["Summons/Crow/CrowObject/_.LOLS.xdb", 2024, 3170089622],
         ["Summons/Crow/CrowObject/_.MTRL.xdb", 2949, 2257499737],
@@ -71763,7 +71763,7 @@
         ["Summons/Crow/CrowObject/_.dds", 16512, 1820226943],
         ["Summons/Crow/CrowObject/_.skel", 3072, 3574336389],
         ["Summons/Crow/CrowObject/_.skin", 58368, 2481742816],
-        ["Summons/Crow/CrowObject/_1.LOLS.xdb", 3176, 1389291894],
+        ["Summons/Crow/CrowObject/_1.LOLS.xdb", 3242, 1889381617],
         ["Summons/Crow/CrowObject/_SPC.TXTR.xdb", 657, 1225334619],
         ["Summons/Crow/CrowObject/_SPC.dds", 11064, 1390972981],
         ["Summons/Crow/CrowObject/_TRS.PRXY.xdb", 1924, 3966878639],
@@ -71796,7 +71796,7 @@
         ["Summons/Crow/S1/moveA.anim", 10240, 3142493375],
         ["Summons/Crow/S1/moveB.anim", 10240, 3142493375],
         ["Summons/Crow/S2/_.ANSC.xdb", 5354, 1122722776],
-        ["Summons/Crow/S2/_.MTRL.xdb", 3676, 446802729],
+        ["Summons/Crow/S2/_.MTRL.xdb", 3742, 1792056040],
         ["Summons/Crow/S2/_.PRXY.xdb", 715, 210469952],
         ["Summons/Crow/S2/_.dds", 87536, 2701240021],
         ["Summons/Crow/S2/_.skel", 3072, 1284864244],
@@ -89467,8 +89467,8 @@
     {
       "id": 243,
       "name": "gamedata101.pile",
-      "packed_size": 517706,
-      "source_size": 4388716,
+      "packed_size": 588056,
+      "source_size": 4571209,
       "files": [
         ["UI/Styles/Icons/PingWheel/ping_wheel_s_bg_4.dds", 262272, 3609212987],
         ["UI/Styles/Icons/PingWheel/ping_wheel_s_bg_5.dds", 262272, 1685530396],
@@ -89640,7 +89640,15 @@
         ["UI/Screens/Combat/Combat_b554a0220b044de597048df6ebc61b68_properties_283_propertyValue_en.txt", 94, 1867221658],
         ["UI/Styles/Icons/PingWheel/selection_edge.dds", 1152, 1017726986],
         ["UI/Styles/Icons/PingWheel/selection_fill.dds", 1152, 1078985624],
-        ["UI/UIRoot_substitutes_113_captionText_en.txt", 4662, 1112495915]
+        ["UI/UIRoot_substitutes_113_captionText_en.txt", 4662, 1112495915],
+        ["Summons/Crow/CrowObject/S2/_.ANSC.xdb", 5606, 1857565380],
+        ["Summons/Crow/CrowObject/S2/_.SOBJ.xdb", 759, 557676873],
+        ["Summons/Crow/CrowObject/S2/_.skel", 3072, 1284864244],
+        ["Summons/Crow/CrowObject/S2/_.skin", 114688, 3902405255],
+        ["Summons/Crow/CrowObject/S2/attack.anim", 22528, 2785787525],
+        ["Summons/Crow/CrowObject/S2/flyOff.anim", 15360, 2403661056],
+        ["Summons/Crow/CrowObject/S2/idle.anim", 10240, 2697781741],
+        ["Summons/Crow/CrowObject/S2/move.anim", 10240, 3738521783]
       ]
     }
   ]

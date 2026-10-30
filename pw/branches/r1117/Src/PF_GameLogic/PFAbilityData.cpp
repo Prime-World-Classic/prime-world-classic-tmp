@@ -149,9 +149,12 @@ void PFAbilityData::Update(float dt, bool fullUpdate)
       cooldownSpeed += perHero * counter.count;
     }
   }
-  // training mode NoCooldown (PFTraining.cpp)
+  // training mode NoCooldown (PFTraining.cpp): not for the base attack and not for passives (their cooldown is an
+  // internal timer, e.g. the alchemy set gives a consumable every time it ends)
   if ( ( cooldown[0] > 0.0f || cooldown[EAbilityState::_Count - 1] > 0.0f ) && IsValid( pOwner )
-    && NGameX::Training::HasMode( pOwner, NGameX::Training::VAR_NO_COOLDOWN ) )
+    && NGameX::Training::HasMode( pOwner, NGameX::Training::VAR_NO_COOLDOWN )
+    && GetType() != NDb::ABILITYTYPE_PASSIVE
+    && static_cast<PFAbilityData const*>( pOwner->GetAttackAbility() ) != this )
   {
     for (int i = 0; i < EAbilityState::_Count; ++i)
       cooldown[i] = 0.0f;

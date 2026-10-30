@@ -204,10 +204,8 @@ namespace
       if ( mode != s_modeNames[i] )
         continue;
 
+      // NoCooldown takes effect in PFAbilityData::Update (abilities only: not the base attack, not passive timers)
       SetVar( pUnit, s_modes[i], on ? 1.0f : 0.0f );
-      if ( on && s_modes[i] == VAR_NO_COOLDOWN )
-        if ( NWorld::PFBaseHero * pHero = dynamic_cast<NWorld::PFBaseHero *>( pUnit ) )
-          pHero->DropCooldowns( NWorld::DropCooldownParams( NDb::ABILITYIDFLAGS_ALL ) );
       if ( on && s_modes[i] == VAR_NO_MANA )
         pUnit->ChangeMana( pUnit->GetMaxMana() );
       return true;

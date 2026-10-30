@@ -7083,8 +7083,8 @@
     {
       "id": 159,
       "name": "gamedata017.pile",
-      "packed_size": 17176884,
-      "source_size": 50174158,
+      "packed_size": 17176883,
+      "source_size": 50174156,
       "files": [
         ["Effects/Buffs/Inspiration/_BlueNotesSparks.part", 133120, 848448693],
         ["Effects/Buffs/Inspiration/_BlueTRS.PRXY.xdb", 666, 3470060010],
@@ -7227,7 +7227,7 @@
         ["Effects/Buffs/Invulnerability/_root.skel", 1536, 2720636866],
         ["Effects/Buffs/Manoeuvre/_.EFFT.xdb", 591, 470636055],
         ["Effects/Buffs/Manoeuvre/_.PRXY.xdb", 4678, 4109609426],
-        ["Effects/Buffs/Manoeuvre/_Area.EFFT.xdb", 552, 682719705],
+        ["Effects/Buffs/Manoeuvre/_Area.EFFT.xdb", 550, 1923280595],
         ["Effects/Buffs/Manoeuvre/_Area.PRXY.xdb", 38408, 4005292751],
         ["Effects/Buffs/Manoeuvre/_AreaDecalRays.stat", 2048, 1041279379],
         ["Effects/Buffs/Manoeuvre/_AreaDecalWave.stat", 2048, 1041279379],

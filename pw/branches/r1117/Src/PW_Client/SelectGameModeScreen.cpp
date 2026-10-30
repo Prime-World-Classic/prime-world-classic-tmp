@@ -26,6 +26,15 @@ static int s_reconnect_team = 1;
 REGISTER_VAR( "custom_game_reconnect_hero", s_reconnect_hero, STORAGE_NONE );
 REGISTER_VAR( "custom_game_reconnect_team", s_reconnect_team, STORAGE_NONE );
 
+// Local game (local_game 1, dev builds): the map, hero and players count of the game
+// created right away. local_players 1 also skips waiting for others (SelectHeroScreen).
+static string s_localMap( "Maps/Multiplayer/MOBA/_.ADMPDSCR.xdb" );
+string g_localHero;
+int g_localPlayers = 10;
+REGISTER_DEV_VAR( "local_map", s_localMap, STORAGE_NONE );
+REGISTER_DEV_VAR( "local_hero", g_localHero, STORAGE_NONE );
+REGISTER_DEV_VAR( "local_players", g_localPlayers, STORAGE_NONE );
+
 namespace NGameX
 {
 
@@ -176,8 +185,8 @@ void SelectGameModeScreen::Step( bool bAppActive )
   // A web game needs nothing here: the lobby server built the custom game from
   // the synchronizer session (hero, team and party are already assigned).
   if (locked->GetLobbyStatus() == lobby::EClientStatus::InCustomLobby && g_sessionStatus == RegisterInSessionRequest_Joined) {
-    // Locally hosted game: the first hero of the list, as before.
-    locked->ChangeCustomGameSettings(lobby::ETeam::Enum(g_playerTeamId), lobby::ETeam::Enum(g_playerTeamId), heroes[0]);
+    // Locally hosted game: local_hero, or the first hero of the list, as before.
+    locked->ChangeCustomGameSettings(lobby::ETeam::Enum(g_playerTeamId), lobby::ETeam::Enum(g_playerTeamId), g_localHero.empty() ? heroes[0] : g_localHero.c_str());
     g_sessionStatus = RegisterInSessionRequest_HeroSelected;
   }
   if ((locked->GetLobbyStatus() == lobby::EClientStatus::InCustomLobby || g_localGameRun) && g_sessionStatus == RegisterInSessionRequest_WebJoined) {
@@ -189,7 +198,7 @@ void SelectGameModeScreen::Step( bool bAppActive )
 
   // 1. Create game for others
   if (g_sessionStatus == RegisterInSessionRequest_Create) {
-    locked->CreateGame("Maps/Multiplayer/MOBA/_.ADMPDSCR.xdb", 10);
+    locked->CreateGame(s_localMap.c_str(), g_localPlayers);
     g_sessionStatus = RegisterInSessionRequest_Joined;
   }
   if (g_sessionStatus == RegisterInSessionRequest_WebCreate) {

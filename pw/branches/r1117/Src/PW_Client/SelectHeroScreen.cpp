@@ -14,6 +14,8 @@ extern RegisterSessionRequest g_sessionStatus;
 extern string g_sessionToken;
 extern int g_playersCount;
 extern bool g_localGameRun;
+extern int g_localPlayers; // local_players, SelectGameModeScreen.cpp
+extern string g_localHero; // local_hero, SelectGameModeScreen.cpp
 
 namespace NGameX
 {  
@@ -58,6 +60,16 @@ void SelectHeroScreen::CommonStep( bool bAppActive )
   float dt = NMainLoop::GetTimeDelta();
 
   const float timeToReady = 60.0f;
+
+  // Local game with local_players 1 (dev builds): nobody to wait for. LocalGameContext has no
+  // lobby status, so the hero/readiness steps below and in SelectGameModeScreen never fire
+  // for it: pick local_hero and get ready right away.
+  if (g_localPlayers == 1 && g_sessionStatus == RegisterInSessionRequest_Joined && !logic->IsPlayerReady()) {
+    if (!g_localHero.empty())
+      logic->SelectHero(g_localHero.c_str());
+    g_sessionStatus = RegisterInSessionRequest_InReadyState;
+    logic->PlayerReady();
+  }
 
   // 4. SetReady with all players connected or 
   if (g_sessionStatus == RegisterInSessionRequest_HeroSelected || g_sessionStatus == RegisterInSessionRequest_WebHeroSelected) {

@@ -276,6 +276,48 @@
 							</placement>
 							<timeController href="" />
 						</Item>
+						<Item>
+							<attachFlags>19</attachFlags>
+							<component href="/Heroes/Laguna/Effects/ReviveSplash.PRXY" />
+							<events href="/Heroes/Laguna/_.SOBJ" id="053E637E-8209-45D0-A2D1-A7006D1D3D3D">
+								<EnableDisableSCEvents>
+									<disableEvents />
+									<enableEvents>
+										<Item href="/Heroes/Laguna/_.SOBJ" id="2FD2711D-10D0-47D0-B391-1EF43FE74326">
+											<AnimationSCEvent>
+												<animParam>0</animParam>
+												<name>revive</name>
+												<probability>100</probability>
+												<type>NodeEnter</type>
+											</AnimationSCEvent>
+										</Item>
+									</enableEvents>
+									<order>EnableThenDisable</order>
+									<restartComponent>true</restartComponent>
+								</EnableDisableSCEvents>
+							</events>
+							<id></id>
+							<locatorName></locatorName>
+							<placement>
+								<pos>
+									<x>0</x>
+									<y>3.3</y>
+									<z>0</z>
+								</pos>
+								<rot>
+									<w>1</w>
+									<x>0</x>
+									<y>0</y>
+									<z>0</z>
+								</rot>
+								<scale>
+									<x>1</x>
+									<y>1</y>
+									<z>1</z>
+								</scale>
+							</placement>
+							<timeController href="" />
+						</Item>
 					</attached>
 					<caption></caption>
 					<faceFXAnims />

@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Texture>
 	<BackLink DBID="/Effects/Environment/WaterTraces/_DeathA01.PRXY" Count="1" />
+	<BackLink DBID="/Heroes/Laguna/Effects/ReviveSplash.PRXY" Count="1" />
 	<BackLink DBID="/Terrain/Water/Bubble1.PRXY" Count="1" />
 	<generatedFileName></generatedFileName>
 	<mipLevels>0</mipLevels>

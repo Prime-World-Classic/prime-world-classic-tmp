@@ -51,8 +51,28 @@ namespace
   const SpringChainParams s_springChains[] =
   {
     { "CTail", 0.1f, 0.3f, 1.0f, 1.0f, 25.0f },   // Laguna tentacles, tuned in game 2026-10-21
+    { "SWing", 0.25f, 0.4f, 0.5f, 0.0f, 20.0f },  // Brewer S2 back wings: light membranes, a little bounce
+    { "SSkirt", 0.12f, 0.25f, 0.8f, 1.0f, 30.0f }, // Brewer S2 long skirt panels
   };
   const int springChainsCount = sizeof( s_springChains ) / sizeof( s_springChains[0] );
+
+  // Capsules the bones of a chain must stay out of: segment between two bones' heads, radius in model units
+  // (body part plus the thickness of what the chain carries)
+  struct SpringColliderParams
+  {
+    const char* chainPrefix;
+    const char* boneA;
+    const char* boneB;
+    float radius;
+  };
+  const SpringColliderParams s_springColliders[] =
+  {
+    { "CTail", "Hip_L", "Knee_L", 0.42f },     // Laguna: tentacles must not go through the legs
+    { "CTail", "Knee_L", "Ankle_L", 0.25f },
+    { "CTail", "Hip_R", "Knee_R", 0.42f },
+    { "CTail", "Knee_R", "Ankle_R", 0.25f },
+  };
+  const int springCollidersCount = sizeof( s_springColliders ) / sizeof( s_springColliders[0] );
 
   inline float SpringParam( float consoleValue, float chainValue ) { return consoleValue >= 0.0f ? consoleValue : chainValue; }
 
@@ -73,6 +93,30 @@ namespace
       if ( strncmp( name, s_springChains[i].prefix, strlen( s_springChains[i].prefix ) ) == 0 )
         return i;
     return -1;
+  }
+
+  // Point p pushed out of the capsule a-b of radius r (unchanged when outside)
+  inline bool SpringPushOut( CVec3& p, const CVec3& a, const CVec3& b, float r )
+  {
+    const CVec3 ab = b - a;
+    const float len2 = SpringDot( ab, ab );
+    const float t = ( len2 > 1e-8f ) ? Clamp( SpringDot( p - a, ab ) / len2, 0.0f, 1.0f ) : 0.0f;
+    const CVec3 c = a + ab * t;
+    CVec3 d = p - c;
+    const float dist = SpringLength( d );
+    if ( dist >= r )
+      return false;
+    if ( dist < 1e-5f )
+    {
+      // exactly on the axis: push sideways, perpendicular to the capsule
+      d = SpringCross( ab, CVec3( 0.0f, 0.0f, 1.0f ) );
+      if ( SpringLength( d ) < 1e-5f )
+        d = CVec3( 1.0f, 0.0f, 0.0f );
+      p = c + d * ( r / SpringLength( d ) );
+      return true;
+    }
+    p = c + d * ( r / dist );
+    return true;
   }
 
   // Rotation by angle about a unit axis (Rodrigues), applied to the orientation part of a world matrix around a pivot
@@ -142,7 +186,8 @@ namespace Render
     allocatedBonesCount(0),
     springsInitialized(false),
     timeDelta(0.0f),
-    springPrevStep(0.0f)
+    springPrevStep(0.0f),
+    springScale(1.0f)
 	{
 		const unsigned int bonesCount = pSkeletonData->GetData()->jointsCount;
 
@@ -316,6 +361,7 @@ namespace Render
     springByBone.clear();
     springByBone.resize( bonesCount, -1 );
     springBones.clear();
+    springColliders.clear();
 
     nstl::vector<int> chainOfBone( bonesCount, -1 );
     nstl::vector<bool> isSpring( bonesCount, false );
@@ -363,6 +409,55 @@ namespace Render
 
       springByBone[i] = springBones.size();
       springBones.push_back( s );
+    }
+
+    // Colliders of the chains present in this skeleton
+    for ( int k = 0; k < springCollidersCount; ++k )
+    {
+      const SpringColliderParams& p = s_springColliders[k];
+      SpringCollider c;
+      c.chain = -1;
+      for ( int j = 0; j < springChainsCount; ++j )
+        if ( strcmp( s_springChains[j].prefix, p.chainPrefix ) == 0 )
+          c.chain = j;
+      if ( c.chain < 0 || !GetJointIndexByName( p.boneA, c.boneA ) || !GetJointIndexByName( p.boneB, c.boneB ) )
+        continue;
+      if ( c.boneA >= bonesCount || c.boneB >= bonesCount )
+        continue;
+      c.radius = p.radius;
+      springColliders.push_back( c );
+    }
+  }
+
+  void SkeletonWrapper::CollideSpringTail( const SpringBone& s, const CVec3& head, CVec3& tail, float boneLength ) const
+  {
+    for ( int pass = 0; pass < 2; ++pass )
+    {
+      bool moved = false;
+      for ( int k = 0; k < (int)springColliders.size(); ++k )
+      {
+        const SpringCollider& c = springColliders[k];
+        if ( c.chain != s.chain )
+          continue;
+        const CVec3 a = GetTranslation( pBoneWorldMatrix[c.boneA] );
+        const CVec3 b = GetTranslation( pBoneWorldMatrix[c.boneB] );
+        const float r = c.radius * springScale;
+        moved |= SpringPushOut( tail, a, b, r );
+        // the middle of the bone too: move the tail by twice the push of the midpoint
+        CVec3 mid = ( head + tail ) * 0.5f;
+        const CVec3 mid0 = mid;
+        if ( SpringPushOut( mid, a, b, r ) )
+        {
+          tail = tail + ( mid - mid0 ) * 2.0f;
+          moved = true;
+        }
+      }
+      if ( !moved )
+        break;
+      const CVec3 d = tail - head;
+      const float len = SpringLength( d );
+      if ( len > 1e-4f )
+        tail = head + d * ( boneLength / len );
     }
   }
 
@@ -423,32 +518,46 @@ namespace Render
       const CVec3 d = s.tail - head;
       const float len = SpringLength( d );
       s.tail = ( len > 1e-4f ) ? head + d * ( boneLength / len ) : target;
+      CollideSpringTail( s, head, s.tail, boneLength );
     }
 
     // Rotation from the animated direction to the simulated one, limited by the max angle
     const CVec3 from = animDir * ( 1.0f / boneLength );
     CVec3 to = s.tail - head;
-    const float toLength = SpringLength( to );
+    float toLength = SpringLength( to );
     if ( toLength < 1e-4f )
       return;
     to = to * ( 1.0f / toLength );
 
     CVec3 axis = SpringCross( from, to );
-    const float sinA = SpringLength( axis );
-    const float cosA = SpringDot( from, to );
+    float sinA = SpringLength( axis );
+    float cosA = SpringDot( from, to );
+    if ( sinA >= 1e-5f )
+    {
+      axis = axis * ( 1.0f / sinA );
+      const float maxAngle = maxAngleDeg * FP_PI / 180.0f;
+      if ( atan2f( sinA, cosA ) > maxAngle )
+      {
+        // Pull the simulated tail back inside the cone so it does not stick to the limit
+        const float c = cosf( maxAngle ), sn = sinf( maxAngle );
+        const CVec3 limited = from * c + SpringCross( axis, from ) * sn;
+        s.tail = head + limited * boneLength;
+      }
+    }
+    // Colliders win over the angle limit
+    CollideSpringTail( s, head, s.tail, boneLength );
+    to = s.tail - head;
+    toLength = SpringLength( to );
+    if ( toLength < 1e-4f )
+      return;
+    to = to * ( 1.0f / toLength );
+    axis = SpringCross( from, to );
+    sinA = SpringLength( axis );
+    cosA = SpringDot( from, to );
     if ( sinA < 1e-5f )
       return;
     axis = axis * ( 1.0f / sinA );
-    float angle = atan2f( sinA, cosA );
-    const float maxAngle = maxAngleDeg * FP_PI / 180.0f;
-    if ( angle > maxAngle )
-    {
-      angle = maxAngle;
-      // Pull the simulated tail back inside the cone so it does not stick to the limit
-      const float c = cosf( angle ), sn = sinf( angle );
-      const CVec3 limited = from * c + SpringCross( axis, from ) * sn;
-      s.tail = head + limited * boneLength;
-    }
+    const float angle = atan2f( sinA, cosA );
 
     // Rodrigues rotation matrix, applied to the bone orientation around its head
     const float c = cosf( angle ), sn = sinf( angle ), t = 1.0f - c;
@@ -548,6 +657,7 @@ namespace Render
       springStep = dt / springSteps;
     }
     springsInitialized = springsActive;
+    springScale = SpringLength( CVec3( worldMatrix._11, worldMatrix._21, worldMatrix._31 ) );
 
     // Turn lean: the root leans into the turn, the spine twists ahead (children inherit both)
     UpdateTurnLean( worldMatrix, dt );

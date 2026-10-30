@@ -51,9 +51,21 @@ namespace Render
     float timeDelta;
     float springPrevStep;
 
+    // Capsules (between two bones' heads) the bones of a spring chain are pushed out of
+    struct SpringCollider
+    {
+      int chain;
+      unsigned int boneA;
+      unsigned int boneB;
+      float radius;   // model units
+    };
+    nstl::vector<SpringCollider> springColliders;
+    float springScale;   // model scale of the current Update, scales the collider radii
+
     void InitUpdateOrder();
     void InitSpringBones();
     void ApplySpringBone( SpringBone& s, Matrix43& boneWorld, const Matrix43& parentWorld, int steps, float stepTime, bool reset );
+    void CollideSpringTail( const SpringBone& s, const CVec3& head, CVec3& tail, float boneLength ) const;
 
     // Turn lean: the body leans into a turn and the torso/head turn ahead of the model, client-side visual only
     struct TurnLean

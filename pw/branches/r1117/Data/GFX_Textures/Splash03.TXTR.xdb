@@ -6,6 +6,7 @@
 	<BackLink DBID="/Effects/Debuffs/Glue/_HoneyInstant.PRXY" Count="1" />
 	<BackLink DBID="/Effects/Debuffs/Glue/Brewer_S1/_HoneyInstant.PRXY" Count="1" />
 	<BackLink DBID="/Effects/Shots/Rose/_Hit.PRXY" Count="1" />
+	<BackLink DBID="/Heroes/Laguna/Effects/ReviveSplash.PRXY" Count="1" />
 	<BackLink DBID="/MiniGames/Minigame02/Effects/Flow/_Long.PRXY" Count="2" />
 	<BackLink DBID="/MiniGames/Minigame02/Effects/Flow/_Mid.PRXY" Count="2" />
 	<BackLink DBID="/MiniGames/Minigame02/Effects/Flow/_Short.PRXY" Count="2" />

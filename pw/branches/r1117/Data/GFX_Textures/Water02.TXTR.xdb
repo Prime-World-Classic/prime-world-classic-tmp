@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Texture>
+	<BackLink DBID="/Heroes/Laguna/Effects/ReviveSplash.PRXY" Count="1" />
 	<BackLink DBID="/Terrain/BaseA/Backdrop1.SOBJ" Count="1" />
 	<BackLink DBID="/Terrain/BaseA/Backdrop4.SOBJ" Count="1" />
 	<generatedFileName></generatedFileName>

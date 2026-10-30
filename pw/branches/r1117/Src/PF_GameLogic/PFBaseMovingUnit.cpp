@@ -1460,7 +1460,13 @@ void MovingUnit::TickMove(float timeDelta)
   {
     const CVec2 delta = vDirectTarget - prevPos;   // prevPos == origin, plain CVec2
     const float dist  = fabs( delta );
-    if ( dist < 0.001f || ( stopDistance > 0.0f && dist <= stopDistance ) )
+    // Stop where the tile path would stop (the range checking made by MoveToInternal for stopDistance), not at
+    // stopDistance itself: it cut the tile path much closer, and callers count on that. E.g. PFBaseUnitChaseState
+    // with requireLineOfSight approaches to halfTargetSize + halfObjectSize (3.5 for a hero and MagicGirl's portal)
+    // while the use range is 3: the hero stood at 3.5 and never used the portal
+    const bool rangeReached = ( stopDistance > 0.0f ) &&
+      ( pChecking ? pChecking->IsGoodTile( pMap->GetTile( prevPos ) ) : ( dist <= stopDistance ) );
+    if ( dist < 0.001f || rangeReached )
     {
       Stop();                                   // reached the point (or the requested range)
       directHandled = true;

@@ -449,11 +449,9 @@ static HRESULT CreateTextureFromDDS(const DDS_HEADER* pHeader, const BYTE* pBitD
   // с буквами R/G/B. Округление байтово нейтрально: GetSurfaceInfo считает блоки как
   // ceil(size/4), поэтому rowBytes/numRows у 2x2 и у 4x4 одинаковы и Fill копирует
   // ровно те же байты.
-  if( fmt == D3DFMT_DXT1 || fmt == D3DFMT_DXT2 || fmt == D3DFMT_DXT3 || fmt == D3DFMT_DXT4 || fmt == D3DFMT_DXT5 )
-  {
-    width  = Max(4u, ((width  + 3) / 4) * 4);
-    height = Max(4u, ((height + 3) / 4) * 4);
-  }
+  // Округлять надо после пропуска mip-уровней: на «Низком» качестве gfx_skip_mip_levels = 1,
+  // и тот же empty.dds (4x4, 2 уровня) начинается с уровня 2x2 — D3DERR_INVALIDCALL
+  // при перезагрузке текстур (render_reload_textures), игра закрывалась.
 
   // skip LODs
   UINT start = 0;
@@ -466,6 +464,12 @@ static HRESULT CreateTextureFromDDS(const DDS_HEADER* pHeader, const BYTE* pBitD
     height = Max(height >> 1, 1u);
   }
   mipCount -= startLevel;
+
+  if( fmt == D3DFMT_DXT1 || fmt == D3DFMT_DXT2 || fmt == D3DFMT_DXT3 || fmt == D3DFMT_DXT4 || fmt == D3DFMT_DXT5 )
+  {
+    width  = Max(4u, ((width  + 3) / 4) * 4);
+    height = Max(4u, ((height + 3) / 4) * 4);
+  }
   const BYTE* pSrcBits = pBitData + start;
   NI_VERIFY(start < bitSize, "Corrupted DDS", return D3DXERR_INVALIDDATA);
   const BYTE* const pSrcBound = pBitData + bitSize;

@@ -450,14 +450,17 @@ public :
    if( curTex2dRef = dynamic_cast<Texture2D*>( texInfo.second.texPtr.GetPtr() ) )
    {
      Texture2DRef newTexRef;
-     LoadTextureFromFileImpl( texInfo.first.c_str(), texInfo.second.skipMipLevels, newTexRef, texInfo.second.sizeInFile );
+     // не загрузилась — оставляем текущую текстуру (раньше *newTexRef разыменовывал null)
+     if( !LoadTextureFromFileImpl( texInfo.first.c_str(), texInfo.second.skipMipLevels, newTexRef, texInfo.second.sizeInFile ) || !newTexRef )
+       return;
      
      curTex2dRef->SetTexture(*newTexRef);
    }
    else if ( curTexCubeRef = dynamic_cast<TextureCube*>( texInfo.second.texPtr.GetPtr() ) )
    {
      TextureCubeRef newTexRef;
-     LoadTextureFromFileImpl( texInfo.first.c_str(), texInfo.second.skipMipLevels, newTexRef, texInfo.second.sizeInFile );
+     if( !LoadTextureFromFileImpl( texInfo.first.c_str(), texInfo.second.skipMipLevels, newTexRef, texInfo.second.sizeInFile ) || !newTexRef )
+       return;
      
      curTexCubeRef->SetTexture(*newTexRef);
    }

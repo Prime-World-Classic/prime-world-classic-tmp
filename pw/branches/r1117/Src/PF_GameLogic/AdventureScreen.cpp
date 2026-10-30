@@ -238,7 +238,7 @@ static string g_smartCastItems       = "";
 
 // Praise: Alt + click on a hero portrait of the top bar; free, gives nothing (only the notification for everybody)
 static bool  g_praise                = true;
-static float g_praiseCooldown        = 120.0f; // seconds
+static const float PRAISE_COOLDOWN   = 120.0f; // seconds; a constant, not a variable: players must not change it
 static float g_praiseShowTime        = 7.0f;  // seconds a notification stays on the screen
 static int   g_praiseMaxShown        = 6;     // also no more than fit above the minimap (Flash: PraiseRows)
 static bool  g_praiseSound           = true;  // short reward-like sound of a praise (Data/Audio/Ping/praise.wav)
@@ -6261,7 +6261,7 @@ bool AdventureScreen::TryPraiseHero( NWorld::PFBaseHero * pTarget )
     return true; // not ourselves, but swallow the click anyway
 
   const unsigned long now = GetTickCount();
-  const unsigned long cooldownMs = (unsigned long)( Max( g_praiseCooldown, 0.0f ) * 1000.0f );
+  const unsigned long cooldownMs = (unsigned long)( PRAISE_COOLDOWN * 1000.0f );
   if ( lastPraiseTime != 0 && now - lastPraiseTime < cooldownMs )
   {
     const int left = (int)( ( cooldownMs - ( now - lastPraiseTime ) + 999 ) / 1000 );
@@ -10230,7 +10230,6 @@ REGISTER_VAR( "summon_manual_control", g_summonManualControl, STORAGE_NONE ); //
 REGISTER_VAR( "smart_cast_toggles", g_smartCastToggles, STORAGE_USER );
 REGISTER_VAR( "smart_cast_items", g_smartCastItems, STORAGE_USER );
 REGISTER_VAR( "praise", g_praise, STORAGE_USER );
-REGISTER_VAR( "praise_cooldown", g_praiseCooldown, STORAGE_NONE );
 REGISTER_VAR( "praise_show_time", g_praiseShowTime, STORAGE_NONE );
 REGISTER_VAR( "praise_panel_top", g_praisePanelTop, STORAGE_NONE );
 REGISTER_VAR( "praise_id", g_praiseId, STORAGE_USER );

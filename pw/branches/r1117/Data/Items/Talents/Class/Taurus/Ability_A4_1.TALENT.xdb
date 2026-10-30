@@ -1910,9 +1910,9 @@
 					<UnitConstant>
 						<name>Slow_Duration</name>
 						<var>
-							<compiledString>FRMAAAABAAAAHwAAAEE0XzF1X1Nsb3dEdXJhdGlvbgBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+							<compiledString>FUIAAAAGAAAASQAAAF8AAABrAAAAgQAAAJUAAAC5AAAAQTRfMXVfU2xvd0R1cmF0aW9uAABSYW1IaXRPYnN0YWNsZQAASW1tdW5lMkNvbnRyb2wAAFN0dW5fRHVyYXRpb24AVYvsg+wIaBQAAACLRQiLEItNCIuCiAEAAP/Q3B3bAAAA3+D2xEF1QWgkAAAAi00MixGLTQyLgogBAAD/0Nwd2wAAAN/g9sREeh+LTQxRi1UIUmg0AAAAi0UQixCLTRCLQlD/0Nld/OsF2e7ZXfyLTQxRi1UIUmgAAAAAi0UQixCLTRCLQlD/0NhF/Nld+NlF+IvlXcMAAAAAAAAAAAAAAAA=</compiledString>
 							<returnType>float</returnType>
-							<sString>cA4_1u_SlowDuration</sString>
+							<sString>cA4_1u_SlowDuration + (sender.vRamHitObstacle &gt; 0 &amp;&amp; receiver.vImmune2Control == 0 ? cStun_Duration : 0.0f)</sString>
 						</var>
 					</UnitConstant>
 				</Item>

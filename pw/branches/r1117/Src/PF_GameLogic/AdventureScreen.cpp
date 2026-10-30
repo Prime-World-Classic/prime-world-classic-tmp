@@ -238,7 +238,7 @@ static string g_smartCastItems       = "";
 
 // Praise: Alt + click on a hero portrait of the top bar; free, gives nothing (only the notification for everybody)
 static bool  g_praise                = true;
-static float g_praiseCooldown        = 5.0f;  // seconds
+static float g_praiseCooldown        = 120.0f; // seconds
 static float g_praiseShowTime        = 7.0f;  // seconds a notification stays on the screen
 static int   g_praiseMaxShown        = 6;     // also no more than fit above the minimap (Flash: PraiseRows)
 static bool  g_praiseSound           = true;  // short reward-like sound of a praise (Data/Audio/Ping/praise.wav)

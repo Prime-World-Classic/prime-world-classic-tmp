@@ -67,9 +67,9 @@
 																		<cancelInvisibility>false</cancelInvisibility>
 																		<caption>Маг урон</caption>
 																		<damage>
-																			<compiledString>FQoAAAABAAAAFgAAAEEyX0RhbWFnZQBVi+yLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0l3D</compiledString>
+																			<compiledString>FQoAAAAEAAAAGQAAAEgAAABOAAAAcQAAAEEyX0RhbWFnZQBVi+yD7BCLRQxQi00IUWgAAAAAi1UQiwKLTRCLUFD/0lHZ6NkcJFHZ7tkcJItFEIsQi00Qi0IM3V34/9DcJZ4AAADcNZYAAADZXfTZRfRR2Rwk6HUAAACDxATZHCToQgAAAIPECNwNjgAAANno3uHcTfjZXfDZRfCL5V3DAAAAAAAA8D8zMzMzMzPTPwAAAAAAAF5AAAAAAAAAPkAAAAAAAACAP1WL7FHZRQjZRQze2d/g9sRBdQjZRQjZXfzrBtlFDNld/NlF/IvlXcNVi+xR2UUI2UUM3tnf4PbEBXoI2UUI2V386wbZRQzZXfzZRfyL5V3D</compiledString>
 																			<returnType>float</returnType>
-																			<sString>cA2_Damage</sString>
+																			<sString>cA2_Damage * (1 - 0.3 * clamp((mDist2Target - 30) / 120, 0, 1))</sString>
 																		</damage>
 																		<damageMode>0</damageMode>
 																		<damageType>Energy</damageType>

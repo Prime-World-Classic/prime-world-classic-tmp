@@ -426,6 +426,7 @@ struct GSClientSettings
     bool                pingWheelPending;
     bool                pingWheelShown;
     bool                pingWheelMiddle;            // started by the middle mouse button
+    bool                pingWheelFromMinimap;       // started on the minimap: the cursor is not tracked by the scene there
     UI::EMButton::Enum  pingWheelButton;
     float               pingWheelTimer;
     CVec3               pingWheelWorldPos;
@@ -641,6 +642,8 @@ struct GSClientSettings
     bool MsgOnRMouseUp( const Input::SSysParams & sysParams );
     void UpdateMoveOnHold( float deltaTime );
     bool IsAbilityStatusModifierDown() const;
+    bool IsSignalModifierDown() const;
+    CVec2 GetMousePixelPos() const;
     void SendTalentStatusToTeam( int level, int slot );
     bool CastCurrentTalentOnSelf( NWorld::PFTalent * pTalent );
     void UpdatePingWheel( float deltaTime );
@@ -670,7 +673,7 @@ struct GSClientSettings
     void UpdateAutoAttackOption();
     void UpdateSmartCastBoxes( float deltaTime );
     bool IsTalentSmartCast( NWorld::PFTalent const * pTalent, int level, int slot ) const;
-    bool StartPing( bool middleButton, UI::EMButton::Enum button );
+    bool StartPing( bool middleButton, UI::EMButton::Enum button, const CVec3 * minimapPos = 0 );
     bool MsgOnKeyDown( const Input::SSysParams & sysParams );
 
     void MsgOnMouse3Down();

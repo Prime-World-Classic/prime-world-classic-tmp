@@ -781,6 +781,7 @@ AdventureScreen::AdventureScreen()
 , pingWheelPending(false)
 , pingWheelShown(false)
 , pingWheelMiddle(false)
+, pingWheelFromMinimap(false)
 , pingWheelButton(UI::EMButton::Left)
 , pingWheelTimer(0.0f)
 , pingWheelWorldPos(VNULL3)
@@ -3025,8 +3026,25 @@ bool AdventureScreen::IsMinimapSignalCmd( UI::EMButton::Enum action )
     return false;
   if ( command == CMD_SIGNAL ) // 'signal' button of the UI, then a click
     return action == UI::EMButton::Left;
-  // Alt + the button that does NOT move the hero (left by default, right in the casual control style)
-  return minimapSignalKey && action == ( g_casualControlStyle ? UI::EMButton::Right : UI::EMButton::Left );
+  // Alt + any of the two buttons (Alt + left click was the signal before the casual control style came)
+  return IsSignalModifierDown() && ( action == UI::EMButton::Left || action == UI::EMButton::Right );
+}
+
+bool AdventureScreen::IsSignalModifierDown() const
+{
+  // 'minimap_signal_key' is bound to ALT by default; the physical key check covers a lost key event (alt-tab etc.)
+  return minimapSignalKey || ( GetAsyncKeyState( VK_MENU ) & 0x8000 ) != 0;
+}
+
+// the mouse position in screen pixels (vCursorPos is not updated over the UI, the minimap resets it to -1)
+CVec2 AdventureScreen::GetMousePixelPos() const
+{
+  if ( !pLogic )
+    return vCursorPos;
+  const UI::Point & pos   = pLogic->GetWindowRegardlessMousePosition();
+  const UI::Point & uiRes = UI::GetUIScreenResolution();
+  const UI::Point & res   = UI::GetScreenResolution();
+  return CVec2( pos.x * (float)res.x / Max( (float)uiRes.x, 1.0f ), pos.y * (float)res.y / Max( (float)uiRes.y, 1.0f ) );
 }
 
 bool AdventureScreen::UseSmartChat()
@@ -3093,11 +3111,11 @@ bool AdventureScreen::MsgOnMouseDownImpl( const Input::SSysParams & sysParams, U
     return false;
 
   // pings on the middle button: Alt + click on the ground is an ordinary click then (the minimap still pings with Alt)
-  const bool altPingDisabled = g_pingMiddleMouse && minimapSignalKey && command != CMD_SIGNAL;
+  const bool altPingDisabled = g_pingMiddleMouse && IsSignalModifierDown() && command != CMD_SIGNAL;
 
   if( IsMinimapSignalCmd(action) && !altPingDisabled )
   {
-    if ( !( minimapSignalKey && command != CMD_SIGNAL && StartPing( false, action ) ) )
+    if ( !( IsSignalModifierDown() && command != CMD_SIGNAL && StartPing( false, action ) ) )
       ExecuteCommand( CMD_SIGNAL, currentPick.GetPickedPos(), currentPick.GetPickedPtr() );
   }
   else if( IsSelectionCmd(action) )
@@ -3671,7 +3689,7 @@ void AdventureScreen::MsgOnMouse3Down()
 }
 
 // remembers the ping point; UpdatePingWheel decides: released quickly -> ordinary ping, held -> ping wheel
-bool AdventureScreen::StartPing( bool middleButton, UI::EMButton::Enum button )
+bool AdventureScreen::StartPing( bool middleButton, UI::EMButton::Enum button, const CVec3 * minimapPos )
 {
   if ( !g_pingWheel || m_state != STATE_NORMAL || isPlayingMinigame )
     return false;
@@ -3681,9 +3699,12 @@ bool AdventureScreen::StartPing( bool middleButton, UI::EMButton::Enum button )
   pingWheelMiddle   = middleButton;
   pingWheelButton   = button;
   pingWheelTimer    = 0.0f;
-  pingWheelWorldPos = currentPick.GetPickedPos();
+  pingWheelWorldPos = minimapPos ? *minimapPos : currentPick.GetPickedPos();
   pingWheelObject   = currentPick.GetPickedPtr();
-  pingWheelCursor   = vCursorPos;
+  if ( minimapPos )
+    pingWheelObject = 0;
+  pingWheelFromMinimap = minimapPos != 0;
+  pingWheelCursor   = pingWheelFromMinimap ? GetMousePixelPos() : vCursorPos;
   pingWheelSelected = -1;
   return true;
 }
@@ -5914,8 +5935,9 @@ void AdventureScreen::UpdatePingWheel( float deltaTime )
   }
 
   // the item in the direction of the cursor from the wheel center (item 0 is at the top, clockwise)
-  const float dx = vCursorPos.x - pingWheelCursor.x;
-  const float dy = vCursorPos.y - pingWheelCursor.y;
+  const CVec2 cursor = pingWheelFromMinimap ? GetMousePixelPos() : vCursorPos;
+  const float dx = cursor.x - pingWheelCursor.x;
+  const float dy = cursor.y - pingWheelCursor.y;
   int selected = -1;
   const float deadZone = g_pingWheelDeadZone * Min( Max( g_pingWheelScale, 30.0f ), 300.0f ) * 0.01f;
   if ( dx * dx + dy * dy > deadZone * deadZone )
@@ -8416,7 +8438,9 @@ void AdventureScreen::MinimapActionBegin( UI::EMButton::Enum action, float x, fl
 
   if( IsMinimapSignalCmd(action) )
   {
-    ExecuteCommand( CMD_SIGNAL, vPickPos, 0 );
+    // Alt + click: held -> ping wheel, released quickly -> ordinary ping (as on the ground)
+    if ( !( IsSignalModifierDown() && command != CMD_SIGNAL && StartPing( false, action, &vPickPos ) ) )
+      ExecuteCommand( CMD_SIGNAL, vPickPos, 0 );
   } 
   else if ( IsSelectionCmd(action) )
   {        

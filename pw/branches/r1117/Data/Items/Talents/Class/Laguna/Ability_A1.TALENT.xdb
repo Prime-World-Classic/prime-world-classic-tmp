@@ -1817,9 +1817,9 @@
 	<isUltimateTalent>false</isUltimateTalent>
 	<isUnitFreeAfterCast>true</isUnitFreeAfterCast>
 	<manaCost>
-		<compiledString>FQAAAAAAAAAAVYvs2ehdwwAAgD8=</compiledString>
+		<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAADIQg==</compiledString>
 		<returnType>float</returnType>
-		<sString>1.0f</sString>
+		<sString>100</sString>
 	</manaCost>
 	<marker>doCast1</marker>
 	<microAI href="" />

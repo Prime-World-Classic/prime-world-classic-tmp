@@ -2199,6 +2199,10 @@ bool PFApplTechAbilityUpgrade::Start()
   if (PFBaseApplicator::Start())
     return true;
 
+  // upgraded dispatch may target a non-unit (tree, position): nothing to mark
+  if (!IsValid(GetReceiver()))
+    return true;
+
   const int talentObjectId = GetDB().abilityObjectId;
   const int talentLastUseStep = GetDB().abilityLastUseStep;
 

@@ -7083,7 +7083,8 @@ bool AdventureScreen::SummonControlKey( const int & key )
 }
 
 // Players keep their own input_new.cfg (unbindall + all the binds), so the binds of the summon control never reach them
-// from input.cfg. Defined once: the statistics move from TAB to CapsLock, TAB switches between the summons.
+// from input.cfg. The statistics stay on TAB (players asked to keep it), CapsLock switches between the summons.
+// The files that got the first version (statistics moved to CapsLock, TAB = next summon) are swapped back once.
 void AdventureScreen::EnsureDefaultSummonBinds()
 {
   Input::Binds * binds = Input::BindsManager::Instance()->GetBinds();
@@ -7097,28 +7098,46 @@ void AdventureScreen::EnsureDefaultSummonBinds()
     NGlobal::RunCommand( L"bindsection", L"input" );
   }
 
-  if ( binds->FindCommand( "summon_select_next" ) )
-    return;
-
-  bool statisticsOnTab = false;
+  // the first bind line of a command (the adventure_screen section goes first; 'rebind' changes the first line too)
+  bool statisticsOnCaps = false, statisticsFound = false, nextOnTab = false, nextFound = false;
   Input::TBinds::const_iterator it = binds->GetBindStrings().find( L"input" );
   if ( it != binds->GetBindStrings().end() )
   {
     const Input::TBindsEntry & entry = *it;
     for ( int i = 0; i < entry.second.size(); ++i )
-      if ( entry.second[i].find( " show_statistics " ) != -1 && entry.second[i].find( "'TAB'" ) != -1 )
-        statisticsOnTab = true;
+    {
+      if ( !statisticsFound && entry.second[i].find( "show_statistics" ) != -1 )
+      {
+        statisticsFound  = true;
+        statisticsOnCaps = entry.second[i].find( "'CAPITAL'" ) != -1;
+      }
+      if ( !nextFound && entry.second[i].find( "summon_select_next" ) != -1 )
+      {
+        nextFound = true;
+        nextOnTab = entry.second[i].find( "'TAB'" ) != -1;
+      }
+    }
   }
 
+  const bool hasNext = binds->FindCommand( "summon_select_next" ) != 0;
+  const bool firstVersion = hasNext && nextOnTab && statisticsOnCaps;
+  if ( hasNext && !firstVersion )
+    return;
+
   NGlobal::RunCommand( L"bindsection adventure_screen", L"input" );
-  if ( statisticsOnTab )
+  if ( firstVersion )
   {
-    NGlobal::RunCommand( L"rebind show_statistics 'CAPITAL'", L"input" );
-    NGlobal::RunCommand( L"rebind !hide_statistics 'CAPITAL'", L"input" );
+    NGlobal::RunCommand( L"rebind show_statistics 'TAB'", L"input" );
+    NGlobal::RunCommand( L"rebind !hide_statistics 'TAB'", L"input" );
+    NGlobal::RunCommand( L"rebind summon_select_next 'CAPITAL'", L"input" );
   }
-  NGlobal::RunCommand( L"bind summon_select_all '`'", L"input" );
-  NGlobal::RunCommand( L"bind summon_select_summons 'R'", L"input" );
-  NGlobal::RunCommand( L"bind summon_select_next 'TAB'", L"input" );
+  else
+  {
+    NGlobal::RunCommand( L"bind summon_select_all '`'", L"input" );
+    NGlobal::RunCommand( L"bind summon_select_summons 'R'", L"input" );
+    // the player put the statistics on CapsLock himself: TAB is free then
+    NGlobal::RunCommand( statisticsOnCaps ? L"bind summon_select_next 'TAB'" : L"bind summon_select_next 'CAPITAL'", L"input" );
+  }
   NGlobal::RunCommand( L"bindsection", L"input" );
 }
 #pragma warning( pop )

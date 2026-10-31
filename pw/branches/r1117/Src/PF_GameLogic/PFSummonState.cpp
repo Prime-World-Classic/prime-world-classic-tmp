@@ -278,7 +278,7 @@ namespace NWorld
     if ( pOwner->CheckFlagType( NDb::UNITFLAGTYPE_FORBIDATTACK ) )
       return false;
 
-    CPtr<PFBaseUnit> pTarget = pOwner->FindTarget( holdPosition ? pOwner->GetAttackRange() : pOwner->GetTargetingRange() );
+    CPtr<PFBaseUnit> pTarget = pOwner->FindSummonTarget( holdPosition ? pOwner->GetAttackRange() : pOwner->GetTargetingRange() );
     if ( IsUnitValid( pTarget ) && pTarget != pOwner )
       PushState( new PFBaseUnitAttackState( pOwner->GetWorld(), pOwner, pTarget, false, false, false, false, !holdPosition ) );
 
@@ -332,7 +332,7 @@ namespace NWorld
         // »щем цель, только если находимс€ достаточно близко к мастеру
         if ( isStationarySummon || pMaster->IsTargetInRange( pOwner, maxEscortDistance ))
         {
-          CPtr<PFBaseUnit> pTarget = pOwner->FindTarget( pOwner->GetTargetingRange() );
+          CPtr<PFBaseUnit> pTarget = pOwner->FindSummonTarget( pOwner->GetTargetingRange() );
           //ѕровер€ем что цель валидна и от мастера находитс€ в дистанции чейза 
           if ( IsUnitValid( pTarget ) /*&& pMaster->IsTargetInRange( pTarget, pOwner->GetChaseRange() )*/ )
           {

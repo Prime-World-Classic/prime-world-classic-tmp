@@ -362,6 +362,9 @@ void PFSummonedUnitAIBehaviour::OnDamage( PFBaseUnitDamageDesc const & desc )
   if ( pUnit->CheckFlagType(NDb::UNITFLAGTYPE_FORBIDATTACK) )
     return; // Attack forbid flag not empty!
 
+  if ( pUnit->IsMasterAutoAttackDisabled() )
+    return; // the master's auto attack is off: no answer to damage, no scream
+
   CPtr<PFBaseUnit> pSender = IsValid(desc.pSender) ? ( desc.pSender->IsMounted() ? desc.pSender->GetMountedOn() : desc.pSender ) : NULL;
 
   if ( IsTargetValid(pSender) && pSender->IsVisibleForFaction(pUnit->GetFaction()) && !desc.dontAttackBack && pSender->GetFaction() != GetFaction() )

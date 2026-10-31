@@ -55,6 +55,9 @@ void PFBaseBehaviour::OnDamage( PFBaseUnitDamageDesc const & desc)
   if ( pUnit->CheckFlagType(NDb::UNITFLAGTYPE_FORBIDATTACK) )
     return; // Attack forbid flag not empty!
 
+  if ( pUnit->IsMasterAutoAttackDisabled() )
+    return; // a summon of a hero with auto attack off does not answer on its own
+
   CPtr<PFBaseUnit> pSender = IsValid(desc.pSender) ? ( desc.pSender->IsMounted() ? desc.pSender->GetMountedOn() : desc.pSender ) : NULL;
   if ( IsTargetValid(pSender) && pSender->IsVisibleForFaction(pUnit->GetFaction()) && !desc.dontAttackBack )
   {

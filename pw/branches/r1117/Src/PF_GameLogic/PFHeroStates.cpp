@@ -474,7 +474,8 @@ namespace NWorld
 
     if( !IsTargetValid( pTarget ) )
     {
-      pTarget = pOwner->FindTarget( pOwner->GetTargetingRange() );
+      if( !pOwner->IsAutoAttackDisabled() )
+        pTarget = pOwner->FindTarget( pOwner->GetTargetingRange() );
 
       strongTarget = false;
     }

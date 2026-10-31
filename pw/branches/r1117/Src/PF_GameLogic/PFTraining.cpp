@@ -510,6 +510,7 @@ static NWorld::PFBaseHero * ChangeHero( NWorld::PFWorld * world, NWorld::PFBaseH
   if ( pNewHero )
   {
     pNewHero->AddGold( pOldHero->GetGold(), false );
+    pNewHero->SetAutoAttackDisabled( pOldHero->IsAutoAttackDisabled() ); // the player's option stays with the new hero
     for ( int i = 0; i < sizeof( s_keptVars ) / sizeof( s_keptVars[0] ); ++i )
       if ( pOldHero->GetVariableValue( s_keptVars[i] ) > 0.0f )
         SetVar( pNewHero, s_keptVars[i], 1.0f );

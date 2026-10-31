@@ -1530,6 +1530,34 @@ void PFBaseUnit::StopAttackingMe( bool ignorePursueDispatches /*= true */ )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool PFBaseUnit::IsMasterAutoAttackDisabled() const
+{
+  // the first hero up the chain of masters decides (a summon, a summon of a summon, a hero clone)
+  const CPtr<PFBaseUnit>* pCur = &pMaster;
+  for ( int depth = 0; depth < 4 && IsValid( *pCur ); ++depth )
+  {
+    const PFBaseUnit* pUnit = pCur->GetPtr();
+    if ( const PFBaseHero* pHero = dynamic_cast<const PFBaseHero*>( pUnit ) )
+      return pHero->IsAutoAttackDisabled();
+    pCur = &pUnit->pMaster;
+  }
+  return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+CPtr<PFBaseUnit> PFBaseUnit::FindSummonTarget( float range )
+{
+  if ( !IsMasterAutoAttackDisabled() )
+    return FindTarget( range );
+
+  // no own choice of the target: help only against the target the master attacks by order
+  const CPtr<PFBaseUnit> pMasterTarget = pMaster->GetCurrentTarget();
+  if ( !CheckFlagType( NDb::UNITFLAGTYPE_FORBIDSELECTTARGET ) && IsUnitValid( pMasterTarget ) && CanSelectTarget( pMasterTarget, true ) && IsTargetInRange( pMasterTarget, range ) )
+    return pMasterTarget;
+  return CPtr<PFBaseUnit>();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PFBaseUnit::AssignTarget(const CPtr<PFBaseUnit> &pTarget, bool strongTarget)
 {
   DEBUG_TARGETTING(NStr::StrFmt("AT-tid=%d,st=%d",(IsValid(pTarget))?(pTarget->GetObjectId()):(0), strongTarget))
@@ -1623,6 +1651,9 @@ void PFBaseUnit::OnScream( const CPtr<PFBaseUnit> pTarget, ScreamTarget::ScreamT
   {
     return; // target can not be changed
   }
+
+  if ( IsMasterAutoAttackDisabled() )
+    return; // the master's auto attack is off: summons do not join in on their own
 
   DebugShowScreamEffect( this, pTarget, st );
 
@@ -1721,7 +1752,9 @@ void PFBaseUnit::AutoTarget( float dt )
     {
       DEBUG_TARGETTING("AT")
 
-      CPtr<PFBaseUnit> pTarget = FindTarget( GetTargetingRange(), true );
+      CPtr<PFBaseUnit> pTarget;
+      if ( !IsMasterAutoAttackDisabled() ) // otherwise a summon keeps the target it was ordered
+        pTarget = FindTarget( GetTargetingRange(), true );
       if ( IsUnitValid(pTarget) && pTarget!=pCurrentTarget )
       {
         if ( IsValid(pCurrentTarget) )

@@ -611,6 +611,8 @@ public:
   bool                            CanSelectTarget(PFBaseUnit const* pTarget, bool mustSeeTarget) const;
   void                            AutoTarget( float dt );
   CPtr<PFBaseUnit>                FindTarget(float fRange, bool checkScreams = false, int targetFlags = 0, bool checkForbid = true );
+  CPtr<PFBaseUnit>                FindSummonTarget(float fRange); // FindTarget for summons: with the master's auto attack off, only the master's own target
+  bool                            IsMasterAutoAttackDisabled() const; // the hero up the chain of masters has the "auto attack" option off
   void                            AssignTarget(const CPtr<PFBaseUnit> &pTarget, bool strongTarget = true); // Do not auto-change target if strongTarget==true
   void                            DropTarget();
   void                            ClearScreamTargets();

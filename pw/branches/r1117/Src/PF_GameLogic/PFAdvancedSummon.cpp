@@ -280,7 +280,7 @@ namespace NWorld
 
           if (canAttack)
           {
-            const CPtr<PFBaseUnit> foundTarget(pOwner->FindTarget(behaviour->GetLashRange()));
+            const CPtr<PFBaseUnit> foundTarget(pOwner->FindSummonTarget(behaviour->GetLashRange()));
 
             if (IsUnitValid(foundTarget))
               PushState(new AdvancedSummonAttackState(behaviour, pOwner, foundTarget, true));
@@ -399,7 +399,7 @@ namespace NWorld
       {
         if (canAttack && (!hasCurrentState))
         {
-          const CPtr<PFBaseUnit> foundTarget(pOwner->FindTarget(behaviour->GetLashRange()));
+          const CPtr<PFBaseUnit> foundTarget(pOwner->FindSummonTarget(behaviour->GetLashRange()));
 
           if (IsUnitValid(foundTarget))
             PushState(new AdvancedSummonAttackState(behaviour, pOwner, foundTarget, true));

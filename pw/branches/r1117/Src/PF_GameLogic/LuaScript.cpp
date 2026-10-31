@@ -4264,6 +4264,7 @@ START_LUA2CPP_FUNCTION_ARG2( LuaHeroReplace, const char*, const char* )
 
   pNewHero->ChangeFaction( pHero->GetFaction() );
   pNewHero->AddGold( pHero->GetGold(), false );
+  pNewHero->SetAutoAttackDisabled( pHero->IsAutoAttackDisabled() ); // the player's option stays with the new hero
 
   pHero->SetForbidRespawn( true );
   pHero->DebugDie();

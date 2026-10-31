@@ -393,8 +393,8 @@ public:
   // misc
   const NDb::BaseHero *   GetDbHero() const { return pDbHero; };
   bool                    IsIsolated() const { return isolated; }
-  // player option "auto attack" (CmdSetAutoAttack): when disabled the hero attacks only by orders
-  bool                    IsAutoAttackDisabled() const { return autoAttackDisabled; }
+  // player option "auto attack" (CmdSetAutoAttack): when disabled the hero attacks only by orders; a clone follows its master's option
+  bool                    IsAutoAttackDisabled() const { return autoAttackDisabled || ( isClone && IsMasterAutoAttackDisabled() ); }
   void                    SetAutoAttackDisabled( bool disabled ) { autoAttackDisabled = disabled; }
   // "ability range" stat: multiplies the use range and the reach of cone abilities (+ their range-scaled effects)
   float                   GetAbilityRangeScale() const { return abilityRangeScale; }

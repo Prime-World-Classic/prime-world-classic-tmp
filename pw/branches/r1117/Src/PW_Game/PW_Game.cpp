@@ -50,13 +50,61 @@ extern "C" {
   extern int g_formulaVmNArgs;
 }
 
+// <log dir>\...-fatal.dmp from a dedicated thread, see Src/System/MiniDump.cpp.
+extern "C" {
+  void PwStartFatalDumpThread();
+  void PwWriteFatalDump(EXCEPTION_POINTERS *pointers);
+}
+
+// Exceptions that kill the process if nobody handles them. They are first-chance here:
+// a handled one (rare) also gets logged/dumped, the launcher drops its dump after a
+// normal exit.
+static bool IsCrashCode(DWORD code)
+{
+  switch (code)
+  {
+  case 0xC0000005:  // access violation
+  case 0xC0000006:  // in-page error
+  case 0xC000001D:  // illegal instruction
+  case 0xC0000094:  // integer divide by zero
+  case 0xC0000096:  // privileged instruction
+  case 0xC00000FD:  // stack overflow
+  case 0xC0000374:  // heap corruption
+  case 0xC0000409:  // stack buffer overrun / fastfail
+  case 0xC0000420:  // assertion failure
+    return true;
+  }
+  return false;
+}
+
 static LONG CALLBACK FastfailVeh(PEXCEPTION_POINTERS pi)
 {
   const DWORD code = pi->ExceptionRecord->ExceptionCode;
   // AV and stack overflow are logged too: they often precede a fastfail exit and the
   // unhandled filter never gets a chance to write anything.
-  if (code != 0xC0000409 && code != 0xC00000FD && code != 0xC0000005)
+  if (!IsCrashCode(code))
     return EXCEPTION_CONTINUE_SEARCH;
+
+  // Minidump first: some crashes end the process without reaching the unhandled filter
+  // (no exception.dmp, no dialog), this is the only point that always sees them. An AV
+  // outside our module is skipped: drivers and overlays may probe memory on purpose.
+  {
+    const char *mod = (const char *)GetModuleHandleA(NULL);
+    const char *at = (const char *)pi->ExceptionRecord->ExceptionAddress;
+    bool inModule = false;
+    __try
+    {
+      const IMAGE_DOS_HEADER *dh = (const IMAGE_DOS_HEADER *)mod;
+      const size_t size = ((const IMAGE_NT_HEADERS *)(mod + dh->e_lfanew))->OptionalHeader.SizeOfImage;
+      inModule = at >= mod && at < mod + size;
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+      inModule = false;
+    }
+    if (inModule || code != 0xC0000005)
+      PwWriteFatalDump(pi);
+  }
 
   char path[MAX_PATH];
   if (!GetModuleFileNameA(NULL, path, MAX_PATH - 16))
@@ -368,6 +416,7 @@ bool LaunchGameDll()
 
 int __stdcall WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, char * lpCmdLine, int nCmdShow )
 {
+  PwStartFatalDumpThread();
   AddVectoredExceptionHandler( 1, FastfailVeh );
   _set_invalid_parameter_handler( (_invalid_parameter_handler)MyInvalidParamHandler );
   _set_purecall_handler( MyPurecallHandler );

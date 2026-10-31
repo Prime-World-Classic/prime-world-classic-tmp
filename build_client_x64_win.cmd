@@ -239,6 +239,14 @@ REM PW_EXTRA_OPTS ADDS to the toolchain defaults, it does not replace them:
 REM silently losing /WX- and /MT makes the build fail for reasons unrelated to
 REM the edit under test (see the vs2022 notes in the pw-client skill).
 set "PW_EXTRA_OPTS=%PW_DEFAULT_OPTS% %PW_EXTRA_OPTS%"
+REM The linker map is written by every build (it does not change the code): after the
+REM build make_symbols.py turns it into PW_Game.sym.xz, the function-name table the
+REM launcher uses for crash reports. It ships next to the exe (game-pwc Bin/).
+if not defined PW_EXTRA_LINK_OPTS (
+    set "PW_EXTRA_LINK_OPTS=/MAP"
+) else (
+    if "!PW_EXTRA_LINK_OPTS:/MAP=!"=="!PW_EXTRA_LINK_OPTS!" set "PW_EXTRA_LINK_OPTS=!PW_EXTRA_LINK_OPTS! /MAP"
+)
 REM PCH is ON by default: the gate passed (E2E on tiny10, golden unitstats byte-identical,
 REM -43% TU time). pw_rules.py reads an EMPTY PW_PCH as "off", so switching it off must
 REM remove the variable instead of writing "off".
@@ -363,6 +371,11 @@ if not exist "%OUT%" mkdir "%OUT%"
 copy /y "%EXE%" "%OUT%\%OUT_NAME%" >nul
 if exist "%BUILD_DIR%\PW_Game.pdb" copy /y "%BUILD_DIR%\PW_Game.pdb" "%OUT%\" >nul
 if exist "%BUILD_DIR%\PW_Game.map" copy /y "%BUILD_DIR%\PW_Game.map" "%OUT%\" >nul
+if exist "%BUILD_DIR%\PW_Game.map" (
+    "%PYTHON%" "%BR%\Tools\WineClientBuild\make_symbols.py" "%BUILD_DIR%\PW_Game.map" "%EXE%" -o "%OUT%\PW_Game.sym.xz"
+    if errorlevel 1 (echo ERROR: make_symbols.py & exit /b 1)
+    echo == symbols: %OUT%\PW_Game.sym.xz
+)
 echo == artifact: %OUT%\%OUT_NAME%
 exit /b 0
 

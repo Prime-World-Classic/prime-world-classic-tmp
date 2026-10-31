@@ -198,7 +198,7 @@ static float g_pingWardTime          = 6.0f;  // "enemy ward" / "need a ward" li
 static bool  g_pingsDisabled         = false; // signals of the other players are not shown at all ("Communication" page)
 static bool  g_pingsMuted            = false; // no signal sounds at all (the new ones and the old minimap alert)
 static bool  g_pingAttackOnUnit      = true;  // a ping on an enemy: the "Attack" sound with its red marker
-static bool  g_pingMiddleMouse       = false; // obsolete: the middle mouse button always pings now (the variable stays for old user.cfg)
+static bool  g_pingMiddleMouse       = false; // pings / wheel on the middle mouse button (Alt + click pings too)
 static float g_pingWheelTransparency = 30.0f; // wheel background transparency, %
 static float g_pingWheelScale        = 100.0f; // wheel size, %
 static bool  g_pingGroundEffect      = true;  // Dota-like ring on the ground + light beam at the ping point
@@ -2756,7 +2756,7 @@ void AdventureScreen::CommonStep( bool bAppActive )
 
   if (pCameraController && pLogic)
     pCameraController->EnableMouseZoom( !pLogic->IsMouseUnderWindow() && !pingWheelPending && !chatWheelShown
-      && !( GetAsyncKeyState( VK_MBUTTON ) & 0x8000 ) ); // the mouse wheel selects an item of the open wheel then
+      && !( g_pingMiddleMouse && ( GetAsyncKeyState( VK_MBUTTON ) & 0x8000 ) ) ); // the mouse wheel selects an item of the open wheel then
 
   gameOverEffect.Update(deltaTime);
   
@@ -3679,8 +3679,8 @@ void AdventureScreen::MsgOnMouse3Down()
 {
   mouse3Pressed = true;
 
-  // pings on the middle mouse button: click = ping, held = ping wheel
-  if ( !bAdventureControlsEnabled || !GetHero() || m_state != STATE_NORMAL || isPlayingMinigame || pingWheelPending )
+  // pings on the middle mouse button (option): click = ping, held = ping wheel
+  if ( !g_pingMiddleMouse || !bAdventureControlsEnabled || !GetHero() || m_state != STATE_NORMAL || isPlayingMinigame || pingWheelPending )
     return;
   if ( pLogic && pLogic->IsMouseUnderWindow() )
     return;

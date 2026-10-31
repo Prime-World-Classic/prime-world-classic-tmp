@@ -26,8 +26,8 @@
 								<DecalPlanePinValue>Present</DecalPlanePinValue>
 								<DiffuseAdd>
 									<A>-0.1</A>
-									<B>0.26125</B>
-									<G>0.125</G>
+									<B>0.0870417</B>
+									<G>0.075</G>
 									<R>0.5</R>
 								</DiffuseAdd>
 								<DiffuseMap>

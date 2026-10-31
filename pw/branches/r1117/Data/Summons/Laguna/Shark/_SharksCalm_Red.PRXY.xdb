@@ -34,8 +34,8 @@
 								</Add>
 								<Multiplier>
 									<A>0.6</A>
-									<B>0.575625</B>
-									<G>0.3625</G>
+									<B>0.2775</B>
+									<G>0.290179</G>
 									<R>1</R>
 								</Multiplier>
 								<samplerState>

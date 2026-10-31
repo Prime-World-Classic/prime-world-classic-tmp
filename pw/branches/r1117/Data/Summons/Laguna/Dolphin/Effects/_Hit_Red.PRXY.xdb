@@ -41,8 +41,8 @@
 								</DiffuseMap>
 								<DiffuseMul>
 									<A>1.53665</A>
-									<B>0.773765</B>
-									<G>0.662111</G>
+									<B>0.617059</B>
+									<G>0.624335</G>
 									<R>1</R>
 								</DiffuseMul>
 								<distortion>0.5</distortion>
@@ -1219,8 +1219,8 @@
 								</DiffuseMap>
 								<DiffuseMul>
 									<A>0.3922548</A>
-									<B>0.82893</B>
-									<G>0.73882</G>
+									<B>0.703996</B>
+									<G>0.708004</G>
 									<R>1</R>
 								</DiffuseMul>
 								<distortion>1</distortion>

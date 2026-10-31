@@ -28,8 +28,8 @@
 							<DiffuseMap>
 								<Add>
 									<A>0</A>
-									<B>0.59745</B>
-									<G>0.505</G>
+									<B>0.471</B>
+									<G>0.473012</G>
 									<R>0.76</R>
 								</Add>
 								<Multiplier>
@@ -156,8 +156,8 @@
 							<DiffuseMap>
 								<Add>
 									<A>0</A>
-									<B>0.59745</B>
-									<G>0.505</G>
+									<B>0.471</B>
+									<G>0.473012</G>
 									<R>0.76</R>
 								</Add>
 								<Multiplier>
@@ -290,8 +290,8 @@
 								</Add>
 								<Multiplier>
 									<A>1</A>
-									<B>0.85675</B>
-									<G>0.775</G>
+									<B>0.745</B>
+									<G>0.7467</G>
 									<R>1</R>
 								</Multiplier>
 								<samplerState>
@@ -428,8 +428,8 @@
 							<DiffuseMap>
 								<Add>
 									<A>0</A>
-									<B>0.59745</B>
-									<G>0.505</G>
+									<B>0.471</B>
+									<G>0.473012</G>
 									<R>0.76</R>
 								</Add>
 								<Multiplier>

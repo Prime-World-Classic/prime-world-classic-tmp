@@ -41,8 +41,8 @@
 								</DiffuseMap>
 								<DiffuseMul>
 									<A>1.53665</A>
-									<B>0.60375</B>
-									<G>0.475</G>
+									<B>0.405</B>
+									<G>0.435317</G>
 									<R>1</R>
 								</DiffuseMul>
 								<distortion>0.5</distortion>
@@ -830,8 +830,8 @@
 								</DiffuseMap>
 								<DiffuseMul>
 									<A>1</A>
-									<B>0.60375</B>
-									<G>0.475</G>
+									<B>0.405</B>
+									<G>0.435317</G>
 									<R>1</R>
 								</DiffuseMul>
 								<distortion>1</distortion>
@@ -1219,8 +1219,8 @@
 								</DiffuseMap>
 								<DiffuseMul>
 									<A>0.392255</A>
-									<B>0.60375</B>
-									<G>0.475</G>
+									<B>0.405</B>
+									<G>0.435317</G>
 									<R>1</R>
 								</DiffuseMul>
 								<distortion>1</distortion>
@@ -1936,8 +1936,8 @@
 								</DiffuseMap>
 								<DiffuseMul>
 									<A>1</A>
-									<B>0.801875</B>
-									<G>0.7375</G>
+									<B>0.7025</B>
+									<G>0.717658</G>
 									<R>1</R>
 								</DiffuseMul>
 								<distortion>1</distortion>
@@ -2481,8 +2481,8 @@
 								</DiffuseMap>
 								<DiffuseMul>
 									<A>0.956289</A>
-									<B>0.801875</B>
-									<G>0.7375</G>
+									<B>0.7025</B>
+									<G>0.717658</G>
 									<R>1</R>
 								</DiffuseMul>
 								<distortion>1</distortion>
@@ -3327,8 +3327,8 @@
 								</Add>
 								<Multiplier>
 									<A>1</A>
-									<B>0.76225</B>
-									<G>0.685</G>
+									<B>0.643</B>
+									<G>0.66119</G>
 									<R>1</R>
 								</Multiplier>
 								<samplerState>
@@ -3455,8 +3455,8 @@
 								</Add>
 								<Multiplier>
 									<A>1</A>
-									<B>0.60375</B>
-									<G>0.475</G>
+									<B>0.405</B>
+									<G>0.435317</G>
 									<R>1</R>
 								</Multiplier>
 								<samplerState>

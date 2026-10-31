@@ -4,6 +4,7 @@
 #include "PFUIEvent.h"
 #include "UIEventHandler.h"
 #include "BindsController.h"
+#include "NivalInput/InputCommandRef.h"
 
 #include "System/MainFrame.h"
 
@@ -428,6 +429,10 @@ struct GSClientSettings
     bool                pingWheelShown;
     bool                pingWheelMiddle;            // started by the middle mouse button
     bool                pingWheelFromMinimap;       // started on the minimap: the cursor is not tracked by the scene there
+    int                 pingWheelCursorSel;         // the item under the cursor direction last frame (WheelScrollSelect)
+    int                 chatWheelCursorSel;
+    Input::CommandReference wheelScrollInput;       // the mouse wheel ('camera_zoom_mouse'): scrolls the items of an open wheel
+    float               wheelScrollDelta;           // its delta of this frame
     UI::EMButton::Enum  pingWheelButton;
     float               pingWheelTimer;
     CVec3               pingWheelWorldPos;
@@ -1186,7 +1191,6 @@ struct GSClientSettings
     bool IsPingShown( NWorld::PFBaseHero const * pSender );
 
     // pings are on the middle mouse button: the camera must not be dragged by it
-    static bool IsMiddleMousePingMode();
 
     // new soft ping sounds (type -1 = ordinary ping); while they are on, the old FMOD/Flash ping sounds are muted
     static bool IsPingSoundEnabled();

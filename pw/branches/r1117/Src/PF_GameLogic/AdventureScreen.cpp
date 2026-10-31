@@ -198,7 +198,7 @@ static float g_pingWardTime          = 6.0f;  // "enemy ward" / "need a ward" li
 static bool  g_pingsDisabled         = false; // signals of the other players are not shown at all ("Communication" page)
 static bool  g_pingsMuted            = false; // no signal sounds at all (the new ones and the old minimap alert)
 static bool  g_pingAttackOnUnit      = true;  // a ping on an enemy: the "Attack" sound with its red marker
-static bool  g_pingMiddleMouse       = false; // pings / wheel on the middle mouse button instead of Alt + click
+static bool  g_pingMiddleMouse       = false; // obsolete: the middle mouse button always pings now (the variable stays for old user.cfg)
 static float g_pingWheelTransparency = 30.0f; // wheel background transparency, %
 static float g_pingWheelScale        = 100.0f; // wheel size, %
 static bool  g_pingGroundEffect      = true;  // Dota-like ring on the ground + light beam at the ping point
@@ -782,6 +782,10 @@ AdventureScreen::AdventureScreen()
 , pingWheelShown(false)
 , pingWheelMiddle(false)
 , pingWheelFromMinimap(false)
+, pingWheelCursorSel(-1)
+, chatWheelCursorSel(-1)
+, wheelScrollInput("camera_zoom_mouse")
+, wheelScrollDelta(0.0f)
 , pingWheelButton(UI::EMButton::Left)
 , pingWheelTimer(0.0f)
 , pingWheelWorldPos(VNULL3)
@@ -2640,6 +2644,7 @@ void AdventureScreen::CommonStep( bool bAppActive )
   UpdateHoldSelfCast( deltaTime );
   UpdateHoldCharge( deltaTime );
   UpdateTalentQueue( deltaTime );
+  wheelScrollDelta = wheelScrollInput.RetrieveDelta();
   UpdatePingWheel( deltaTime );
   UpdateChatWheel( deltaTime );
   UpdateAutoAttackOption();
@@ -2750,7 +2755,8 @@ void AdventureScreen::CommonStep( bool bAppActive )
   }
 
   if (pCameraController && pLogic)
-    pCameraController->EnableMouseZoom(!pLogic->IsMouseUnderWindow());
+    pCameraController->EnableMouseZoom( !pLogic->IsMouseUnderWindow() && !pingWheelPending && !chatWheelShown
+      && !( GetAsyncKeyState( VK_MBUTTON ) & 0x8000 ) ); // the mouse wheel selects an item of the open wheel then
 
   gameOverEffect.Update(deltaTime);
   
@@ -2890,6 +2896,8 @@ bool AdventureScreen::ProcessUIEvent( const Input::Event & message )
 
   if ( !m_updated )
     return false;
+
+  wheelScrollInput.ProcessEvent( message ); // the camera gets the same event, its zoom is off while a wheel is open
 
 	if ( bAdventureControlsEnabled && pScene && pScene->GetCameraControllers()->ProcessEvent( message ) )
 		return true;
@@ -3111,10 +3119,7 @@ bool AdventureScreen::MsgOnMouseDownImpl( const Input::SSysParams & sysParams, U
   if( currentPick.GetPickedNormal() == VNULL3 )
     return false;
 
-  // pings on the middle button: Alt + click on the ground is an ordinary click then (the minimap still pings with Alt)
-  const bool altPingDisabled = g_pingMiddleMouse && IsSignalModifierDown() && command != CMD_SIGNAL;
-
-  if( IsMinimapSignalCmd(action) && !altPingDisabled )
+  if( IsMinimapSignalCmd(action) )
   {
     if ( !( IsSignalModifierDown() && command != CMD_SIGNAL && StartPing( false, action ) ) )
       ExecuteCommand( CMD_SIGNAL, currentPick.GetPickedPos(), currentPick.GetPickedPtr() );
@@ -3674,8 +3679,8 @@ void AdventureScreen::MsgOnMouse3Down()
 {
   mouse3Pressed = true;
 
-  // pings on the middle mouse button
-  if ( !g_pingMiddleMouse || !bAdventureControlsEnabled || !GetHero() || m_state != STATE_NORMAL || isPlayingMinigame || pingWheelPending )
+  // pings on the middle mouse button: click = ping, held = ping wheel
+  if ( !bAdventureControlsEnabled || !GetHero() || m_state != STATE_NORMAL || isPlayingMinigame || pingWheelPending )
     return;
   if ( pLogic && pLogic->IsMouseUnderWindow() )
     return;
@@ -3687,6 +3692,28 @@ void AdventureScreen::MsgOnMouse3Down()
 
   if ( !StartPing( true, UI::EMButton::Left ) )
     ExecuteCommand( CMD_SIGNAL, currentPick.GetPickedPos(), currentPick.GetPickedPtr() );
+}
+
+// The item of an open wheel: the cursor direction as before, and one notch of the mouse wheel = the next item
+// (down = clockwise). After a scroll the cursor takes over again only when it moves to another sector.
+static int WheelScrollSelect( int count, int current, int cursorSel, int & lastCursorSel, float scroll )
+{
+  if ( count <= 0 )
+    return -1;
+  if ( scroll != 0.0f )
+  {
+    const int step = scroll > 0.0f ? 1 : -1;
+    lastCursorSel = cursorSel;
+    if ( current < 0 || current >= count )
+      return step > 0 ? 0 : count - 1;
+    return ( current + step + count ) % count;
+  }
+  if ( cursorSel != lastCursorSel )
+  {
+    lastCursorSel = cursorSel;
+    return cursorSel;
+  }
+  return current;
 }
 
 // remembers the ping point; UpdatePingWheel decides: released quickly -> ordinary ping, held -> ping wheel
@@ -3707,12 +3734,8 @@ bool AdventureScreen::StartPing( bool middleButton, UI::EMButton::Enum button, c
   pingWheelFromMinimap = minimapPos != 0;
   pingWheelCursor   = pingWheelFromMinimap ? GetMousePixelPos() : vCursorPos;
   pingWheelSelected = -1;
+  pingWheelCursorSel = -1;
   return true;
-}
-
-bool AdventureScreen::IsMiddleMousePingMode()
-{
-  return g_pingMiddleMouse;
 }
 
 
@@ -4092,6 +4115,7 @@ bool AdventureScreen::StartChatWheel()
   chatWheelTimer    = 0.0f;
   chatWheelCenter   = center;
   chatWheelSelected = -1;
+  chatWheelCursorSel = -1;
   return true;
 }
 
@@ -4124,6 +4148,7 @@ void AdventureScreen::UpdateChatWheel( float deltaTime )
     const float sector = 360.0f / count;
     selected = static_cast<int>( ( angle + sector * 0.5f ) / sector ) % count;
   }
+  selected = WheelScrollSelect( count, chatWheelSelected, selected, chatWheelCursorSel, wheelScrollDelta );
   if ( selected != chatWheelSelected )
   {
     chatWheelSelected = selected;
@@ -5905,7 +5930,8 @@ void AdventureScreen::UpdatePingWheel( float deltaTime )
 
   if ( !pingWheelShown )
   {
-    if ( pingWheelTimer < Max( g_pingWheelDelay, 0.05f ) || !flash )
+    // a scroll of the mouse wheel shows the wheel at once
+    if ( ( pingWheelTimer < Max( g_pingWheelDelay, 0.05f ) && wheelScrollDelta == 0.0f ) || !flash )
       return;
 
     vector<int> pingTypes;
@@ -5950,6 +5976,7 @@ void AdventureScreen::UpdatePingWheel( float deltaTime )
     const float sector = 360.0f / count;
     selected = static_cast<int>( ( angle + sector * 0.5f ) / sector ) % count;
   }
+  selected = WheelScrollSelect( (int)pingWheelSlots.size(), pingWheelSelected, selected, pingWheelCursorSel, wheelScrollDelta );
   if ( selected != pingWheelSelected )
   {
     pingWheelSelected = selected;

@@ -424,7 +424,6 @@ static const AdvancedVarDesc s_advancedVars[] =
   { "adv_overtip_status_heroes", "overtip_status_heroes_only", ADV_CHECKBOX, 0.0f, 0.0f, 0, L"", "adv_overtip_status", L"\u0418\u043d\u0434\u0438\u043a\u0430\u0442\u043e\u0440 \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0439 \u0442\u043e\u043b\u044c\u043a\u043e \u043d\u0430\u0434 \u0433\u0435\u0440\u043e\u044f\u043c\u0438", L"Status indicator above heroes only" },
   { "adv_page_comm", "", ADV_PAGE, 1.0f, 0.0f, 0, L"", "", L"", L"" },
   { "adv_hdr_ping_wheel", "", ADV_HEADER, 0.0f, 0.0f, 0, L"", "", L"\u0421\u0438\u0433\u043d\u0430\u043b\u044b", L"Signals" },
-  { "adv_ping_middle_mouse", "ping_middle_mouse", ADV_CHECKBOX, 0.0f, 0.0f, 0, L"", "", L"\u0421\u0438\u0433\u043d\u0430\u043b\u044b \u043d\u0430 \u0441\u0440\u0435\u0434\u043d\u044e\u044e \u043a\u043d\u043e\u043f\u043a\u0443 \u043c\u044b\u0448\u0438", L"Signals on the middle mouse button" },
   { "adv_pings_disabled", "pings_disabled", ADV_CHECKBOX, 0.0f, 0.0f, 0, L"", "", L"\u041e\u0442\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0432\u0441\u0435 \u0441\u0438\u0433\u043d\u0430\u043b\u044b", L"Turn off all signals" },
   { "adv_pings_muted", "pings_muted", ADV_CHECKBOX, 0.0f, 0.0f, 0, L"", "", L"\u0417\u0430\u043c\u0443\u0442\u0438\u0442\u044c \u0432\u0441\u0435 \u0441\u0438\u0433\u043d\u0430\u043b\u044b", L"Mute all signals" },
   { "adv_ping_sound", "ping_sound", ADV_CHECKBOX, 0.0f, 0.0f, 0, L"", "", L"\u041d\u043e\u0432\u044b\u0435 \u0437\u0432\u0443\u043a\u0438 \u0441\u0438\u0433\u043d\u0430\u043b\u043e\u0432", L"New signal sounds" },

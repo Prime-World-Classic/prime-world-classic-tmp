@@ -859,6 +859,7 @@ AdventureScreen::AdventureScreen()
 , enableAnnouncements(true)
 , lastPlayerActivityStep(0)
 , isSelfCastOn(false)
+, talentPreparedNow(false)
 , towerDeathTimer(0.0f)
 , bCameraSwitchAttachControlled(false)
 , leftFraction( NCore::ETeam::COUNT )
@@ -7303,7 +7304,7 @@ bool AdventureScreen::OnTalentButtonPress( int level, int slot )
   if ( isHotKeyDown || !g_altClickAbilityStatus || !IsAbilityStatusModifierDown() )
   {
     // a press of a talent that cannot be used now goes no further in Flash: wait for the talent here
-    if ( !isPlayingMinigame && !( g_altSelfCast && isSelfCastOn ) )
+    if ( !isPlayingMinigame && !( g_altSelfCast && IsAbilityStatusModifierDown() ) )
       if ( NWorld::PFBaseMaleHero * pMale = dynamic_cast<NWorld::PFBaseMaleHero*>( GetHero() ) )
         if ( NWorld::PFTalent * pTalent = pMale->GetTalent( level, slot ) )
           if ( pTalent->IsActivated() && pTalent->IsActive() && !pTalent->CanBeUsed() )
@@ -7393,6 +7394,7 @@ bool AdventureScreen::OnTalentSetButtonClick(int level, int slot)
 
         m_talentLevel = level;
         m_talentSlot  = slot;
+        talentPreparedNow = true;
 
         if (SetCommand(CMD_TALENT_TALENT_PANEL))
         {
@@ -7414,11 +7416,11 @@ bool AdventureScreen::OnTalentSetButtonClick(int level, int slot)
         }
         else if ( IsTalentSmartCast( pTalent, level, slot ) && isHotKeyDown )
         {
-          if ( !( g_altSelfCast && isSelfCastOn ) && g_dblClickSelfCast && isDoubleActivation && CastCurrentTalentOnSelf( pTalent ) )
+          if ( !( g_altSelfCast && IsAbilityStatusModifierDown() ) && g_dblClickSelfCast && isDoubleActivation && CastCurrentTalentOnSelf( pTalent ) )
           {
             lastTalentActivationLevel = -1; // quick cast: double tap of the hotkey casts on self
           }
-          else if ( !( g_altSelfCast && isSelfCastOn ) ){
+          else if ( !( g_altSelfCast && IsAbilityStatusModifierDown() ) ){
 
             CVec3 vPickPosFromMinimap;
             const bool fromMinimapCast = minimap->IsOver();
@@ -8396,6 +8398,7 @@ bool AdventureScreen::CmdActionBarHotKey( const int & slotIndex )
     return true;
   }
   isHotKeyDown = true;
+  talentPreparedNow = false;
   talentQueuePressSlot = slotIndex; // a queued press of this talent watches this key
   ActionBarController * actionBarController = pLogic->GetActionBarController();
   if (IsValid(actionBarController))
@@ -8411,16 +8414,25 @@ bool AdventureScreen::CmdActionBarHotKey( const int & slotIndex )
   holdChargeSeen     = false;
   holdChargeChannelTime = 0.0f;
 
-  if ( g_altSelfCast && isSelfCastOn && GetHero() && m_talentLevel != -1 && m_talentSlot != -1 )
+  // Alt + hotkey: cast on own hero. Any talent that may target its caster (target type 'self') or has the SelfCasting
+  // flag: most ally talents never got the flag. Only the talent this press prepared (a stale one is not cast) and only
+  // a talent that needs a target (one without a target is already used).
+  if ( g_altSelfCast && IsAbilityStatusModifierDown() && talentPreparedNow && GetHero() && m_talentLevel != -1 && m_talentSlot != -1
+       && command == CMD_TALENT_TALENT_PANEL && m_commandArguments[CMD_TALENT_TALENT_PANEL] != 0 )
   {
     if ( NWorld::PFTalent* pTalent = GetHero()->GetTalent( m_talentLevel, m_talentSlot ) )
     {
-      if ( pTalent->GetFlags() & NDb::ABILITYFLAGS_SELFCASTING )
+      if ( CastCurrentTalentOnSelf( pTalent ) && m_state == STATE_TARGET )
       {
-        ExecuteCommand( command, GetHero()->GetPosition(), GetHero(), false, m_altTarget );
+        // leave the targeting mode the press of the button started
+        if ( IsValid( actionBarController ) )
+          actionBarController->DropTarget();
+        TargetZoneReset();
+        SetState( STATE_NORMAL );
       }
     }
   }
+  talentPreparedNow = false;
 
   return true;
 }

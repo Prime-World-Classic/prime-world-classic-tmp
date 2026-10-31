@@ -284,6 +284,7 @@ struct GSClientSettings
 
     bool isHotkeysEnabled;
     bool isSelfCastOn;
+    bool talentPreparedNow; // the talent button pressed by the current hotkey prepared a talent command
     int blockedHotKeys;
 
     Weak<NGameX::ChatUiController> chatController;

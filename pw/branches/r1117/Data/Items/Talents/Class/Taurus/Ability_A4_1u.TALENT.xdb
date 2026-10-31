@@ -42,9 +42,9 @@
 					<UnitConstant>
 						<name>A4_1u_Damage</name>
 						<var>
-							<compiledString>FQAAAAACAAAACAAAABIAAABVi+xqAVHZBUQAAADZHCRR2QVAAAAA2RwkagCLRQiLEItNCIuCMAEAAP/QUdkcJGoBi00QixGLTRCLQmD/0F3DAACgQgCAJ0Q=</compiledString>
+							<compiledString>FQAAAAACAAAACAAAABIAAABVi+xqAVHZBUQAAADZHCRR2QVAAAAA2RwkagCLRQiLEItNCIuCMAEAAP/QUdkcJGoBi00QixGLTRCLQmD/0F3DAAC0QgCAO0Q=</compiledString>
 							<returnType>float</returnType>
-							<sString>damageScale(sStrength, 80, 670)</sString>
+							<sString>damageScale(sStrength, 90, 750)</sString>
 						</var>
 					</UnitConstant>
 				</Item>

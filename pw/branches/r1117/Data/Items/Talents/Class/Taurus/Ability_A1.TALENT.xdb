@@ -933,9 +933,9 @@
 					<UnitConstant>
 						<name>HoldToCharge</name>
 						<var>
-							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAAAAPw==</compiledString>
+							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DmpmZPg==</compiledString>
 							<returnType>float</returnType>
-							<sString>0.5f</sString>
+							<sString>0.3f</sString>
 						</var>
 					</UnitConstant>
 				</Item>
@@ -943,9 +943,9 @@
 					<UnitConstant>
 						<name>A1_Damage</name>
 						<var>
-							<compiledString>FQAAAAACAAAACAAAABIAAABVi+xqAVHZBUQAAADZHCRR2QVAAAAA2RwkagCLRQiLEItNCIuCMAEAAP/QUdkcJGoBi00QixGLTRCLQmD/0F3DAADIQgCAIkQ=</compiledString>
+							<compiledString>FQAAAAACAAAACAAAABIAAABVi+xqAVHZBUQAAADZHCRR2QVAAAAA2RwkagCLRQiLEItNCIuCMAEAAP/QUdkcJGoBi00QixGLTRCLQmD/0F3DAADwQgAAPkQ=</compiledString>
 							<returnType>float</returnType>
-							<sString>damageScale(sStrength, 100, 650)</sString>
+							<sString>damageScale(sStrength, 120, 760)</sString>
 						</var>
 					</UnitConstant>
 				</Item>
@@ -1073,9 +1073,9 @@
 					<UnitConstant>
 						<name>A1_ChargeTime</name>
 						<var>
-							<compiledString>FSwAAAAEAAAAMwAAAEwAAACIAAAArAAAAEExdTJfQ2hhcmdlUmVkdWNlAAAAVGF1cnVzX0ExdTIAVGF1cnVzX0ExdTIAVYvsg+wMaBQAAACLRQiLEItNCIuCqAEAAP/QhcB0KmggAAAAi00IixGLTQiLgqgBAAD/0IlF/ItN/IsRi038i0IE/9CIRfvrBMZF+wBR2e7ZHCSLTQxRi1UIUmgAAAAAi0UQixCLTRCLQlD/0FHZHCQPtk37UegfAAAAg8QM3C26AAAA2V302UX0i+VdwwAAAMDMzPQ/AAAAAFWL7FEPtkUIhcB0CNlFDNld/OsG2UUQ2V382UX8i+Vdww==</compiledString>
+							<compiledString>FSwAAAADAAAAMwAAAEwAAACIAAAAQTF1Ml9DaGFyZ2VSZWR1Y2UAAABUYXVydXNfQTF1MgBUYXVydXNfQTF1MgBVi+yD7AxoFAAAAItFCIsQi00Ii4KoAQAA/9CFwHQqaCAAAACLTQiLEYtNCIuCqAEAAP/QiUX8i038ixGLTfyLQgT/0IhF++sExkX7AFHZ7tkcJItNDFGLVQhSaAAAAACLRRCLEItNEItCUP/QUdkcJA+2TftR6B0AAACDxAzZ6N7h2V302UX0i+VdwwAAAAAAAPA/AAAAAFWL7FEPtkUIhcB0CNlFDNld/OsG2UUQ2V382UX8i+Vdww==</compiledString>
 							<returnType>float</returnType>
-							<sString>1.3f - s(tal("Taurus_A1u2"), cA1u2_ChargeReduce, 0.0f)</sString>
+							<sString>1.0f - s(tal("Taurus_A1u2"), cA1u2_ChargeReduce, 0.0f)</sString>
 						</var>
 					</UnitConstant>
 				</Item>
@@ -1103,9 +1103,9 @@
 					<UnitConstant>
 						<name>A1_MinDamagePercent</name>
 						<var>
-							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAABIQg==</compiledString>
+							<compiledString>FQAAAAABAAAABQAAAFWL7NkFCwAAAF3DAABwQg==</compiledString>
 							<returnType>float</returnType>
-							<sString>50</sString>
+							<sString>60</sString>
 						</var>
 					</UnitConstant>
 				</Item>

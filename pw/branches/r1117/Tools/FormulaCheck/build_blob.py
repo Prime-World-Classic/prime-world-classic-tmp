@@ -146,11 +146,18 @@ def link_obj(img):
 
 def compile_cpp(cpp_path, out_dir):
     """как FormulaBuilder::CompileObjFile: cl -I"<Data/GameLogic>" -I"<Tools/CCompiler>" -c file.cpp;
-    запуск из каталога файла (Wine не понимает абсолютные Linux-пути), без -Fo."""
-    env = dict(os.environ, WINEPREFIX=RC.WINEPREFIX, WINEDEBUG="-all",
-               WINEDLLOVERRIDES="mscoree,mshtml=")
-    cmd = ["wine", RC.CL, '-I"%s"' % RC.INC1, '-I"%s"' % RC.INC2,
-           "-c", os.path.basename(cpp_path)]
+    запуск из каталога файла (Wine не понимает абсолютные Linux-пути), без -Fo.
+    На Windows cl.exe запускается напрямую (результат побайтово тот же)."""
+    if os.name == "nt":
+        env = dict(os.environ)
+        env["PATH"] = os.path.dirname(RC.CL) + os.pathsep + env.get("PATH", "")
+        cmd = [RC.CL, "-I%s" % RC.INC1, "-I%s" % RC.INC2, "-nologo",
+               "-c", os.path.basename(cpp_path)]
+    else:
+        env = dict(os.environ, WINEPREFIX=RC.WINEPREFIX, WINEDEBUG="-all",
+                   WINEDLLOVERRIDES="mscoree,mshtml=")
+        cmd = ["wine", RC.CL, '-I"%s"' % RC.INC1, '-I"%s"' % RC.INC2,
+               "-c", os.path.basename(cpp_path)]
     r = subprocess.run(cmd, cwd=out_dir, env=env, capture_output=True, timeout=300)
     log = (r.stdout + r.stderr).decode("cp1251", "replace")
     if r.returncode != 0:
